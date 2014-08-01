@@ -1,0 +1,15 @@
+#ifndef BEYOND_ENGINE_EVENT_GESTURESTATE_H__INCLUDE
+#define BEYOND_ENGINE_EVENT_GESTURESTATE_H__INCLUDE
+
+enum class EGestureState
+{
+    eGS_POSSIBLE,
+    eGS_BEGAN,
+    eGS_CHANGED,
+    eGS_ENDED,
+    eGS_CANCELLED,
+    eGS_FAILED,
+    eGS_RECOGNIZED = eGS_ENDED,
+};
+
+#endif

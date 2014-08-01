@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://www.codeandweb.com/texturepacker-->
+<!-- $TexturePacker:SmartUpdate:bdb6ca3dd6dbc387d41f89d455a60cfc:17a7ae1111d540614ac5564445e73ae5:6a52e54f945de41e44e07d327aa4506e$ -->
+<Imageset Name="LoadingUI" Imagefile="LoadingUI.png" NativeHorzRes="1924" NativeVertRes="1245" AutoScaled="false">
+    <Image Name="Loading_Background_01" XPos="2" YPos="2" Width="1920" Height="1080"/>
+    <Image Name="Loading_Logo_01" XPos="2" YPos="1084" Width="585" Height="159"/>
+    <Image Name="Loading_Progress_Bottom_01" XPos="589" YPos="1084" Width="729" Height="47"/>
+    <Image Name="Loading_Progress_Top_01" XPos="589" YPos="1133" Width="723" Height="39"/>
+</Imageset>

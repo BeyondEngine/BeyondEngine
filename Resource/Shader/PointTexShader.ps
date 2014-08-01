@@ -1,0 +1,11 @@
+/* file: PointTexShader.ps
+ */
+varying TEXP vec2 texCoord0;
+
+uniform SAMP sampler2D u_tex0;
+
+void main()
+{
+	COLP vec4 fragColor = texture2D(u_tex0, texCoord0);
+	gl_FragColor = fragColor;
+}

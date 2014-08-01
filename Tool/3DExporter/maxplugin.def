@@ -1,0 +1,11 @@
+LIBRARY	"3DExporter"
+
+EXPORTS
+	LibDescription			@1
+	LibNumberClasses		@2
+	LibClassDesc			@3
+	LibVersion				@4
+
+SECTIONS
+	.data READ WRITE
+

@@ -1,0 +1,609 @@
+﻿Build started 2014/12/20 22:15:26.
+     1>Project "E:\Programming\BeyondEngine_GitHub_Publish\Tool\BeyondEngineEditor\BeyondEngineEditor.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         D:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I..\..\include\ /I..\..\Include\glfw3\include\win32 /I..\..\include\platform\win32 /I..\..\Include\platform\win32\gles\include\OGLES /I..\..\Lib\wxWidgets_3_0_mb\include /I..\..\Lib\wxWidgets_3_0_mb\include\msvc /I..\..\Lib /I..\..\SourceCode\ /I..\..\SourceCode\Platform /I..\..\SourceCode\Platform\win32 /I..\..\SourceCode\Utility /I..\..\SourceCode\Utility\BeatsUtility\Platform /I..\..\SourceCode\Utility\BeatsUtility\Platform\Win32 /I..\..\GameProject /ZI /nologo /W4 /WX /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _CRT_SECURE_NO_WARNINGS /D _CRT_NON_CONFORMING_SWPRINTFS /D EDITOR_MODE /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"stdafx.h" /Fp"Debug.win32\BeyondEngineEditor_d.pch" /Fo"Debug.win32\\" /Fd"Debug.win32\vc110.pdb" /Gd /TP /wd4740 /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         D:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I..\..\include\ /I..\..\Include\glfw3\include\win32 /I..\..\include\platform\win32 /I..\..\Include\platform\win32\gles\include\OGLES /I..\..\Lib\wxWidgets_3_0_mb\include /I..\..\Lib\wxWidgets_3_0_mb\include\msvc /I..\..\Lib /I..\..\SourceCode\ /I..\..\SourceCode\Platform /I..\..\SourceCode\Platform\win32 /I..\..\SourceCode\Utility /I..\..\SourceCode\Utility\BeatsUtility\Platform /I..\..\SourceCode\Utility\BeatsUtility\Platform\Win32 /I..\..\GameProject /ZI /nologo /W4 /WX /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _CRT_SECURE_NO_WARNINGS /D _CRT_NON_CONFORMING_SWPRINTFS /D EDITOR_MODE /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug.win32\BeyondEngineEditor_d.pch" /Fo"Debug.win32\\" /Fd"Debug.win32\vc110.pdb" /Gd /TP /wd4740 /analyze- /errorReport:prompt AboutDlg.cpp AnimationGLWindow.cpp AniViewAgent.cpp BatchEditWnd.cpp BoolPropertyDescription.cpp ColorPropertyDescription.cpp ComponentInfoWnd.cpp ComponentRenderObject.cpp EditCameraWnd.cpp ComponentFileTreeItemData.cpp ComponentGraphics_GL.cpp ComponentInstanceTreeItemData.cpp ComponentTreeItemData.cpp ConstantCurveEditor.cpp ConstantCurveProperty.cpp DataViewTreeModel.cpp DataViewTreeModelNode.cpp DoublePropertyDescription.cpp EditAnimationDialog.cpp EditDialogBase.cpp EditLanguageDialog.cpp EditorConfig.cpp EditorSceneWindow.cpp EditPerformanceDialog.cpp GradientColorBoard.cpp GradientColorPropertyDescription.cpp GradientCtrl.cpp GradientCursor.cpp GradientDialog.cpp PropertyGridEditor.cpp SceneGridWnd.cpp SplineDialog.cpp EffectViewAgent.cpp EngineProperGridManager.cpp EnginePropertyGrid.cpp EngineSplash.cpp EnumPropertyDescription.cpp BeyondEngineEditorComponentWindow.cpp BeyondEngineEditorGLWindow.cpp EditorMainFrame.cpp FilePropertyDescription.cpp FloatPropertyDescription.cpp GameViewAgent.cpp IntPropertyDescription.cpp ListPropertyDescription.cpp EngineEditor.cpp MapPropertyDescription.cpp PropertyRegister.cpp PropertyTrigger.cpp PtrPropertyDescription.cpp SceneViewAgent.cpp SingleTypeChoicePropertyBase.cpp SplineGLWindow.cpp StringPropertyDescription.cpp DataViewCheckRender.cpp DataViewCtrl.cpp TerrainViewAgent.cpp TexturePreviewDialog.cpp TexturePropertyDescription.cpp timebarevent.cpp timebarframe.cpp timebaritem.cpp timebaritemcontainer.cpp DataViewListModel.cpp timebarscale.cpp TransparentText.cpp UIntPropertyDescription.cpp UIViewAgent.cpp Vec2fPropertyDescription.cpp Vec3fPropertyDescription.cpp Vec4fPropertyDescription.cpp ViewAgentBase.cpp wxDialogEditor.cpp WxGLRenderWindow.cpp wxPtrButtonEditor.cpp wxWidgetsPropertyBase.cpp
+         wxWidgetsPropertyBase.cpp
+         wxPtrButtonEditor.cpp
+         WxGLRenderWindow.cpp
+         wxDialogEditor.cpp
+         ViewAgentBase.cpp
+         Vec4fPropertyDescription.cpp
+         Vec3fPropertyDescription.cpp
+         Vec2fPropertyDescription.cpp
+         UIViewAgent.cpp
+         UIntPropertyDescription.cpp
+         TransparentText.cpp
+         timebarscale.cpp
+         DataViewListModel.cpp
+         timebaritemcontainer.cpp
+         timebaritem.cpp
+         timebarframe.cpp
+         timebarevent.cpp
+         TexturePropertyDescription.cpp
+         TexturePreviewDialog.cpp
+         TerrainViewAgent.cpp
+         Generating Code...
+         Compiling...
+         DataViewCtrl.cpp
+         DataViewCheckRender.cpp
+         StringPropertyDescription.cpp
+         SplineGLWindow.cpp
+         SingleTypeChoicePropertyBase.cpp
+         SceneViewAgent.cpp
+         PtrPropertyDescription.cpp
+         PropertyTrigger.cpp
+         PropertyRegister.cpp
+         MapPropertyDescription.cpp
+         EngineEditor.cpp
+         ListPropertyDescription.cpp
+         IntPropertyDescription.cpp
+         GameViewAgent.cpp
+         FloatPropertyDescription.cpp
+         FilePropertyDescription.cpp
+         EditorMainFrame.cpp
+         BeyondEngineEditorGLWindow.cpp
+         BeyondEngineEditorComponentWindow.cpp
+         EnumPropertyDescription.cpp
+         Generating Code...
+         Compiling...
+         EngineSplash.cpp
+         EnginePropertyGrid.cpp
+         EngineProperGridManager.cpp
+         EffectViewAgent.cpp
+         SplineDialog.cpp
+         SceneGridWnd.cpp
+         PropertyGridEditor.cpp
+         GradientDialog.cpp
+         GradientCursor.cpp
+         GradientCtrl.cpp
+         GradientColorPropertyDescription.cpp
+         GradientColorBoard.cpp
+         EditPerformanceDialog.cpp
+         EditorSceneWindow.cpp
+         EditorConfig.cpp
+         EditLanguageDialog.cpp
+         EditDialogBase.cpp
+         EditAnimationDialog.cpp
+         DoublePropertyDescription.cpp
+         DataViewTreeModelNode.cpp
+         Generating Code...
+         Compiling...
+         DataViewTreeModel.cpp
+         ConstantCurveProperty.cpp
+         ConstantCurveEditor.cpp
+         ComponentTreeItemData.cpp
+         ComponentInstanceTreeItemData.cpp
+         ComponentGraphics_GL.cpp
+         ComponentFileTreeItemData.cpp
+         EditCameraWnd.cpp
+         ComponentRenderObject.cpp
+         ComponentInfoWnd.cpp
+         ColorPropertyDescription.cpp
+         BoolPropertyDescription.cpp
+         BatchEditWnd.cpp
+         AniViewAgent.cpp
+         AnimationGLWindow.cpp
+         AboutDlg.cpp
+         Generating Code...
+       ResourceCompile:
+         C:\Program Files (x86)\Windows Kits\8.0\bin\x86\rc.exe /l"0x0409" /I..\..\Lib\wxWidgets_3_0_mb\include /nologo /fo"Debug.win32\BeyondEngineEditor.res" BeyondEngineEditor.rc 
+       Link:
+         D:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\Programming\BeyondEngine_GitHub_Publish\bin\BeyondEngineEditor_d.exe" /INCREMENTAL /NOLOGO /LIBPATH:..\..\Lib\Windebuggingtool\lib\i386 /LIBPATH:..\..\Include\Beats\Prebuilt\Win32 /LIBPATH:..\..\Lib\wxWidgets_3_0_mb\lib\vc_lib /LIBPATH:..\..\Include\glfw3\prebuilt\win32 /LIBPATH:..\..\Include\platform\win32\gles\prebuilt /LIBPATH:..\..\Include\platform\win32\zlib\prebuilt /LIBPATH:..\..\Include\jpeg\prebuilt\win32 /LIBPATH:..\..\Include\png\prebuilt\win32 /LIBPATH:..\..\Include\tiff\prebuilt\win32 /LIBPATH:..\..\Include\freetype2\prebuilt\win32 /LIBPATH:..\..\Include\webp\prebuilt\win32 glfw3.lib glew32.lib Utility_d.lib opengl32.lib libzlib.lib libpng.lib libjpeg.lib libtiff.lib libwebp.lib freetype.lib winmm.lib ws2_32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dbghelp.lib components_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /NODEFAULTLIB:msvcrt.lib /NODEFAULTLIB:libcmt.lib /NODEFAULTLIB:libcmtd.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:\Programming\BeyondEngine_GitHub_Publish\bin\BeyondEngineEditor_d.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\Programming\BeyondEngine_GitHub_Publish\bin\BeyondEngineEditor_d.lib" /MACHINE:X86 /SAFESEH:NO Debug.win32\BeyondEngineEditor.res
+         Debug.win32\AboutDlg.obj
+         Debug.win32\AnimationGLWindow.obj
+         Debug.win32\AniViewAgent.obj
+         Debug.win32\BatchEditWnd.obj
+         Debug.win32\BoolPropertyDescription.obj
+         Debug.win32\ColorPropertyDescription.obj
+         Debug.win32\ComponentInfoWnd.obj
+         Debug.win32\ComponentRenderObject.obj
+         Debug.win32\EditCameraWnd.obj
+         Debug.win32\ComponentFileTreeItemData.obj
+         Debug.win32\ComponentGraphics_GL.obj
+         Debug.win32\ComponentInstanceTreeItemData.obj
+         Debug.win32\ComponentTreeItemData.obj
+         Debug.win32\ConstantCurveEditor.obj
+         Debug.win32\ConstantCurveProperty.obj
+         Debug.win32\DataViewTreeModel.obj
+         Debug.win32\DataViewTreeModelNode.obj
+         Debug.win32\DoublePropertyDescription.obj
+         Debug.win32\EditAnimationDialog.obj
+         Debug.win32\EditDialogBase.obj
+         Debug.win32\EditLanguageDialog.obj
+         Debug.win32\EditorConfig.obj
+         Debug.win32\EditorSceneWindow.obj
+         Debug.win32\EditPerformanceDialog.obj
+         Debug.win32\GradientColorBoard.obj
+         Debug.win32\GradientColorPropertyDescription.obj
+         Debug.win32\GradientCtrl.obj
+         Debug.win32\GradientCursor.obj
+         Debug.win32\GradientDialog.obj
+         Debug.win32\PropertyGridEditor.obj
+         Debug.win32\SceneGridWnd.obj
+         Debug.win32\SplineDialog.obj
+         Debug.win32\EffectViewAgent.obj
+         Debug.win32\EngineProperGridManager.obj
+         Debug.win32\EnginePropertyGrid.obj
+         Debug.win32\EngineSplash.obj
+         Debug.win32\EnumPropertyDescription.obj
+         Debug.win32\BeyondEngineEditorComponentWindow.obj
+         Debug.win32\BeyondEngineEditorGLWindow.obj
+         Debug.win32\EditorMainFrame.obj
+         Debug.win32\FilePropertyDescription.obj
+         Debug.win32\FloatPropertyDescription.obj
+         Debug.win32\GameViewAgent.obj
+         Debug.win32\IntPropertyDescription.obj
+         Debug.win32\ListPropertyDescription.obj
+         Debug.win32\EngineEditor.obj
+         Debug.win32\MapPropertyDescription.obj
+         Debug.win32\PropertyRegister.obj
+         Debug.win32\PropertyTrigger.obj
+         Debug.win32\PtrPropertyDescription.obj
+         Debug.win32\SceneViewAgent.obj
+         Debug.win32\SingleTypeChoicePropertyBase.obj
+         Debug.win32\SplineGLWindow.obj
+         Debug.win32\stdafx.obj
+         Debug.win32\StringPropertyDescription.obj
+         Debug.win32\DataViewCheckRender.obj
+         Debug.win32\DataViewCtrl.obj
+         Debug.win32\TerrainViewAgent.obj
+         Debug.win32\TexturePreviewDialog.obj
+         Debug.win32\TexturePropertyDescription.obj
+         Debug.win32\timebarevent.obj
+         Debug.win32\timebarframe.obj
+         Debug.win32\timebaritem.obj
+         Debug.win32\timebaritemcontainer.obj
+         Debug.win32\DataViewListModel.obj
+         Debug.win32\timebarscale.obj
+         Debug.win32\TransparentText.obj
+         Debug.win32\UIntPropertyDescription.obj
+         Debug.win32\UIViewAgent.obj
+         Debug.win32\Vec2fPropertyDescription.obj
+         Debug.win32\Vec3fPropertyDescription.obj
+         Debug.win32\Vec4fPropertyDescription.obj
+         Debug.win32\ViewAgentBase.obj
+         Debug.win32\wxDialogEditor.obj
+         Debug.win32\WxGLRenderWindow.obj
+         Debug.win32\wxPtrButtonEditor.obj
+         Debug.win32\wxWidgetsPropertyBase.obj
+         E:\Programming\BeyondEngine_GitHub_Publish\lib\BeyondEngine_d.lib
+     1>wxbase30d.lib(any.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(any.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(appbase.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(appbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(arrstr.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(arrstr.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(base64.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(base64.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(clntdata.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(clntdata.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(cmdline.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(cmdline.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(config.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(config.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(convauto.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(convauto.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(datetime.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(datetime.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(datetimefmt.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(datetimefmt.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(datstrm.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(datstrm.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(dircmn.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(dircmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(dummy.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(dummy.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(dynarray.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(dynarray.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(dynlib.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(dynlib.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(encconv.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(encconv.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(event.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(event.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(evtloopcmn.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(evtloopcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(extended.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(extended.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(ffile.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(ffile.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(file.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(file.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(fileback.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(fileback.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(fileconf.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(fileconf.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(filefn.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(filefn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(filename.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(filename.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(filesys.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(filesys.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(fmapbase.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(fmapbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(hash.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(hash.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(hashmap.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(hashmap.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(init.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(init.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(intl.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(intl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(ipcbase.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(ipcbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(languageinfo.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(languageinfo.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(list.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(list.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(log.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(log.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(longlong.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(longlong.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(mimecmn.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(mimecmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(module.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(module.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(msgout.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(msgout.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(mstream.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(mstream.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(numformatter.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(numformatter.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(object.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(object.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(platinfo.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(platinfo.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(powercmn.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(powercmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(process.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(process.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(stdpbase.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(stdpbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(stopwatch.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(stopwatch.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(strconv.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(strconv.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(stream.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(stream.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(string.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(string.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(stringimpl.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(stringimpl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(strvararg.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(strvararg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(sysopt.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(sysopt.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(textbuf.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(textbuf.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(textfile.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(textfile.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(threadinfo.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(threadinfo.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(time.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(time.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(timercmn.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(timercmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(timerimpl.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(timerimpl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(tokenzr.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(tokenzr.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(translation.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(translation.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(txtstrm.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(txtstrm.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(uri.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(uri.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(utilscmn.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(utilscmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(variant.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(variant.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(wfstream.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(wfstream.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(wxcrt.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(wxcrt.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(xlocale.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(xlocale.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(basemsw.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(basemsw.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(crashrpt.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(crashrpt.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(dde.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(dde.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(debughlp.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(debughlp.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(dir.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(dir.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(dlmsw.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(dlmsw.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(evtloopconsole.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(evtloopconsole.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(main.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(main.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(mimetype.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(mimetype.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(regconf.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(regconf.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(registry.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(registry.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(stackwalk.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(stackwalk.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(stdpaths.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(stdpaths.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(thread.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(thread.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(timer.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(timer.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(utils.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(utils.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(utilsexc.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(utilsexc.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxbase30d.lib(volume.obj) : warning LNK4099: PDB 'wxbase30d.pdb' was not found with 'wxbase30d.lib(volume.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxbase30d.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jaricom.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jaricom.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcapimin.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcapimin.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcapistd.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcapistd.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcarith.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcarith.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jccoefct.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jccoefct.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jccolor.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jccolor.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcdctmgr.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcdctmgr.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jchuff.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jchuff.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcinit.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcinit.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcmainct.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcmainct.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcmarker.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcmarker.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcmaster.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcmaster.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcomapi.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcomapi.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcparam.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcparam.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcprepct.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcprepct.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jcsample.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jcsample.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdapimin.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdapimin.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdapistd.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdapistd.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdarith.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdarith.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdatadst.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdatadst.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdatasrc.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdatasrc.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdcoefct.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdcoefct.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdcolor.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdcolor.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jddctmgr.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jddctmgr.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdhuff.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdhuff.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdinput.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdinput.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdmainct.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdmainct.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdmarker.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdmarker.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdmaster.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdmaster.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdmerge.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdmerge.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdpostct.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdpostct.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jdsample.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jdsample.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jerror.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jerror.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jfdctflt.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jfdctflt.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jfdctfst.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jfdctfst.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jfdctint.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jfdctint.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jidctflt.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jidctflt.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jidctfst.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jidctfst.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jidctint.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jidctint.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jmemmgr.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jmemmgr.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jmemnobs.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jmemnobs.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jquant1.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jquant1.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jquant2.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jquant2.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxjpegd.lib(jutils.obj) : warning LNK4099: PDB 'wxjpegd.pdb' was not found with 'wxjpegd.lib(jutils.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxjpegd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(png.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(png.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngerror.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngerror.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngget.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngget.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngmem.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngmem.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngread.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngread.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngrio.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngrio.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngrtran.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngrtran.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngrutil.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngrutil.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngset.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngset.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngtrans.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngtrans.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngwio.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngwio.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngwrite.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngwrite.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngwtran.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngwtran.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxpngd.lib(pngwutil.obj) : warning LNK4099: PDB 'wxpngd.pdb' was not found with 'wxpngd.lib(pngwutil.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxpngd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_aux.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_aux.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_close.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_close.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_codec.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_codec.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_color.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_color.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_compress.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_compress.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_dir.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_dir.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_dirinfo.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_dirinfo.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_dirread.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_dirread.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_dirwrite.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_dirwrite.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_dumpmode.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_dumpmode.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_error.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_error.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_fax3.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_fax3.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_fax3sm.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_fax3sm.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_flush.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_flush.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_getimage.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_getimage.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_jpeg.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_jpeg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_luv.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_luv.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_lzw.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_lzw.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_next.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_next.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_open.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_open.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_packbits.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_packbits.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_pixarlog.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_pixarlog.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_predict.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_predict.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_read.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_read.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_strip.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_strip.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_swab.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_swab.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_thunder.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_thunder.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_tile.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_tile.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_warning.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_warning.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_win32.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_win32.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_write.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_write.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxtiffd.lib(tif_zip.obj) : warning LNK4099: PDB 'wxtiffd.pdb' was not found with 'wxtiffd.lib(tif_zip.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxtiffd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(adler32.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(adler32.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(crc32.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(crc32.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(deflate.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(deflate.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(gzclose.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(gzclose.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(gzlib.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(gzlib.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(gzread.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(gzread.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(gzwrite.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(gzwrite.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(inffast.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(inffast.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(inflate.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(inflate.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(inftrees.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(inftrees.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(trees.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(trees.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(uncompr.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(uncompr.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxzlibd.lib(zutil.obj) : warning LNK4099: PDB 'wxzlibd.pdb' was not found with 'wxzlibd.lib(zutil.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxzlibd.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(accelcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(accelcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(affinematrix2d.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(affinematrix2d.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(anidecod.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(anidecod.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(appcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(appcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(artprov.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(artprov.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(artstd.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(artstd.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(arttango.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(arttango.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(bmpbase.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(bmpbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(bmpbtncmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(bmpbtncmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(bookctrl.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(bookctrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(btncmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(btncmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(checkboxcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(checkboxcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(checklstcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(checklstcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(choiccmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(choiccmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(clipcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(clipcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(clrpickercmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(clrpickercmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(cmndata.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(cmndata.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(colourcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(colourcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(colourdata.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(colourdata.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(combocmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(combocmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(containr.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(containr.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(cshelp.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(cshelp.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(ctrlcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(ctrlcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(ctrlsub.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(ctrlsub.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dcbase.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dcbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dcbufcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dcbufcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dirctrlcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dirctrlcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dlgcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dlgcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dndcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dndcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dobjcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dobjcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dpycmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dpycmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dummy.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dummy.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(event.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(event.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(fldlgcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(fldlgcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(fontcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(fontcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(fontdata.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(fontdata.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(fontenumcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(fontenumcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(fontmap.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(fontmap.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(framecmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(framecmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(gdicmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(gdicmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(geometry.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(geometry.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(graphcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(graphcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(headercolcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(headercolcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(headerctrlcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(headerctrlcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(helpbase.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(helpbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(iconbndl.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(iconbndl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(imagbmp.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(imagbmp.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(image.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(image.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(imagpng.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(imagpng.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(layout.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(layout.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(lboxcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(lboxcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(listctrlcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(listctrlcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(markupparser.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(markupparser.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(menucmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(menucmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(modalhook.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(modalhook.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msgout.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msgout.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(nbkbase.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(nbkbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(ownerdrwcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(ownerdrwcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(panelcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(panelcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(paper.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(paper.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(pickerbase.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(pickerbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(popupcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(popupcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(prntbase.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(prntbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(quantize.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(quantize.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(radiobtncmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(radiobtncmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(radiocmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(radiocmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(rearrangectrl.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(rearrangectrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(rendcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(rendcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(rgncmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(rgncmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(scrolbarcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(scrolbarcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(settcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(settcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(sizer.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(sizer.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(slidercmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(slidercmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(spinbtncmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(spinbtncmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(spinctrlcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(spinctrlcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(srchcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(srchcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(statbar.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(statbar.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(statbmpcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(statbmpcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(statboxcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(statboxcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(statlinecmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(statlinecmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(stattextcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(stattextcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(stockitem.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(stockitem.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(tbarbase.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(tbarbase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(textcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(textcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(textentrycmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(textentrycmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(textmeasurecmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(textmeasurecmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(toplvcmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(toplvcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(treebase.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(treebase.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(utilscmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(utilscmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(validate.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(validate.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(valnum.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(valnum.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(valtext.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(valtext.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(wincmn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(wincmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(windowid.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(windowid.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(xpmdecod.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(xpmdecod.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(anybutton.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(anybutton.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(app.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(app.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(artmsw.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(artmsw.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(bitmap.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(bitmap.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(brush.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(brush.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(clipbrd.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(clipbrd.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(colordlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(colordlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(colour.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(colour.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(combo.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(combo.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(cursor.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(cursor.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dataobj.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dataobj.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dc.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dc.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dcclient.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dcclient.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dcmemory.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dcmemory.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dcprint.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dcprint.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dcscreen.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dcscreen.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dib.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dib.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dirdlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dirdlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(display.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(display.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dragimag.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dragimag.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dropsrc.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dropsrc.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(droptgt.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(droptgt.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(enhmeta.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(enhmeta.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(evtloop.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(evtloop.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(filedlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(filedlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(font.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(font.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(fontdlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(fontdlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(fontenum.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(fontenum.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(fontutil.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(fontutil.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(frame.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(frame.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(gdiimage.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(gdiimage.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(gdiplus.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(gdiplus.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(graphics.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(graphics.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(headerctrl.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(headerctrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(helpchm.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(helpchm.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(icon.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(icon.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(imaglist.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(imaglist.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(main.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(main.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(mdi.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(mdi.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(menuitem.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(menuitem.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(minifram.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(minifram.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msgdlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msgdlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(nativdlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(nativdlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(nonownedwnd.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(nonownedwnd.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(oleutils.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(oleutils.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(safearray.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(safearray.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(ownerdrw.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(ownerdrw.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(palette.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(palette.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(panel.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(panel.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(pen.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(pen.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(popupwin.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(popupwin.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(printdlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(printdlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(printwin.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(printwin.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(region.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(region.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(renderer.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(renderer.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(settings.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(settings.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(spinctrl.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(spinctrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(statusbar.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(statusbar.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(textentry.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(textentry.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(tooltip.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(tooltip.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(toplevel.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(toplevel.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(treectrl.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(treectrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(utilsgui.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(utilsgui.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(utilswin.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(utilswin.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(uuid.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(uuid.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(uxtheme.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(uxtheme.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(volume.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(volume.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(window.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(window.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(choicdgg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(choicdgg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(clrpickerg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(clrpickerg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(collpaneg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(collpaneg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(dirctrlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(dirctrlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(logg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(logg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(markuptext.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(markuptext.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(numdlgg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(numdlgg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(renderg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(renderg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(scrlwing.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(scrlwing.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(selstore.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(selstore.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(splitter.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(splitter.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(srchctlg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(srchctlg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(textdlgg.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(textdlgg.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(tipwin.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(tipwin.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(vlbox.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(vlbox.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(vscroll.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(vscroll.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_accel.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_accel.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_bmpbuttn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_bmpbuttn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_button.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_button.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_checkbox.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_checkbox.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_checklst.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_checklst.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_choice.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_choice.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_combobox.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_combobox.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_control.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_control.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_dialog.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_dialog.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_listbox.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_listbox.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_listctrl.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_listctrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_menu.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_menu.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_notebook.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_notebook.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_radiobox.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_radiobox.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_radiobut.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_radiobut.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_scrolbar.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_scrolbar.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_slider.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_slider.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_spinbutt.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_spinbutt.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_statbmp.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_statbmp.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_statbox.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_statbox.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_statline.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_statline.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_stattext.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_stattext.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_textctrl.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_textctrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_textmeasure.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_textmeasure.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_tglbtn.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_tglbtn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(msw_toolbar.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(msw_toolbar.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_core.lib(generic_statusbr.obj) : warning LNK4099: PDB 'wxmsw30d_core.pdb' was not found with 'wxmsw30d_core.lib(generic_statusbr.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_core.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(calctrlcmn.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(calctrlcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(datavcmn.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(datavcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(dummy.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(dummy.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(gridcmn.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(gridcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(odcombocmn.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(odcombocmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(calctrl.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(calctrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(datecontrols.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(datecontrols.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(datectrl.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(datectrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(datetimectrl.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(datetimectrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(datavgen.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(datavgen.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(editlbox.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(editlbox.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(grid.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(grid.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(gridctrl.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(gridctrl.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(grideditors.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(grideditors.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(gridsel.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(gridsel.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(odcombo.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(odcombo.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_adv.lib(splash.obj) : warning LNK4099: PDB 'wxmsw30d_adv.pdb' was not found with 'wxmsw30d_adv.lib(splash.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_adv.pdb'; linking object as if no debug info
+     1>wxmsw30d_gl.lib(dummy.obj) : warning LNK4099: PDB 'wxmsw30d_gl.pdb' was not found with 'wxmsw30d_gl.lib(dummy.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_gl.pdb'; linking object as if no debug info
+     1>wxmsw30d_gl.lib(glcmn.obj) : warning LNK4099: PDB 'wxmsw30d_gl.pdb' was not found with 'wxmsw30d_gl.lib(glcmn.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_gl.pdb'; linking object as if no debug info
+     1>wxmsw30d_gl.lib(glcanvas.obj) : warning LNK4099: PDB 'wxmsw30d_gl.pdb' was not found with 'wxmsw30d_gl.lib(glcanvas.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_gl.pdb'; linking object as if no debug info
+     1>wxmsw30d_aui.lib(dummy.obj) : warning LNK4099: PDB 'wxmsw30ud_aui.pdb' was not found with 'wxmsw30d_aui.lib(dummy.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30ud_aui.pdb'; linking object as if no debug info
+     1>wxmsw30d_aui.lib(auibar.obj) : warning LNK4099: PDB 'wxmsw30ud_aui.pdb' was not found with 'wxmsw30d_aui.lib(auibar.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30ud_aui.pdb'; linking object as if no debug info
+     1>wxmsw30d_aui.lib(auibook.obj) : warning LNK4099: PDB 'wxmsw30ud_aui.pdb' was not found with 'wxmsw30d_aui.lib(auibook.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30ud_aui.pdb'; linking object as if no debug info
+     1>wxmsw30d_aui.lib(dockart.obj) : warning LNK4099: PDB 'wxmsw30ud_aui.pdb' was not found with 'wxmsw30d_aui.lib(dockart.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30ud_aui.pdb'; linking object as if no debug info
+     1>wxmsw30d_aui.lib(floatpane.obj) : warning LNK4099: PDB 'wxmsw30ud_aui.pdb' was not found with 'wxmsw30d_aui.lib(floatpane.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30ud_aui.pdb'; linking object as if no debug info
+     1>wxmsw30d_aui.lib(framemanager.obj) : warning LNK4099: PDB 'wxmsw30ud_aui.pdb' was not found with 'wxmsw30d_aui.lib(framemanager.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30ud_aui.pdb'; linking object as if no debug info
+     1>wxmsw30d_aui.lib(tabart.obj) : warning LNK4099: PDB 'wxmsw30ud_aui.pdb' was not found with 'wxmsw30d_aui.lib(tabart.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30ud_aui.pdb'; linking object as if no debug info
+     1>wxmsw30d_aui.lib(tabmdi.obj) : warning LNK4099: PDB 'wxmsw30ud_aui.pdb' was not found with 'wxmsw30d_aui.lib(tabmdi.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30ud_aui.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(dummy.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(dummy.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(advprops.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(advprops.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(editors.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(editors.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(manager.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(manager.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(property.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(property.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(propgrid.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(propgrid.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(propgridiface.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(propgridiface.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(propgridpagestate.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(propgridpagestate.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+     1>wxmsw30d_propgrid.lib(props.obj) : warning LNK4099: PDB 'wxmsw30d_propgrid.pdb' was not found with 'wxmsw30d_propgrid.lib(props.obj)' or at 'E:\Programming\BeyondEngine_GitHub_Publish\bin\wxmsw30d_propgrid.pdb'; linking object as if no debug info
+         BeyondEngineEditor.vcxproj -> E:\Programming\BeyondEngine_GitHub_Publish\bin\BeyondEngineEditor_d.exe
+     1>Done Building Project "E:\Programming\BeyondEngine_GitHub_Publish\Tool\BeyondEngineEditor\BeyondEngineEditor.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:02:00.38

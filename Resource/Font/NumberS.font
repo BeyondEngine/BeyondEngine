@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Font Name="NumberS" DefaultWidth="16" DefaultHeight="24">
+	<Glyph Char="0" Atlas="MainUI.xml" SubTexture="Number_02_0"/>
+	<Glyph Char="1" Atlas="MainUI.xml" SubTexture="Number_02_1"/>
+	<Glyph Char="2" Atlas="MainUI.xml" SubTexture="Number_02_2"/>
+	<Glyph Char="3" Atlas="MainUI.xml" SubTexture="Number_02_3"/>
+	<Glyph Char="4" Atlas="MainUI.xml" SubTexture="Number_02_4"/>
+	<Glyph Char="5" Atlas="MainUI.xml" SubTexture="Number_02_5"/>
+	<Glyph Char="6" Atlas="MainUI.xml" SubTexture="Number_02_6"/>
+	<Glyph Char="7" Atlas="MainUI.xml" SubTexture="Number_02_7"/>
+	<Glyph Char="8" Atlas="MainUI.xml" SubTexture="Number_02_8"/>
+	<Glyph Char="9" Atlas="MainUI.xml" SubTexture="Number_02_9"/>
+</Font>

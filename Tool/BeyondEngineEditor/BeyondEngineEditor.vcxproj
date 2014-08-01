@@ -1,0 +1,329 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Export|Win32">
+      <Configuration>Export</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{D103AAAA-25A7-482C-8BD5-CD46E8CD98AD}</ProjectGuid>
+    <RootNamespace>BeyondEngineEditor</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(Configuration).win32\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>$(ProjectName)_d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'">
+    <IntDir>$(Configuration).win32\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <TargetName>$(ProjectName)_e</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(Configuration).win32\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include\;..\..\Include\glfw3\include\win32;..\..\include\platform\win32;..\..\Include\platform\win32\gles\include\OGLES;..\..\Lib\wxWidgets_3_0_mb\include;..\..\Lib\wxWidgets_3_0_mb\include\msvc;..\..\Lib;..\..\SourceCode\;..\..\SourceCode\Platform;..\..\SourceCode\Platform\win32;..\..\SourceCode\Utility;..\..\SourceCode\Utility\BeatsUtility\Platform;..\..\SourceCode\Utility\BeatsUtility\Platform\Win32;..\..\GameProject;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;EDITOR_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DisableSpecificWarnings>4740</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glfw3.lib;glew32.lib;Utility_d.lib;opengl32.lib;libzlib.lib;libpng.lib;libjpeg.lib;libtiff.lib;libwebp.lib;freetype.lib;winmm.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;components_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\Lib\Windebuggingtool\lib\i386;..\..\Include\Beats\Prebuilt\Win32;..\..\Lib\wxWidgets_3_0_mb\lib\vc_lib;..\..\Include\glfw3\prebuilt\win32;..\..\Include\platform\win32\gles\prebuilt;..\..\Include\platform\win32\zlib\prebuilt;..\..\Include\jpeg\prebuilt\win32;..\..\Include\png\prebuilt\win32;..\..\Include\tiff\prebuilt\win32;..\..\Include\freetype2\prebuilt\win32;..\..\Include\webp\prebuilt\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;libcmt.lib;libcmtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\Lib\wxWidgets_3_0_mb\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include\;..\..\Include\glfw3\include\win32;..\..\include\platform\win32;..\..\Include\platform\win32\gles\include\OGLES;..\..\Lib\wxWidgets_3_0_mb\include;..\..\Lib\wxWidgets_3_0_mb\include\msvc;..\..\Lib;..\..\SourceCode\;..\..\SourceCode\Platform;..\..\SourceCode\Platform\win32;..\..\SourceCode\Utility;..\..\SourceCode\Utility\BeatsUtility\Platform;..\..\SourceCode\Utility\BeatsUtility\Platform\Win32;..\..\GameProject;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;EDITOR_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DisableSpecificWarnings>4740</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glfw3.lib;glew32.lib;Utility_d.lib;opengl32.lib;libzlib.lib;libpng.lib;libjpeg.lib;libtiff.lib;libwebp.lib;freetype.lib;winmm.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;components_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\Lib\Windebuggingtool\lib\i386;..\..\Include\Beats\Prebuilt\Win32;..\..\Lib\wxWidgets_3_0_mb\lib\vc_lib;..\..\Include\glfw3\prebuilt\win32;..\..\Include\platform\win32\gles\prebuilt;..\..\Include\platform\win32\zlib\prebuilt;..\..\Include\jpeg\prebuilt\win32;..\..\Include\png\prebuilt\win32;..\..\Include\tiff\prebuilt\win32;..\..\Include\freetype2\prebuilt\win32;..\..\Include\webp\prebuilt\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;libcmt.lib;libcmtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\Lib\wxWidgets_3_0_mb\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\..\include\;..\..\Include\glfw3\include\win32;..\..\include\platform\win32;..\..\Include\platform\win32\gles\include\OGLES;..\..\Lib\wxWidgets_3_0_mb\include;..\..\Lib\wxWidgets_3_0_mb\include\msvc;..\..\Lib;..\..\SourceCode\;..\..\SourceCode\Platform;..\..\SourceCode\Platform\win32;..\..\SourceCode\Utility;..\..\SourceCode\Utility\BeatsUtility\Platform;..\..\SourceCode\Utility\BeatsUtility\Platform\Win32;..\..\GameProject;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;EDITOR_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4740</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glfw3.lib;glew32.lib;Utility_r.lib;opengl32.lib;libzlib.lib;libpng.lib;libjpeg.lib;libtiff.lib;libwebp.lib;freetype.lib;winmm.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;components_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\Include\freetype2\prebuilt\win32;..\..\Include\webp\prebuilt\win32;..\..\Include\tiff\prebuilt\win32;..\..\Include\jpeg\prebuilt\win32;..\..\Include\png\prebuilt\win32;..\..\Include\glfw3\prebuilt\win32;..\..\Include\Beats\Prebuilt\win32;..\..\Include\platform\win32\zlib\prebuilt;..\..\Include\platform\win32\gles\prebuilt;..\..\Lib\Windebuggingtool\lib\i386;..\..\Lib\wxWidgets_3_0_mb\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <IgnoreSpecificDefaultLibraries>msvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\..\Lib\wxWidgets_3_0_mb\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="AboutDlg.cpp" />
+    <ClCompile Include="AnimationGLWindow.cpp" />
+    <ClCompile Include="AniViewAgent.cpp" />
+    <ClCompile Include="BatchEditWnd.cpp" />
+    <ClCompile Include="BoolPropertyDescription.cpp" />
+    <ClCompile Include="ColorPropertyDescription.cpp" />
+    <ClCompile Include="ComponentInfoWnd.cpp" />
+    <ClCompile Include="ComponentRenderObject.cpp" />
+    <ClCompile Include="EditCameraWnd.cpp" />
+    <ClCompile Include="ComponentFileTreeItemData.cpp" />
+    <ClCompile Include="ComponentGraphics_GL.cpp" />
+    <ClCompile Include="ComponentInstanceTreeItemData.cpp" />
+    <ClCompile Include="ComponentTreeItemData.cpp" />
+    <ClCompile Include="ConstantCurveEditor.cpp" />
+    <ClCompile Include="ConstantCurveProperty.cpp" />
+    <ClCompile Include="DataViewTreeModel.cpp" />
+    <ClCompile Include="DataViewTreeModelNode.cpp" />
+    <ClCompile Include="DoublePropertyDescription.cpp" />
+    <ClCompile Include="EditAnimationDialog.cpp" />
+    <ClCompile Include="EditDialogBase.cpp" />
+    <ClCompile Include="EditLanguageDialog.cpp" />
+    <ClCompile Include="EditorConfig.cpp" />
+    <ClCompile Include="EditorSceneWindow.cpp" />
+    <ClCompile Include="EditPerformanceDialog.cpp" />
+    <ClCompile Include="GradientColorBoard.cpp" />
+    <ClCompile Include="GradientColorPropertyDescription.cpp" />
+    <ClCompile Include="GradientCtrl.cpp" />
+    <ClCompile Include="GradientCursor.cpp" />
+    <ClCompile Include="GradientDialog.cpp" />
+    <ClCompile Include="PropertyGridEditor.cpp" />
+    <ClCompile Include="SceneGridWnd.cpp" />
+    <ClCompile Include="SplineDialog.cpp" />
+    <ClCompile Include="EffectViewAgent.cpp" />
+    <ClCompile Include="EngineProperGridManager.cpp" />
+    <ClCompile Include="EnginePropertyGrid.cpp" />
+    <ClCompile Include="EngineSplash.cpp" />
+    <ClCompile Include="EnumPropertyDescription.cpp" />
+    <ClCompile Include="BeyondEngineEditorComponentWindow.cpp" />
+    <ClCompile Include="BeyondEngineEditorGLWindow.cpp" />
+    <ClCompile Include="EditorMainFrame.cpp" />
+    <ClCompile Include="FilePropertyDescription.cpp" />
+    <ClCompile Include="FloatPropertyDescription.cpp" />
+    <ClCompile Include="GameViewAgent.cpp" />
+    <ClCompile Include="IntPropertyDescription.cpp" />
+    <ClCompile Include="ListPropertyDescription.cpp" />
+    <ClCompile Include="EngineEditor.cpp" />
+    <ClCompile Include="MapPropertyDescription.cpp" />
+    <ClCompile Include="PropertyRegister.cpp" />
+    <ClCompile Include="PropertyTrigger.cpp" />
+    <ClCompile Include="PtrPropertyDescription.cpp" />
+    <ClCompile Include="SceneViewAgent.cpp" />
+    <ClCompile Include="SingleTypeChoicePropertyBase.cpp" />
+    <ClCompile Include="SplineGLWindow.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Export|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StringPropertyDescription.cpp" />
+    <ClCompile Include="DataViewCheckRender.cpp" />
+    <ClCompile Include="DataViewCtrl.cpp" />
+    <ClCompile Include="TerrainViewAgent.cpp" />
+    <ClCompile Include="TexturePreviewDialog.cpp" />
+    <ClCompile Include="TexturePropertyDescription.cpp" />
+    <ClCompile Include="timebarevent.cpp" />
+    <ClCompile Include="timebarframe.cpp" />
+    <ClCompile Include="timebaritem.cpp" />
+    <ClCompile Include="timebaritemcontainer.cpp" />
+    <ClCompile Include="DataViewListModel.cpp" />
+    <ClCompile Include="timebarscale.cpp" />
+    <ClCompile Include="TransparentText.cpp" />
+    <ClCompile Include="UIntPropertyDescription.cpp" />
+    <ClCompile Include="UIViewAgent.cpp" />
+    <ClCompile Include="Vec2fPropertyDescription.cpp" />
+    <ClCompile Include="Vec3fPropertyDescription.cpp" />
+    <ClCompile Include="Vec4fPropertyDescription.cpp" />
+    <ClCompile Include="ViewAgentBase.cpp" />
+    <ClCompile Include="wxDialogEditor.cpp" />
+    <ClCompile Include="WxGLRenderWindow.cpp" />
+    <ClCompile Include="wxPtrButtonEditor.cpp" />
+    <ClCompile Include="wxWidgetsPropertyBase.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="AnimationGLWindow.h" />
+    <ClInclude Include="AniViewAgent.h" />
+    <ClInclude Include="BatchEditWnd.h" />
+    <ClInclude Include="BoolPropertyDescription.h" />
+    <ClInclude Include="ColorPropertyDescription.h" />
+    <ClInclude Include="ComponentInfoWnd.h" />
+    <ClInclude Include="ComponentRenderObject.h" />
+    <ClInclude Include="EditCameraWnd.h" />
+    <ClInclude Include="ComponentFileTreeItemData.h" />
+    <ClInclude Include="ComponentGraphics_GL.h" />
+    <ClInclude Include="ComponentInstanceTreeItemData.h" />
+    <ClInclude Include="ComponentTreeItemData.h" />
+    <ClInclude Include="ConstantCurveEditor.h" />
+    <ClInclude Include="ConstantCurveProperty.h" />
+    <ClInclude Include="DataViewTreeModel.h" />
+    <ClInclude Include="DataViewTreeModelNode.h" />
+    <ClInclude Include="DoublePropertyDescription.h" />
+    <ClInclude Include="EditAnimationDialog.h" />
+    <ClInclude Include="EditDialogBase.h" />
+    <ClInclude Include="EditLanguageDialog.h" />
+    <ClInclude Include="EditorConfig.h" />
+    <ClInclude Include="EditorSceneWindow.h" />
+    <ClInclude Include="EditPerformanceDialog.h" />
+    <ClInclude Include="GradientColorBoard.h" />
+    <ClInclude Include="GradientColorPropertyDescription.h" />
+    <ClInclude Include="GradientCtrl.h" />
+    <ClInclude Include="GradientCursor.h" />
+    <ClInclude Include="GradientDialog.h" />
+    <ClInclude Include="PropertyGridEditor.h" />
+    <ClInclude Include="SceneGridWnd.h" />
+    <ClInclude Include="SplineDialog.h" />
+    <ClInclude Include="EffectViewAgent.h" />
+    <ClInclude Include="EngineProperGridManager.h" />
+    <ClInclude Include="EnginePropertyGrid.h" />
+    <ClInclude Include="EngineSplash.h" />
+    <ClInclude Include="EnumPropertyDescription.h" />
+    <ClInclude Include="BeyondEngineEditorComponentWindow.h" />
+    <ClInclude Include="BeyondEngineEditorGLWindow.h" />
+    <ClInclude Include="EditorMainFrame.h" />
+    <ClInclude Include="FilePropertyDescription.h" />
+    <ClInclude Include="FloatPropertyDescription.h" />
+    <ClInclude Include="GameViewAgent.h" />
+    <ClInclude Include="TexturePreviewDialog.h" />
+    <ClInclude Include="wxDialogEditor.h" />
+    <ClInclude Include="IntPropertyDescription.h" />
+    <ClInclude Include="ListPropertyDescription.h" />
+    <ClInclude Include="EngineEditor.h" />
+    <ClInclude Include="MapPropertyDescription.h" />
+    <ClInclude Include="PropertyTrigger.h" />
+    <ClInclude Include="PtrPropertyDescription.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="SceneViewAgent.h" />
+    <ClInclude Include="SingleTypeChoicePropertyBase.h" />
+    <ClInclude Include="SplineGLWindow.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StringPropertyDescription.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="DataViewCheckRender.h" />
+    <ClInclude Include="DataViewCtrl.h" />
+    <ClInclude Include="TerrainViewAgent.h" />
+    <ClInclude Include="TexturePropertyDescription.h" />
+    <ClInclude Include="timebarevent.h" />
+    <ClInclude Include="timebarframe.h" />
+    <ClInclude Include="timebaritem.h" />
+    <ClInclude Include="timebaritemcontainer.h" />
+    <ClInclude Include="DataViewListModel.h" />
+    <ClInclude Include="timebarscale.h" />
+    <ClInclude Include="TransparentText.h" />
+    <ClInclude Include="UIntPropertyDescription.h" />
+    <ClInclude Include="UIViewAgent.h" />
+    <ClInclude Include="Vec2fPropertyDescription.h" />
+    <ClInclude Include="Vec3fPropertyDescription.h" />
+    <ClInclude Include="Vec4fPropertyDescription.h" />
+    <ClInclude Include="ViewAgentBase.h" />
+    <ClInclude Include="WxGLRenderWindow.h" />
+    <ClInclude Include="wxPtrButtonEditor.h" />
+    <ClInclude Include="wxWidgetsPropertyBase.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\BeyondEngine.vcxproj">
+      <Project>{e5f33c6d-d038-47b8-9b4a-b4a50ee22256}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BeyondEngineEditor.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

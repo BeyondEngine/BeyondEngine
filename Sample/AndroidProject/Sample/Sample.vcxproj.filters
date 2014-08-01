@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source files">
+      <UniqueIdentifier>{3de6a87e-c666-4732-a5a5-ce1732c8368b}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{a9d908a5-b5a2-4e18-b3a9-631ecc9fd66c}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{bbb2f1a2-1f45-479f-8de5-bbc22bc410ef}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Java Source Files">
+      <UniqueIdentifier>{a99a763a-d759-4afb-a15d-22574e52e04d}</UniqueIdentifier>
+      <Extensions>*.java</Extensions>
+    </Filter>
+    <Filter Include="Java Source Files\com">
+      <UniqueIdentifier>{574f98a0-462b-4dea-b98b-9647e37b8a63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Java Source Files\com\sample">
+      <UniqueIdentifier>{08dbec45-610d-4454-8b2c-74a8ca0968a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Java Source Files\com\sample\helper">
+      <UniqueIdentifier>{1c58fb5a-8275-4caf-88ff-cdb9169d7b4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Java Source Files\com\sample\Sample">
+      <UniqueIdentifier>{7bc94896-9274-45b9-9e83-3326ffa1b5a1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="AndroidManifest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="jni\Android.mk" />
+    <None Include="jni\Application.mk" />
+    <None Include="src\com\sample\helper\NDKHelper.java">
+      <Filter>Java Source Files\com\sample\helper</Filter>
+    </None>
+    <None Include="src\com\sample\Sample\Cocos2dxHelper.java">
+      <Filter>Java Source Files\com\sample\Sample</Filter>
+    </None>
+    <None Include="src\com\sample\Sample\Cocos2dxMusic.java">
+      <Filter>Java Source Files\com\sample\Sample</Filter>
+    </None>
+    <None Include="src\com\sample\Sample\Cocos2dxSound.java">
+      <Filter>Java Source Files\com\sample\Sample</Filter>
+    </None>
+    <None Include="src\com\sample\Sample\SampleNativeActivity.java">
+      <Filter>Java Source Files\com\sample\Sample</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\main.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\SampleApplication.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

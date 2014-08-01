@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<Root>
+    <Components>
+        <Component GUID="0x1458a522" Name="CScene">
+            <Instance Id="0" PosX="-42" PosY="-1">
+                <VariableNode Type="6" Variable="m_strName" SavedValue="ProtossScene" />
+                <VariableNode Type="15" Variable="m_cameraInitPos" SavedValue="248.5, 320, 248.5">
+                    <VariableNode Type="2" Variable="x" SavedValue="248.5" />
+                    <VariableNode Type="2" Variable="y" SavedValue="320" />
+                    <VariableNode Type="2" Variable="z" SavedValue="248.5" />
+                </VariableNode>
+                <VariableNode Type="15" Variable="m_cameraInitRotation" SavedValue="-50, 45, 0">
+                    <VariableNode Type="2" Variable="x" SavedValue="-50" />
+                    <VariableNode Type="2" Variable="y" SavedValue="45" />
+                    <VariableNode Type="2" Variable="z" SavedValue="0" />
+                </VariableNode>
+                <VariableNode Type="2" Variable="m_fCameraInitNear" SavedValue="50" />
+                <VariableNode Type="2" Variable="m_fCameraInitFar" SavedValue="5500" />
+                <VariableNode Type="2" Variable="m_fCameraInitFov" SavedValue="22.83" />
+                <Dependency VariableName="m_node3DVector">
+                    <DependencyNode Id="2" Guid="0xe3bb1421" />
+                </Dependency>
+            </Instance>
+        </Component>
+        <Component GUID="0xe3bb1421" Name="CStaticMesh">
+            <Instance Id="2" PosX="-31" PosY="-5">
+                <VariableNode Type="6" Variable="m_strName" SavedValue="Protoss" />
+                <VariableNode Type="1" Variable="m_bVisible" SavedValue="True" />
+                <VariableNode Type="15" Variable="m_pos" SavedValue="0, 0, 0">
+                    <VariableNode Type="2" Variable="x" SavedValue="0" />
+                    <VariableNode Type="2" Variable="y" SavedValue="0" />
+                    <VariableNode Type="2" Variable="z" SavedValue="0" />
+                </VariableNode>
+                <VariableNode Type="15" Variable="m_rotation" SavedValue="0, 0, 0">
+                    <VariableNode Type="2" Variable="x" SavedValue="0" />
+                    <VariableNode Type="2" Variable="y" SavedValue="0" />
+                    <VariableNode Type="2" Variable="z" SavedValue="0" />
+                </VariableNode>
+                <VariableNode Type="15" Variable="m_scale" SavedValue="1, 1, 1">
+                    <VariableNode Type="2" Variable="x" SavedValue="1" />
+                    <VariableNode Type="2" Variable="y" SavedValue="1" />
+                    <VariableNode Type="2" Variable="z" SavedValue="1" />
+                </VariableNode>
+                <VariableNode Type="12" Variable="m_path" SavedValue="protoss.sce" />
+            </Instance>
+        </Component>
+    </Components>
+</Root>

@@ -1,0 +1,8 @@
+varying TEXP vec2 texCoord0;
+
+uniform SAMP sampler2D u_tex0;
+
+void main()
+{
+    gl_FragColor = texture2D(u_tex0, texCoord0);
+}

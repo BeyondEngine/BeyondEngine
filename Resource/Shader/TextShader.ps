@@ -1,0 +1,23 @@
+/* file: TextShader.ps
+*/
+
+varying COLP vec4 color;
+varying COLP vec4 borderColor;
+varying TEXP vec2 texCoord0;
+
+uniform SAMP sampler2D u_tex0;
+
+void main()
+{
+	COLP vec4 texColor = texture2D(u_tex0, texCoord0);
+	COLP float fBorderAlpha = 0;
+	COLP float fFontAlpha = 1.0;
+	if(borderColor.a > 0)
+	{
+		fBorderAlpha = texColor.r;
+		fFontAlpha = texColor.a;
+	}
+	texColor.rgb = color.rgb * fFontAlpha + borderColor.rgb * (1.0 -fFontAlpha);
+	texColor.a = (fBorderAlpha * texColor.a > 0.0 ? 255.0 : (fBorderAlpha + texColor.a)) * color.a;
+	gl_FragColor = texColor;
+}

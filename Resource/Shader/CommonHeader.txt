@@ -1,0 +1,20 @@
+/* file: CommonHeader.txt
+ */
+#ifdef GL_ES
+	#define HIGHP highp
+	#define MEDIUMP mediump
+	#define LOWP lowp
+#else
+	#define HIGHP
+	#define MEDIUMP
+	#define LOWP
+#endif
+
+#define POSP HIGHP		//precision for position
+#define TEXP MEDIUMP	//precision for tex coord
+#define COLP LOWP		//precision for color
+#define BIDXP LOWP		//precision for bone index
+#define WEIP MEDIUMP	//precision for weights
+#define MATP HIGHP		//precision for mat4
+#define SAMP LOWP		//precision for sampler2D
+

@@ -1,0 +1,18 @@
+/* file: billbord.ps
+ */
+varying COLP vec4 colortmp;
+varying TEXP vec2 texCoord0;
+
+uniform SAMP sampler2D u_tex0;
+
+void main()
+{
+    COLP vec4 texColor = texture2D( u_tex0, texCoord0 );
+    COLP vec4 outColor;
+    outColor.r = ( 1.0 - texColor.a ) * colortmp.r + colortmp.r * texColor.r;
+    outColor.g = ( 1.0 - texColor.a ) * colortmp.g + colortmp.g * texColor.g;
+    outColor.b = ( 1.0 - texColor.a ) * colortmp.b + colortmp.b * texColor.b;
+    outColor.a = 1.0 - ( 1.0 - texColor.a ) * ( 1.0 - colortmp.a );
+
+    gl_FragColor = outColor;
+}

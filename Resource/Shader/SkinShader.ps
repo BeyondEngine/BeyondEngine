@@ -1,0 +1,10 @@
+/* file: SkinShader.ps
+ */
+varying TEXP vec2 TexCoord0;
+
+uniform SAMP sampler2D u_tex0;
+
+void main()
+{
+	gl_FragColor = texture(u_tex0, TexCoord0);
+}

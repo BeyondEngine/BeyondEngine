@@ -1,0 +1,39 @@
+/* file: GUIShader.ps 
+*/
+
+varying TEXP vec2 texCoord0;
+varying COLP vec4 color;
+
+uniform COLP vec4 u_melody;
+uniform SAMP sampler2D u_tex0;
+
+void main()
+{
+    COLP vec4 texColor = texture2D(u_tex0, texCoord0);
+    if (u_melody.a > 0.0)
+    {
+        COLP float avgLumR = 0.5;
+        COLP float avgLumG = 0.5;
+        COLP float avgLumB = 0.5;
+      
+        // Luminance coefficients for getting luminance from the image
+        COLP vec3 LuminanceCoeff = vec3 (0.2125, 0.7154, 0.0721);
+      
+        // Operation for brightmess
+        COLP vec3 color = texColor.rgb;
+        COLP vec3 avgLumin = vec3(avgLumR, avgLumG, avgLumB);
+        COLP vec3 brtColor = color * u_melody.x;
+        COLP float intensityf = dot(brtColor, LuminanceCoeff);
+        COLP vec3 intensity = vec3(intensityf, intensityf, intensityf);
+      
+        // Operation for saturation
+        COLP vec3 satColor = mix(intensity, brtColor, u_melody.z);
+      
+        // Operation for contrast
+        COLP vec3 conColor = mix(avgLumin, satColor, u_melody.y);
+        texColor.rgb = conColor;
+    }
+    texColor += vec4(color.r, color.g, color.b, 0);
+    texColor.a = texColor.a * color.a;
+    gl_FragColor = texColor;
+}

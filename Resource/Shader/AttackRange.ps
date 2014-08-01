@@ -1,0 +1,50 @@
+uniform COLP vec4 u_color;
+uniform POSP float u_minRangeRate;
+varying TEXP vec2 texCoord0;
+void main()
+{
+	gl_FragColor = u_color;
+	POSP float fDistanceFromCenter = length(texCoord0 - vec2(0.5, 0.5));
+	if ((fDistanceFromCenter <= 0.5) && (fDistanceFromCenter >= 0.5 * u_minRangeRate))
+	{
+		POSP float fOffsetMaxOutside = 0.01;
+		POSP float fOffsetMaxInside = 0.02;
+		
+		POSP float fOffsetMinOutside = 0.02;
+		POSP float fOffsetMinInside = 0.01;
+		
+		POSP float fPowerTime = 1.5;
+		POSP float fCommonAlpha = 0.25;
+		
+		POSP float fScale = 0.65;
+		
+		POSP float fMaxHighLightPos = 0.5 - fOffsetMaxOutside;
+		POSP float fMinHighLightPos = 0.5 * u_minRangeRate + fOffsetMinInside;
+		POSP float fRet = 0.0;
+		if (fDistanceFromCenter >= fMaxHighLightPos)
+		{		
+			fRet = pow(1.0 - (fDistanceFromCenter - fMaxHighLightPos) / fOffsetMaxOutside, fPowerTime) * fScale;
+		}
+		else if (fDistanceFromCenter >= fMaxHighLightPos - fOffsetMaxInside)
+		{
+			fRet = max(pow(1.0 - (fMaxHighLightPos - fDistanceFromCenter) / fOffsetMaxInside, fPowerTime), fCommonAlpha) * fScale;
+		}
+		else if (fDistanceFromCenter > fMinHighLightPos && fDistanceFromCenter - fMinHighLightPos <= fOffsetMinOutside)
+		{
+			fRet = max(pow(1.0 - (fDistanceFromCenter - fMinHighLightPos) / fOffsetMinOutside, fPowerTime), fCommonAlpha) * fScale;
+		}
+		else if (fDistanceFromCenter < fMinHighLightPos &&  fMinHighLightPos - fDistanceFromCenter <= fOffsetMinInside)
+		{
+			fRet = pow(1.0 - (fMinHighLightPos - fDistanceFromCenter) / fOffsetMinInside, fPowerTime) * fScale;
+		}
+		else
+		{
+			fRet = fCommonAlpha * fScale;
+		}
+		gl_FragColor.a = fRet;
+	}
+	else
+	{
+		gl_FragColor.a = 0.0;
+	}
+}
