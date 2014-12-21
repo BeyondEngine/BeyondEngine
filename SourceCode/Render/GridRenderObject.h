@@ -14,13 +14,14 @@ public:
 
     virtual void DoRender() override;
     void GetGridStartPos(int& x, int& y) const;
-    size_t GetGridWidth() const;
-    size_t GetGridHeight() const;
+    uint32_t GetGridWidth() const;
+    uint32_t GetGridHeight() const;
+    float GetPositiveLineLength() const;
     float GetGridDistance() const;
     float GetLineWidth() const;
     void SetGridStartPos(int x, int y);
-    void SetGridWidth(size_t uWidth);
-    void SetGridHeight(size_t uHeight);
+    void SetGridWidth(uint32_t uWidth);
+    void SetGridHeight(uint32_t uHeight);
     void SetGridDistance(float fDis);
     void SetLineWidth(float fLineWidth);
     void SetPositiveLineLength(float fLineLength);
@@ -36,8 +37,8 @@ private:
 private:
     int m_nStartGridPosX;
     int m_nStartGridPosZ;
-    size_t m_uGridWidth;
-    size_t m_uGridHeight;
+    uint32_t m_uGridWidth;
+    uint32_t m_uGridHeight;
     float m_fGridDistance;
     float m_fLineWidth;
     float m_fPositiveLineLength;

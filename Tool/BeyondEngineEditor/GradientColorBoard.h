@@ -15,20 +15,19 @@ public:
         const wxString& name = wxT("BeyondEngineEditorGLWindow"));
     virtual ~CGradientColorBoard();
 
-    void InitCtrl();
     void DrawBackGround(wxDC* pDc);
-    void SetBmp(wxBitmap& colorBmp, wxBitmap& maskBmp);
+    void SetBmp(wxBitmap& colorBmp, wxBitmap& alphaBmp);
     wxColor GetColor(int nPositionX, ECursorType eType);
     wxColor GetColorWithAlpha(wxPoint point);
-    wxBitmap& GetForeGroundBmp();
+    const wxImage& GetImage() const;
 
 protected:
     void OnPaint(wxPaintEvent& event);
 
 private:
-    wxBitmap m_drawBmp;
     wxBitmap m_foreGroundBmp;
-    wxBitmap m_maskBmp;
+    wxBitmap m_alphaBmp;
+    wxImage m_mergeImage;
     DECLARE_EVENT_TABLE()
 };
 #endif

@@ -9,7 +9,7 @@ public:
     CShaderProgram(GLuint uVertexShader, GLuint uPixelShader);
     ~CShaderProgram();
     
-    GLuint ID() const;
+    GLuint ID();
 
     GLuint GetVertexShader() const;
     GLuint GetPixelShader() const;
@@ -21,8 +21,6 @@ private:
     GLuint m_uProgram;
     GLuint m_uVertexShader;
     GLuint m_uPixelShader;
-
-    std::map<ECommonUniformType, GLuint> m_uniformLocations;
 };
 
 #endif

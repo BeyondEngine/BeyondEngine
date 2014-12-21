@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "EditMemoryDialog.h"
-#include "Utility\MemoryDetector\MemoryDetector.h"
+#include "Utility/MemoryDetector/MemoryDetector.h"
 #include <Psapi.h>
 #include <shellapi.h>
 #include "EditorMainFrame.h"

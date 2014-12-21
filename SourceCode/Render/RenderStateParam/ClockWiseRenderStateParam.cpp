@@ -18,9 +18,9 @@ void CClockWiseRenderStateParam::Apply()
     CRenderer::GetInstance()->FrontFace(m_nValue);
 }
 
-ERenderState CClockWiseRenderStateParam::GetRenderStateType() const
+ERenderStateParamType CClockWiseRenderStateParam::GetRenderStateType() const
 {
-    return eRS_ClockWiseMode;
+    return eRSPT_ClockWiseMode;
 }
 
 void CClockWiseRenderStateParam::SetClockWiseType( EClockWiseType type )
@@ -35,14 +35,14 @@ CClockWiseRenderStateParam::EClockWiseType CClockWiseRenderStateParam::GetClockW
 
 bool CClockWiseRenderStateParam::operator==( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_ClockWiseMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_ClockWiseMode );
     CClockWiseRenderStateParam* pOther = (CClockWiseRenderStateParam*)&other;
     return m_nValue == pOther->m_nValue;
 }
 
 bool CClockWiseRenderStateParam::operator!=( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_ClockWiseMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_ClockWiseMode );
     CClockWiseRenderStateParam* pOther = (CClockWiseRenderStateParam*)&other;
     return m_nValue != pOther->m_nValue;
 }

@@ -2,11 +2,12 @@
 #define BEYOND_ENGINE_EDITOR_WXUICONTROL_WXWIDGETSPROPERTY_PGEDITOR_WXDIALOGEDITOR_H__INCLUDE
 
 #include <wx/propgrid/propgrid.h>
+#include "wxPGEditorBase.h"
 
-class wxDialogEditor : public wxPGTextCtrlEditor
+class wxDialogEditor : public wxPGEditorBase
 {
     DECLARE_DYNAMIC_CLASS(wxDialogEditor)
-    typedef wxPGTextCtrlEditor super;
+    typedef wxPGEditorBase super;
 public:
     wxDialogEditor();
     wxDialogEditor(wxDialog* pDialog);

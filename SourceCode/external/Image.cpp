@@ -1,6 +1,6 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Image.h"
-
+#include "Configuration.h"
 #include "external/ZipUtils.h"
 #include "external/S3tc.h"
 #include "jpeglib.h"
@@ -10,8 +10,7 @@
 #include "external/TgaLib.h"
 #include "external/Atitc.h"
 #include "external/etc1/etc1.h"
-#include "Configuration.h"
-#include "Utility/BeatsUtility/FilePathTool.h"
+#include "pvr.h"
 
 #pragma warning(disable:4611) // for load png warning
 
@@ -62,7 +61,31 @@ namespace
             png_error(png_ptr, "pngReaderCallback failed");
         }
     }
+}
 
+PixelFormat getDevicePixelFormat(PixelFormat format)
+{
+    switch (format) 
+    {
+    case PixelFormat::PVRTC4:
+    case PixelFormat::PVRTC4A:
+    case PixelFormat::PVRTC2:
+    case PixelFormat::PVRTC2A:
+        if (!CConfiguration::GetInstance()->SupportsPVRTC())
+        {
+            format = PixelFormat::RGBA8888;
+        }
+        break;
+    case PixelFormat::ETC:
+        if (!CConfiguration::GetInstance()->SupportsETC())
+        {
+            format = PixelFormat::RGB888;
+        }
+        break;
+    default:
+        break;
+    }
+    return format;
 }
 
 namespace
@@ -191,23 +214,25 @@ namespace
 {
     static const int PVR_TEXTURE_FLAG_TYPE_MASK = 0xff;
 
+    static bool _PVRHaveAlphaPremultiplied = false;
+
     // Values taken from PVRTexture.h from http://www.imgtec.com
     enum class PVR2TextureFlag
     {
-        Mipmap         = (1<<8),        // has mip map levels
-        Twiddle        = (1<<9),        // is twiddled
-        Bumpmap        = (1<<10),       // has normals encoded for a bump map
-        Tiling         = (1<<11),       // is bordered for tiled pvr
-        Cubemap        = (1<<12),       // is a cubemap/skybox
-        FalseMipCol    = (1<<13),       // are there false colored MIP levels
-        Volume         = (1<<14),       // is this a volume texture
-        Alpha          = (1<<15),       // v2.1 is there transparency info in the texture
-        VerticalFlip   = (1<<16),       // v2.1 is the texture vertically flipped
+        Mipmap = (1 << 8),        // has mip map levels
+        Twiddle = (1 << 9),        // is twiddled
+        Bumpmap = (1 << 10),       // has normals encoded for a bump map
+        Tiling = (1 << 11),       // is bordered for tiled pvr
+        Cubemap = (1 << 12),       // is a cubemap/skybox
+        FalseMipCol = (1 << 13),       // are there false colored MIP levels
+        Volume = (1 << 14),       // is this a volume texture
+        Alpha = (1 << 15),       // v2.1 is there transparency info in the texture
+        VerticalFlip = (1 << 16),       // v2.1 is the texture vertically flipped
     };
 
     enum class PVR3TextureFlag
     {
-        PremultipliedAlpha    = (1<<1)    // has premultiplied alpha
+        PremultipliedAlpha = (1 << 1)    // has premultiplied alpha
     };
 
     static const char gPVRTexIdentifier[5] = "PVR!";
@@ -232,20 +257,48 @@ namespace
     // v3
     enum class PVR3TexturePixelFormat : uint64_t
     {
-        PVRTC2BPP_RGB  = 0ULL,
+        PVRTC2BPP_RGB = 0ULL,
         PVRTC2BPP_RGBA = 1ULL,
-        PVRTC4BPP_RGB  = 2ULL,
+        PVRTC4BPP_RGB = 2ULL,
         PVRTC4BPP_RGBA = 3ULL,
+        PVRTC2_2BPP_RGBA = 4ULL,
+        PVRTC2_4BPP_RGBA = 5ULL,
+        ETC1 = 6ULL,
+        DXT1 = 7ULL,
+        DXT2 = 8ULL,
+        DXT3 = 9ULL,
+        DXT4 = 10ULL,
+        DXT5 = 11ULL,
+        BC1 = 7ULL,
+        BC2 = 9ULL,
+        BC3 = 11ULL,
+        BC4 = 12ULL,
+        BC5 = 13ULL,
+        BC6 = 14ULL,
+        BC7 = 15ULL,
+        UYVY = 16ULL,
+        YUY2 = 17ULL,
+        BW1bpp = 18ULL,
+        R9G9B9E5 = 19ULL,
+        RGBG8888 = 20ULL,
+        GRGB8888 = 21ULL,
+        ETC2_RGB = 22ULL,
+        ETC2_RGBA = 23ULL,
+        ETC2_RGBA1 = 24ULL,
+        EAC_R11_Unsigned = 25ULL,
+        EAC_R11_Signed = 26ULL,
+        EAC_RG11_Unsigned = 27ULL,
+        EAC_RG11_Signed = 28ULL,
 
-        BGRA8888       = 0x0808080861726762ULL,
-        RGBA8888       = 0x0808080861626772ULL,
-        RGBA4444       = 0x0404040461626772ULL,
-        RGBA5551       = 0x0105050561626772ULL,
-        RGB565         = 0x0005060500626772ULL,
-        RGB888         = 0x0008080800626772ULL,
-        A8             = 0x0000000800000061ULL,
-        L8             = 0x000000080000006cULL,
-        LA88           = 0x000008080000616cULL,
+        BGRA8888 = 0x0808080861726762ULL,
+        RGBA8888 = 0x0808080861626772ULL,
+        RGBA4444 = 0x0404040461626772ULL,
+        RGBA5551 = 0x0105050561626772ULL,
+        RGB565 = 0x0005060500626772ULL,
+        RGB888 = 0x0008080800626772ULL,
+        A8 = 0x0000000800000061ULL,
+        L8 = 0x000000080000006cULL,
+        LA88 = 0x000008080000616cULL,
     };
 
 
@@ -254,20 +307,18 @@ namespace
 
     static const _pixel2_formathash::value_type v2_pixel_formathash_value[] =
     {
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::BGRA8888,        PixelFormat::BGRA8888),
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGBA8888,        PixelFormat::RGBA8888),
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGBA4444,        PixelFormat::RGBA4444),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::BGRA8888, PixelFormat::BGRA8888),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGBA8888, PixelFormat::RGBA8888),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGBA4444, PixelFormat::RGBA4444),
         _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGBA5551,        PixelFormat::RGB5A1),
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGB565,        PixelFormat::RGB565),
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGB888,        PixelFormat::RGB888),
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::A8,            PixelFormat::A8),
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::I8,            PixelFormat::I8),
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::AI88,            PixelFormat::AI88),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGB565,      PixelFormat::RGB565),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::RGB888,      PixelFormat::RGB888),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::A8,          PixelFormat::A8),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::I8,          PixelFormat::I8),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::AI88, PixelFormat::AI88),
 
-#ifdef GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::PVRTC2BPP_RGBA,        PixelFormat::PVRTC2A),
-        _pixel2_formathash::value_type(PVR2TexturePixelFormat::PVRTC4BPP_RGBA,        PixelFormat::PVRTC4A),
-#endif
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::PVRTC2BPP_RGBA, PixelFormat::PVRTC2A),
+        _pixel2_formathash::value_type(PVR2TexturePixelFormat::PVRTC4BPP_RGBA, PixelFormat::PVRTC4A),
     };
 
     static const int PVR2_MAX_TABLE_ELEMENTS = sizeof(v2_pixel_formathash_value) / sizeof(v2_pixel_formathash_value[0]);
@@ -277,22 +328,22 @@ namespace
     typedef const std::map<PVR3TexturePixelFormat, PixelFormat> _pixel3_formathash;
     static _pixel3_formathash::value_type v3_pixel_formathash_value[] =
     {
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::BGRA8888,    PixelFormat::BGRA8888),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGBA8888,    PixelFormat::RGBA8888),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGBA4444,    PixelFormat::RGBA4444),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGBA5551,    PixelFormat::RGB5A1),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGB565,        PixelFormat::RGB565),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGB888,        PixelFormat::RGB888),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::A8,            PixelFormat::A8),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::L8,            PixelFormat::I8),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::LA88,        PixelFormat::AI88),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::BGRA8888, PixelFormat::BGRA8888),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGBA8888, PixelFormat::RGBA8888),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGBA4444, PixelFormat::RGBA4444),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGBA5551, PixelFormat::RGB5A1),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGB565, PixelFormat::RGB565),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::RGB888, PixelFormat::RGB888),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::A8, PixelFormat::A8),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::L8, PixelFormat::I8),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::LA88, PixelFormat::AI88),
 
-#ifdef GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::PVRTC2BPP_RGB,        PixelFormat::PVRTC2),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::PVRTC2BPP_RGBA,        PixelFormat::PVRTC2A),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::PVRTC4BPP_RGB,        PixelFormat::PVRTC4),
-        _pixel3_formathash::value_type(PVR3TexturePixelFormat::PVRTC4BPP_RGBA,        PixelFormat::PVRTC4A),
-#endif
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::PVRTC2BPP_RGB, PixelFormat::PVRTC2),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::PVRTC2BPP_RGBA, PixelFormat::PVRTC2A),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::PVRTC4BPP_RGB, PixelFormat::PVRTC4),
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::PVRTC4BPP_RGBA, PixelFormat::PVRTC4A),
+
+        _pixel3_formathash::value_type(PVR3TexturePixelFormat::ETC1, PixelFormat::ETC),
     };
 
     static const int PVR3_MAX_TABLE_ELEMENTS = sizeof(v3_pixel_formathash_value) / sizeof(v3_pixel_formathash_value[0]);
@@ -340,37 +391,44 @@ namespace
     } __attribute__((packed)) PVRv3TexHeader;
 #endif
 
-
-    bool testFormatForPvr2TCSupport(PVR2TexturePixelFormat format)
+    bool testFormatForPvr2TCSupport(PVR2TexturePixelFormat /*format*/)
     {
-        bool bReturn = true;
-        if (!CConfiguration::GetInstance()->SupportsPVRTC())
-        {
-            if (format == PVR2TexturePixelFormat::PVRTC2BPP_RGBA ||
-                format == PVR2TexturePixelFormat::PVRTC4BPP_RGBA)
-            {
-                bReturn = false;
-            }
-        }
-
-        return bReturn;
+        return true;
     }
 
     bool testFormatForPvr3TCSupport(PVR3TexturePixelFormat format)
     {
-        bool bReturn = true;
-        if (!CConfiguration::GetInstance()->SupportsPVRTC())
+        bool bRet = false;
+        switch (format) 
         {
-            if (format == PVR3TexturePixelFormat::PVRTC2BPP_RGB  ||
-                format == PVR3TexturePixelFormat::PVRTC2BPP_RGBA ||
-                format == PVR3TexturePixelFormat::PVRTC4BPP_RGB  ||
-                format == PVR3TexturePixelFormat::PVRTC4BPP_RGBA)
-            {
-                bReturn = false;
-            }
+        case PVR3TexturePixelFormat::DXT1:
+        case PVR3TexturePixelFormat::DXT3:
+        case PVR3TexturePixelFormat::DXT5:
+            bRet = CConfiguration::GetInstance()->SupportsS3TC();
+            break;
+        case PVR3TexturePixelFormat::BGRA8888:
+            bRet = CConfiguration::GetInstance()->SupportsBGRA8888();
+            break;
+        case PVR3TexturePixelFormat::PVRTC2BPP_RGB:
+        case PVR3TexturePixelFormat::PVRTC2BPP_RGBA:
+        case PVR3TexturePixelFormat::PVRTC4BPP_RGB:
+        case PVR3TexturePixelFormat::PVRTC4BPP_RGBA:
+        case PVR3TexturePixelFormat::ETC1:
+        case PVR3TexturePixelFormat::RGBA8888:
+        case PVR3TexturePixelFormat::RGBA4444:
+        case PVR3TexturePixelFormat::RGBA5551:
+        case PVR3TexturePixelFormat::RGB565:
+        case PVR3TexturePixelFormat::RGB888:
+        case PVR3TexturePixelFormat::A8:
+        case PVR3TexturePixelFormat::L8:
+        case PVR3TexturePixelFormat::LA88:
+            bRet = true;
+            break;
+        default:
+            bRet = false;
+            break;
         }
-
-        return bReturn;
+        return bRet;
     }
 }
 
@@ -498,7 +556,7 @@ namespace
 typedef PixelFormatInfoMap::value_type PixelFormatInfoMapValue;
 static const PixelFormatInfoMapValue TexturePixelFormatInfoTablesValue[] =
 {
-    PixelFormatInfoMapValue(PixelFormat::BGRA8888, PixelFormatInfo(GL_RGBA, GL_BGRA, GL_UNSIGNED_BYTE, 32, false, true)),
+    PixelFormatInfoMapValue(PixelFormat::BGRA8888, PixelFormatInfo(GL_BGRA, GL_BGRA, GL_UNSIGNED_BYTE, 32, false, true)),
     PixelFormatInfoMapValue(PixelFormat::RGBA8888, PixelFormatInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, 32, false, true)),
     PixelFormatInfoMapValue(PixelFormat::RGBA4444, PixelFormatInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, 16, false, true)),
     PixelFormatInfoMapValue(PixelFormat::RGB5A1, PixelFormatInfo(GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, 16, false, true)),
@@ -516,7 +574,7 @@ static const PixelFormatInfoMapValue TexturePixelFormatInfoTablesValue[] =
 #endif
 
 #ifdef GL_ETC1_RGB8_OES
-    PixelFormatInfoMapValue(PixelFormat::ETC, PixelFormatInfo(GL_ETC1_RGB8_OES, 0xFFFFFFFF, 0xFFFFFFFF, 24, true, false)),
+    PixelFormatInfoMapValue(PixelFormat::ETC, PixelFormatInfo(GL_ETC1_RGB8_OES, 0xFFFFFFFF, 0xFFFFFFFF, 4, true, false)),
 #endif
 
 #ifdef GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
@@ -546,7 +604,6 @@ static const PixelFormatInfoMapValue TexturePixelFormatInfoTablesValue[] =
     0xFFFFFFFF, 0xFFFFFFFF, 8, true, false)),
 #endif
 };
-
 const PixelFormatInfoMap CImage::_pixelFormatInfoTables(TexturePixelFormatInfoTablesValue,
                                                           TexturePixelFormatInfoTablesValue + sizeof(TexturePixelFormatInfoTablesValue) / sizeof(TexturePixelFormatInfoTablesValue[0]));
 CImage::CImage()
@@ -568,157 +625,22 @@ CImage::~CImage()
     BEATS_SAFE_DELETE_ARRAY( m_data );
 }
 
-bool CImage::InitWithImageFile( const TString& path )
-{
-    bool ret = false;
-    m_filePath = path;
-    BEATS_ASSERT(m_filePath.length() > 0, _T("Can't load an image with empty path!"));
-    BEATS_ASSERT(CFilePathTool::GetInstance()->Exists(path.c_str()), _T("File %s doesn't exists!"), m_filePath.c_str());
-#ifdef EMSCRIPTEN
-    // Emscripten includes a re-implementation of SDL that uses HTML5 canvas
-    // operations underneath. Consequently, loading images via IMG_Load (an SDL
-    // API) will be a lot faster than running libpng et al as compiled with
-    // Emscripten.
-    SDL_Surface *iSurf = IMG_Load(fullPath.c_str());
 
-    int size = 4 * (iSurf->w * iSurf->h);
-    ret = InitWithRawData((const unsigned char*)iSurf->pixels, size, iSurf->w, iSurf->h, 8, true);
-
-    unsigned int *tmp = (unsigned int *)_data;
-    int nrPixels = iSurf->w * iSurf->h;
-    for(int i = 0; i < nrPixels; i++)
-    {
-        unsigned char *p = _data + i * 4;
-        tmp[i] = BEYOND_ENGINE_RGB_PREMULTIPLY_ALPHA( p[0], p[1], p[2], p[3] );
-    }
-
-    SDL_FreeSurface(iSurf);
-#else
-    CSerializer serializer(m_filePath.c_str());
-    if (serializer.GetWritePos() != 0)
-    {
-        ret = InitWithImageData(serializer.GetBuffer(), serializer.GetWritePos());
-    }
-#endif // EMSCRIPTEN
-
-    return ret;
-}
-
-bool CImage::InitWithImageData( const unsigned char* data, ssize_t dataLen )
-{
-    bool ret = false;
-
-    do
-    {
-        if(! data || dataLen <= 0)
-        {
-            break;
-        }
-        unsigned char* unpackedData = NULL;
-        ssize_t unpackedLen = 0;
-
-        //detect and unzip the compress file
-        if (CZipUtils::IsCCZBuffer(data, dataLen))
-        {
-            unpackedLen = CZipUtils::InflateCCZBuffer(data, dataLen, &unpackedData);
-        }
-        else if (CZipUtils::IsGZipBuffer(data, dataLen))
-        {
-            unpackedLen = CZipUtils::InflateMemory(const_cast<unsigned char*>(data), dataLen, &unpackedData);
-        }
-        else
-        {
-            unpackedData = const_cast<unsigned char*>(data);
-            unpackedLen = dataLen;
-        }
-
-        m_fileType = DetectFormat(unpackedData, unpackedLen);
-
-        switch (m_fileType)
-        {
-        case EFormat::eF_PNG:
-            ret = InitWithPngData(unpackedData, unpackedLen);
-            break;
-        case EFormat::eF_JPG:
-            ret = InitWithJpgData(unpackedData, unpackedLen);
-            break;
-        case EFormat::eF_TIFF:
-            ret = InitWithTiffData(unpackedData, unpackedLen);
-            break;
-        case EFormat::eF_WEBP:
-            ret = InitWithWebpData(unpackedData, unpackedLen);
-            break;
-        case EFormat::eF_PVR:
-            ret = InitWithPVRData(unpackedData, unpackedLen);
-            break;
-        case EFormat::eF_ETC:
-            ret = InitWithETCData(unpackedData, unpackedLen);
-            break;
-        case EFormat::eF_S3TC:
-            ret = InitWithS3TCData(unpackedData, unpackedLen);
-            break;
-        case EFormat::eF_ATITC:
-            ret = InitWithATITCData(unpackedData, unpackedLen);
-            break;
-        default:
-            {
-                // load and detect image format
-                TImageTGA* tgaData = CTgaLib::TgaLoadBuffer(unpackedData, unpackedLen);
-
-                if (tgaData != NULL && tgaData->status == TGA_OK)
-                {
-                    ret = InitWithTGAData(tgaData);
-                }
-                else
-                {
-                    BEATS_ASSERT(false,_T("unsupport image format!"));
-                }
-
-                BEATS_SAFE_DELETE(tgaData);
-                break;
-            }
-        }
-
-        if(unpackedData != data)
-        {
-            BEATS_SAFE_DELETE_ARRAY( unpackedData );
-        }
-    } while (0);
-
-    return ret;
-}
-
-bool CImage::InitWithRawData( const unsigned char * data, ssize_t dataLen, int width, int height, int bitsPerComponent, bool preMulti /*= false*/ )
-{
-    bool bRet = false;
-    do 
-    {
-        if(0 == width || 0 == height)
-        {
-            break;
-        }
-        m_height   = height;
-        m_width    = width;
-        m_preMulti = preMulti;
-        m_renderFormat = PixelFormat::RGBA8888;
-
-        // only RGBA8888 supported
-        int bytesPerComponent = 4;
-        m_dataLen = height * width * bytesPerComponent;
-        m_data = new unsigned char[ m_dataLen ];
-        if ( m_data )
-        {
-            memcpy( m_data, data, m_dataLen );
-            bRet = true;
-        }
-    } while (0);
-
-    return bRet;
-}
 
 const unsigned char* CImage::GetData() const
 {
     return m_data;
+}
+
+void CImage::SetData(PixelFormat renderFormat, unsigned char* pData, ssize_t len)
+{
+    if (m_data != nullptr)
+    {
+        BEATS_SAFE_DELETE_ARRAY(m_data);
+    }
+    m_data = pData;
+    m_dataLen = len;
+    m_renderFormat = renderFormat;
 }
 
 ssize_t CImage::GetDataLength() const
@@ -766,7 +688,168 @@ bool CImage::HasPremultipliedAlpha() const
     return m_hasPremultipliedAlpha;
 }
 
-bool CImage::InitWithJpgData( const unsigned char * data, ssize_t dataLen )
+bool CImage::InitWithRawData( const unsigned char * data, ssize_t /*dataLen*/, int width, int height, int /*bitsPerComponent*/, const TCHAR* filename, bool preMulti /*= false*/ )
+{
+    bool bRet = false;
+    do 
+    {
+        if(0 == width || 0 == height)
+        {
+            break;
+        }
+        m_height   = height;
+        m_width    = width;
+        m_preMulti = preMulti;
+        m_renderFormat = PixelFormat::RGBA8888;
+
+        // only RGBA8888 supported
+        int bytesPerComponent = 4;
+        m_dataLen = height * width * bytesPerComponent;
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
+        if ( m_data )
+        {
+            memcpy( m_data, data, m_dataLen );
+            bRet = true;
+        }
+    } while (0);
+
+    return bRet;
+}
+
+int CImage::GetBitPerPixel()
+{
+    return _pixelFormatInfoTables.at( m_renderFormat ).bpp;
+}
+
+void CImage::SetRGB(int32_t x, int32_t y, unsigned char r, unsigned char g, unsigned char b)
+{
+    int32_t nStride = HasAlpha() ? 4 : 3;
+    int32_t nIndex = (y * m_width + x) * nStride;
+    BEATS_ASSERT(nIndex < m_dataLen);
+    m_data[nIndex++] = r;
+    BEATS_ASSERT(nIndex < m_dataLen);
+    m_data[nIndex++] = g;
+    BEATS_ASSERT(nIndex < m_dataLen);
+    m_data[nIndex++] = b;
+}
+
+unsigned char CImage::GetAlpha(int32_t x, int32_t y) const
+{
+    unsigned char ret = 0;
+    if (HasAlpha())
+    {
+        int32_t nIndex = (y * m_width + x) * 4;
+        BEATS_ASSERT(nIndex + 3 < m_dataLen);
+        ret = m_data[nIndex + 3];
+    }
+    return ret;
+}
+
+bool CImage::HasAlpha() const
+{
+    return _pixelFormatInfoTables.at( m_renderFormat ).alpha;
+}
+
+bool CImage::IsCompressed() const
+{
+    return _pixelFormatInfoTables.at( m_renderFormat ).compressed;
+}
+
+int CImage::CcNextPOT( int x )
+{
+    x = x - 1;
+    x = x | (x >> 1);
+    x = x | (x >> 2);
+    x = x | (x >> 4);
+    x = x | (x >> 8);
+    x = x | (x >>16);
+    return x + 1;
+}
+
+const PixelFormatInfoMap& CImage::GetPixelFormatInfoMap()
+{
+    return _pixelFormatInfoTables;
+}
+
+bool CImage::InitWithImageData(const unsigned char* data, ssize_t dataLen, const TCHAR* filename)
+{
+    bool ret = false;
+
+    if (data && dataLen > 0)
+    {
+        unsigned char* unpackedData = NULL;
+        ssize_t unpackedLen = 0;
+
+        //detect and unzip the compress file, not support for now.
+        //if (CZipUtils::IsCCZBuffer(data, dataLen))
+        //{
+        //    unpackedLen = CZipUtils::InflateCCZBuffer(data, dataLen, &unpackedData);
+        //}
+        //else if (CZipUtils::IsGZipBuffer(data, dataLen))
+        //{
+        //    unpackedLen = CZipUtils::InflateMemory(const_cast<unsigned char*>(data), dataLen, &unpackedData);
+        //}
+        //else
+        //{
+            unpackedData = const_cast<unsigned char*>(data);
+            unpackedLen = dataLen;
+        //}
+
+        m_fileType = DetectFormat(unpackedData, unpackedLen);
+
+        switch (m_fileType)
+        {
+        case EFormat::eF_PNG:
+            ret = InitWithPngData(unpackedData, unpackedLen, filename);
+            break;
+        case EFormat::eF_JPG:
+            ret = InitWithJpgData(unpackedData, unpackedLen, filename);
+            break;
+        case EFormat::eF_TIFF:
+            ret = InitWithTiffData(unpackedData, unpackedLen, filename);
+            break;
+        case EFormat::eF_WEBP:
+            ret = InitWithWebpData(unpackedData, unpackedLen, filename);
+            break;
+        case EFormat::eF_PVR:
+            ret = InitWithPVRData(unpackedData, unpackedLen, filename);
+            break;
+        case EFormat::eF_ETC:
+            ret = InitWithETCData(unpackedData, unpackedLen, filename);
+            break;
+        case EFormat::eF_S3TC:
+            ret = InitWithS3TCData(unpackedData, unpackedLen, filename);
+            break;
+        case EFormat::eF_ATITC:
+            ret = InitWithATITCData(unpackedData, unpackedLen, filename);
+            break;
+        default:
+            {
+                // load and detect image format
+                TImageTGA* tgaData = CTgaLib::TgaLoadBuffer(unpackedData, unpackedLen);
+
+                if (tgaData != NULL && tgaData->status == TGA_OK)
+                {
+                    ret = InitWithTGAData(tgaData, filename);
+                }
+                else
+                {
+                    BEATS_ASSERT(false, _T("unsupport image format!"));
+                }
+
+                BEATS_SAFE_DELETE(tgaData);
+                break;
+            }
+        }
+        if (unpackedData != data)
+        {
+            BEATS_SAFE_DELETE_ARRAY(unpackedData);
+        }
+    }
+    return ret;
+}
+
+bool CImage::InitWithJpgData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
     /* these are standard libjpeg structures for reading(decompression) */
     jpeg_decompress_struct cinfo;
@@ -824,13 +907,13 @@ bool CImage::InitWithJpgData( const unsigned char * data, ssize_t dataLen )
         m_width  = cinfo.output_width;
         m_height = cinfo.output_height;
         m_preMulti = false;
-        row_pointer[0] = new unsigned char[cinfo.output_width*cinfo.output_components];
+        row_pointer[0] = BEATS_NEW_ARRAY(unsigned char, cinfo.output_width*cinfo.output_components, "Texture", filename);
         if(! row_pointer[0])
         {
             break;
         }
         m_dataLen = cinfo.output_width*cinfo.output_height*cinfo.output_components;
-        m_data = new unsigned char[m_dataLen];
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
         if(! m_data)
         {
             break;
@@ -841,8 +924,8 @@ bool CImage::InitWithJpgData( const unsigned char * data, ssize_t dataLen )
         while( cinfo.output_scanline < cinfo.output_height )
         {
             jpeg_read_scanlines( &cinfo, row_pointer, 1 );
-            size_t location = (cinfo.output_height - cinfo.output_scanline - 1) * cinfo.output_width * cinfo.output_components;
-            for(size_t i = 0; i < cinfo.output_width;i++) 
+            uint32_t location = (cinfo.output_height - cinfo.output_scanline - 1) * cinfo.output_width * cinfo.output_components;
+            for(uint32_t i = 0; i < cinfo.output_width;i++) 
             {
                 for (int j = 0; j < cinfo.output_components; ++j)
                 {
@@ -869,7 +952,7 @@ bool CImage::InitWithJpgData( const unsigned char * data, ssize_t dataLen )
     return bRet;
 }
 
-bool CImage::InitWithPngData( const unsigned char * data, ssize_t dataLen )
+bool CImage::InitWithPngData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
 #define PNGSIGSIZE  8
     bool bRet = false;
@@ -927,8 +1010,6 @@ bool CImage::InitWithPngData( const unsigned char * data, ssize_t dataLen )
         png_byte bit_depth = png_get_bit_depth(png_ptr, info_ptr);
         png_uint_32 color_type = png_get_color_type(png_ptr, info_ptr);
 
-        //CCLOG("color type %u", color_type);
-
         // force palette images to be expanded to 24-bit RGB
         // it may include alpha channel
         if (color_type == PNG_COLOR_TYPE_PALETTE)
@@ -953,7 +1034,8 @@ bool CImage::InitWithPngData( const unsigned char * data, ssize_t dataLen )
         } 
 
         // Expanded earlier for grayscale, now take care of palette and rgb
-        if (bit_depth < 8) {
+        if (bit_depth < 8)
+        {
             png_set_packing(png_ptr);
         }
         // update info
@@ -981,12 +1063,12 @@ bool CImage::InitWithPngData( const unsigned char * data, ssize_t dataLen )
 
         // read png data
         png_size_t rowbytes;
-        png_bytep* row_pointers = new png_bytep[m_height];
-
+        png_bytep* row_pointers = BEATS_NEW_ARRAY(png_bytep, m_height, "Texture", filename);
         rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 
         m_dataLen = rowbytes * m_height;
-        m_data = new unsigned char[ m_dataLen ];
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
+        BEATS_ASSERT(m_data != NULL);
         if(!m_data)
         {
             break;
@@ -1015,7 +1097,7 @@ bool CImage::InitWithPngData( const unsigned char * data, ssize_t dataLen )
     return bRet;
 }
 
-bool CImage::InitWithTiffData( const unsigned char * data, ssize_t dataLen )
+bool CImage::InitWithTiffData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
     bool bRet = false;
     do 
@@ -1038,7 +1120,7 @@ bool CImage::InitWithTiffData( const unsigned char * data, ssize_t dataLen )
         }
         uint32 w = 0, h = 0;
         uint16 bitsPerSample = 0, samplePerPixel = 0, planarConfig = 0;
-        size_t npixels = 0;
+        uint32_t npixels = 0;
         
         TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
         TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
@@ -1053,8 +1135,7 @@ bool CImage::InitWithTiffData( const unsigned char * data, ssize_t dataLen )
         m_height = h;
 
         m_dataLen = npixels * sizeof (uint32);
-        m_data = new unsigned char[ m_dataLen ];
-
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
         uint32* raster = (uint32*) _TIFFmalloc(npixels * sizeof (uint32));
         if (raster != nullptr) 
         {
@@ -1078,7 +1159,7 @@ bool CImage::InitWithTiffData( const unsigned char * data, ssize_t dataLen )
     return bRet;
 }
 
-bool CImage::InitWithWebpData( const unsigned char * data, ssize_t dataLen )
+bool CImage::InitWithWebpData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
     bool bRet = false;  
 
@@ -1098,7 +1179,7 @@ bool CImage::InitWithWebpData( const unsigned char * data, ssize_t dataLen )
         m_height   = config.input.height;
 
         m_dataLen = m_width * m_height * 4;
-        m_data = new unsigned char[ m_dataLen ];
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
 
         config.output.u.RGBA.rgba = static_cast<uint8_t*>(m_data);
         config.output.u.RGBA.stride = m_width * 4;
@@ -1117,12 +1198,12 @@ bool CImage::InitWithWebpData( const unsigned char * data, ssize_t dataLen )
     return bRet;
 }
 
-bool CImage::InitWithPVRData( const unsigned char * data, ssize_t dataLen )
+bool CImage::InitWithPVRData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
-    return InitWithPVRv2Data(data, dataLen) || InitWithPVRv3Data(data, dataLen);
+    return InitWithPVRv2Data(data, dataLen, filename) || InitWithPVRv3Data(data, dataLen, filename);
 }
 
-bool CImage::InitWithPVRv2Data( const unsigned char * data, ssize_t dataLen )
+bool CImage::InitWithPVRv2Data(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
     int dataLength = 0, dataOffset = 0, dataSize = 0;
     int blockSize = 0, widthBlocks = 0, heightBlocks = 0;
@@ -1192,7 +1273,7 @@ bool CImage::InitWithPVRv2Data( const unsigned char * data, ssize_t dataLen )
 
         //Move by size of header
         m_dataLen = dataLen - sizeof(PVRv2TexHeader);
-        m_data = new unsigned char[ m_dataLen ];
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
         memcpy(m_data, (unsigned char*)data + sizeof(PVRv2TexHeader), m_dataLen);
 
         bool bBreake = false;
@@ -1259,210 +1340,216 @@ bool CImage::InitWithPVRv2Data( const unsigned char * data, ssize_t dataLen )
     return bReturn;
 }
 
-int CImage::CcNextPOT( int x )
+bool CImage::InitWithPVRv3Data(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
-    x = x - 1;
-    x = x | (x >> 1);
-    x = x | (x >> 2);
-    x = x | (x >> 4);
-    x = x | (x >> 8);
-    x = x | (x >>16);
-    return x + 1;
-}
-
-bool CImage::InitWithPVRv3Data( const unsigned char * data, ssize_t dataLen )
-{
-    bool bReturn = false;
-    do 
+    bool bRet = false;
+    if (static_cast<size_t>(dataLen) >= sizeof(PVRv3TexHeader))
     {
-        if (static_cast<size_t>(dataLen) < sizeof(PVRv3TexHeader))
-        {
-            break;
-        }
-
         const PVRv3TexHeader *header = static_cast<const PVRv3TexHeader *>(static_cast<const void*>(data));
-
         // validate version
-        if (BEYONDENGINE_SWAP_INT32_BIG_TO_HOST(header->version) != 0x50565203)
+        BEATS_ASSERT(BEYONDENGINE_SWAP_INT32_BIG_TO_HOST(header->version) == 0x50565203, "WARNING: pvr file version mismatch");
+        if (BEYONDENGINE_SWAP_INT32_BIG_TO_HOST(header->version) == 0x50565203)
         {
-            BEATS_PRINT(_T("WARNING: pvr file version mismatch"));
-            break;
-        }
-
-        // parse pixel format
-        PVR3TexturePixelFormat pixelFormat = static_cast<PVR3TexturePixelFormat>(header->pixelFormat);
-
-        if (!testFormatForPvr3TCSupport(pixelFormat))
-        {
-            BEATS_PRINT(_T("WARNING: Unsupported PVR Pixel Format: 0x%016llX. Re-encode it with a OpenGL pixel format variant"),
-                static_cast<unsigned long long>(pixelFormat));
-            break;
-        }
-
-
-        if (v3_pixel_formathash.find(pixelFormat) == v3_pixel_formathash.end())
-        {
-            BEATS_PRINT(_T("WARNING: Unsupported PVR Pixel Format: 0x%016llX. Re-encode it with a OpenGL pixel format variant"),
-                static_cast<unsigned long long>(pixelFormat));
-            break;
-        }
-
-        auto it = _pixelFormatInfoTables.find(v3_pixel_formathash.at(pixelFormat));
-
-        if (it == _pixelFormatInfoTables.end())
-        {
-            BEATS_PRINT(_T("WARNING: Unsupported PVR Pixel Format: 0x%016llX. Re-encode it with a OpenGL pixel format variant"),
-                static_cast<unsigned long long>(pixelFormat));
-            break;
-        }
-
-        m_renderFormat = it->first;
-
-        // flags
-        int flags = BEYONDENGINE_SWAP_INT32_LITTLE_TO_HOST(header->flags);
-
-        // PVRv3 specifies premultiply alpha in a flag -- should always respect this in PVRv3 files
-        if (flags & (unsigned int)PVR3TextureFlag::PremultipliedAlpha)
-        {
-            m_preMulti = true;
-        }
-
-        // sizing
-        int width = BEYONDENGINE_SWAP_INT32_LITTLE_TO_HOST(header->width);
-        int height = BEYONDENGINE_SWAP_INT32_LITTLE_TO_HOST(header->height);
-        m_width = width;
-        m_height = height;
-        int dataOffset = 0, dataSize = 0;
-        int blockSize = 0, widthBlocks = 0, heightBlocks = 0;
-
-        m_dataLen = dataLen - (sizeof(PVRv3TexHeader) + header->metadataLength);
-        m_data = new unsigned char[ m_dataLen ];
-        memcpy(m_data, static_cast<const unsigned char*>(data) + sizeof(PVRv3TexHeader) + header->metadataLength, m_dataLen);
-
-        m_numberOfMipmaps = header->numberOfMipmaps;
-        BEATS_ASSERT( m_numberOfMipmaps < MIPMAP_MAX, _T("Image: Maximum number of mimpaps reached. Increate the CC_MIPMAP_MAX value"));
-
-        for (int i = 0; i < m_numberOfMipmaps; i++)
-        {
-            switch ((PVR3TexturePixelFormat)pixelFormat)
+            // parse pixel format
+            PVR3TexturePixelFormat pixelFormat = static_cast<PVR3TexturePixelFormat>(header->pixelFormat);
+            bool bSupportFormat = testFormatForPvr3TCSupport(pixelFormat) &&
+                    v3_pixel_formathash.find(pixelFormat) != v3_pixel_formathash.end() &&
+                    _pixelFormatInfoTables.find(getDevicePixelFormat(v3_pixel_formathash.at(pixelFormat))) != _pixelFormatInfoTables.end();
+            BEATS_ASSERT(bSupportFormat, "WARNING: Unsupported PVR Pixel Format: 0x%016llX. Re-encode it with a OpenGL pixel format variant", static_cast<unsigned long long>(pixelFormat));
+            if (bSupportFormat)
             {
-            case PVR3TexturePixelFormat::PVRTC2BPP_RGB :
-            case PVR3TexturePixelFormat::PVRTC2BPP_RGBA :
-                blockSize = 8 * 4; // Pixel by pixel block size for 2bpp
-                widthBlocks = width / 8;
-                heightBlocks = height / 4;
-                break;
-            case PVR3TexturePixelFormat::PVRTC4BPP_RGB :
-            case PVR3TexturePixelFormat::PVRTC4BPP_RGBA :
-                blockSize = 4 * 4; // Pixel by pixel block size for 4bpp
-                widthBlocks = width / 4;
-                heightBlocks = height / 4;
-                break;
-            case PVR3TexturePixelFormat::BGRA8888:
-                if( ! CConfiguration::GetInstance()->SupportsBGRA8888())
+                auto it = _pixelFormatInfoTables.find(getDevicePixelFormat(v3_pixel_formathash.at(pixelFormat)));
+                m_renderFormat = it->first;
+                int bpp = it->second.bpp;
+
+                // flags
+                int flags = BEYONDENGINE_SWAP_INT32_LITTLE_TO_HOST(header->flags);
+
+                // PVRv3 specifies premultiply alpha in a flag -- should always respect this in PVRv3 files
+                m_hasPremultipliedAlpha = (flags & (unsigned int)PVR3TextureFlag::PremultipliedAlpha) != 0;
+
+                // sizing
+                int width = BEYONDENGINE_SWAP_INT32_LITTLE_TO_HOST(header->width);
+                int height = BEYONDENGINE_SWAP_INT32_LITTLE_TO_HOST(header->height);
+                m_width = width;
+                m_height = height;
+                int dataOffset = 0, dataSize = 0;
+                int blockSize = 0, widthBlocks = 0, heightBlocks = 0;
+
+                m_dataLen = dataLen - (sizeof(PVRv3TexHeader)+header->metadataLength);
+                m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
+                memcpy(m_data, static_cast<const unsigned char*>(data)+sizeof(PVRv3TexHeader)+header->metadataLength, m_dataLen);
+
+                m_numberOfMipmaps = header->numberOfMipmaps;
+                BEATS_ASSERT(m_numberOfMipmaps < MIPMAP_MAX, "Image: Maximum number of mimpaps reached. Increase the CC_MIPMAP_MAX value");
+
+                for (int i = 0; i < m_numberOfMipmaps; i++)
                 {
-                    BEATS_PRINT(_T("image. BGRA8888 not supported on this device"));
-                    break;
+                    switch ((PVR3TexturePixelFormat)pixelFormat)
+                    {
+                    case PVR3TexturePixelFormat::PVRTC2BPP_RGB:
+                    case PVR3TexturePixelFormat::PVRTC2BPP_RGBA:
+                        if (!CConfiguration::GetInstance()->SupportsPVRTC())
+                        {
+                            BEATS_PRINT("Hardware PVR decoder not present. Using software decoder");
+                            m_bUnpack = true;
+                            m_mipmaps[i].len = width*height * 4;
+                            m_mipmaps[i].address = BEATS_NEW_ARRAY(unsigned char, width*height * 4, "Texture", filename);
+                            PVRTDecompressPVRTC(m_data + dataOffset, width, height, m_mipmaps[i].address, true);
+                            bpp = 2;
+                        }
+                        blockSize = 8 * 4; // Pixel by pixel block size for 2bpp
+                        widthBlocks = width / 8;
+                        heightBlocks = height / 4;
+                        break;
+                    case PVR3TexturePixelFormat::PVRTC4BPP_RGB:
+                    case PVR3TexturePixelFormat::PVRTC4BPP_RGBA:
+                        if (!CConfiguration::GetInstance()->SupportsPVRTC())
+                        {
+                            BEATS_PRINT("Hardware PVR decoder not present. Using software decoder");
+                            m_bUnpack = true;
+                            m_mipmaps[i].len = width*height * 4;
+                            m_mipmaps[i].address = BEATS_NEW_ARRAY(unsigned char, width*height * 4, "Texture", filename);
+                            PVRTDecompressPVRTC(m_data + dataOffset, width, height, m_mipmaps[i].address, false);
+                            bpp = 4;
+                        }
+                        blockSize = 4 * 4; // Pixel by pixel block size for 4bpp
+                        widthBlocks = width / 4;
+                        heightBlocks = height / 4;
+                        break;
+                    case PVR3TexturePixelFormat::ETC1:
+                        if (!CConfiguration::GetInstance()->SupportsETC())
+                        {
+                            BEATS_PRINT("Hardware ETC1 decoder not present. Using software decoder");
+                            int bytePerPixel = 3;
+                            unsigned int stride = width * bytePerPixel;
+                            m_bUnpack = true;
+                            m_mipmaps[i].len = width*height*bytePerPixel;
+                            m_mipmaps[i].address = BEATS_NEW_ARRAY(unsigned char, width*height * bytePerPixel, "Texture", filename);
+                            if (etc1_decode_image(static_cast<const unsigned char*>(m_data + dataOffset), static_cast<etc1_byte*>(m_mipmaps[i].address), width, height, bytePerPixel, stride) != 0)
+                            {
+                                return false;
+                            }
+                        }
+                        blockSize = 4 * 4; // Pixel by pixel block size for 4bpp
+                        widthBlocks = width / 4;
+                        heightBlocks = height / 4;
+                        break;
+                    case PVR3TexturePixelFormat::BGRA8888:
+                        if (!CConfiguration::GetInstance()->SupportsBGRA8888())
+                        {
+                            BEATS_PRINT("Image. BGRA8888 not supported on this device");
+                            return false;
+                        }
+                    default:
+                        blockSize = 1;
+                        widthBlocks = width;
+                        heightBlocks = height;
+                        break;
+                    }
+
+                    // Clamp to minimum number of blocks
+                    if (widthBlocks < 2)
+                    {
+                        widthBlocks = 2;
+                    }
+                    if (heightBlocks < 2)
+                    {
+                        heightBlocks = 2;
+                    }
+
+                    dataSize = widthBlocks * heightBlocks * ((blockSize  * bpp) / 8);
+                    auto packetLength = m_dataLen - dataOffset;
+                    packetLength = packetLength > dataSize ? dataSize : packetLength;
+
+                    if (!m_bUnpack)
+                    {
+                        m_mipmaps[i].address = m_data + dataOffset;
+                        m_mipmaps[i].len = static_cast<int>(packetLength);
+                    }
+
+                    dataOffset += packetLength;
+                    BEATS_ASSERT(dataOffset <= m_dataLen, "CCTexurePVR: Invalid length");
+
+
+                    width = MAX(width >> 1, 1);
+                    height = MAX(height >> 1, 1);
                 }
-            default:
-                blockSize = 1;
-                widthBlocks = width;
-                heightBlocks = height;
-                break;
+
+                if (m_bUnpack)
+                {
+                    m_data = m_mipmaps[0].address;
+                    m_dataLen = m_mipmaps[0].len;
+                }
+                bRet = true;
             }
-
-            // Clamp to minimum number of blocks
-            if (widthBlocks < 2)
-            {
-                widthBlocks = 2;
-            }
-            if (heightBlocks < 2)
-            {
-                heightBlocks = 2;
-            }
-
-            dataSize = widthBlocks * heightBlocks * ((blockSize  * it->second.bpp) / 8);
-            auto packetLength = m_dataLen - dataOffset;
-            packetLength = packetLength > dataSize ? dataSize : packetLength;
-
-            m_mipmaps[i].address = m_data + dataOffset;
-            m_mipmaps[i].len = static_cast<int>(packetLength);
-
-            dataOffset += packetLength;
-            BEATS_ASSERT( dataOffset <= m_dataLen, _T("CCTexurePVR: Invalid lenght"));
-
-
-            width = MAX(width >> 1, 1);
-            height = MAX(height >> 1, 1);
         }
-        bReturn = true;
-    } while (0);
-    return true;
+    }
+    return bRet;
 }
 
-bool CImage::InitWithETCData( const unsigned char * data, ssize_t dataLen )
+bool CImage::InitWithETCData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
-    bool bReturn = false;
-
-    do 
+    bool bRet = false;
+    const etc1_byte* header = static_cast<const etc1_byte*>(data);
+    BEYONDENGINE_UNUSED_PARAM(dataLen);
+    //check the data
+    if (etc1_pkm_is_valid(header))
     {
-        const etc1_byte* header = static_cast<const etc1_byte*>(data);
-
-        //check the data
-        if(!etc1_pkm_is_valid(header))
-        {
-            break;
-        }
-
         m_width = etc1_pkm_get_width(header);
         m_height = etc1_pkm_get_height(header);
-
-        if( 0 == m_width || 0 == m_height )
+        BEATS_ASSERT(0 != m_width && 0 != m_height);
+        if (CConfiguration::GetInstance()->SupportsETC())
         {
-            break;
-        }
-
-        if(CConfiguration::GetInstance()->SupportsETC())
-        {
-            //old opengl version has no define for GL_ETC1_RGB8_OES, add macro to make compiler happy. 
+            //old opengl version has no define for GL_ETC1_RGB8_OES, add macro to make compiler happy.
 #ifdef GL_ETC1_RGB8_OES
             m_renderFormat = PixelFormat::ETC;
-            m_dataLen = dataLen - ETC_PKM_HEADER_SIZE;
-            m_data = new unsigned char[m_dataLen];
-            memcpy(m_data, static_cast<const unsigned char*>(data) + ETC_PKM_HEADER_SIZE, m_dataLen);
-            break;
+            m_dataLen = etc1_get_encoded_data_size(m_width, m_height);
+            BEATS_ASSERT(m_dataLen <= dataLen);
+            m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
+            memcpy(m_data, static_cast<const unsigned char*>(data)+ETC_PKM_HEADER_SIZE, m_dataLen);
+            bRet = true;
 #endif
         }
         else
         {
-            BEATS_PRINT(_T("Hardware ETC1 decoder not present. Using software decoder"));
-
             //if it is not gles or device do not support ETC, decode texture by software
             int bytePerPixel = 3;
             unsigned int stride = m_width * bytePerPixel;
             m_renderFormat = PixelFormat::RGB888;
 
-            m_dataLen =  m_width * m_height * bytePerPixel;
-            m_data = new unsigned char[ m_dataLen ];
-
-            if (etc1_decode_image(static_cast<const unsigned char*>(data) + ETC_PKM_HEADER_SIZE, static_cast<etc1_byte*>(m_data), m_width, m_height, bytePerPixel, stride) != 0)
+            m_dataLen = m_width * m_height * bytePerPixel;
+            m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
+            bRet = etc1_decode_image(static_cast<const unsigned char*>(data)+ETC_PKM_HEADER_SIZE, static_cast<etc1_byte*>(m_data), m_width, m_height, bytePerPixel, stride) == 0;
+            if (!bRet)
             {
                 m_dataLen = 0;
-                if (m_data != NULL)
-                {
-                    BEATS_SAFE_DELETE_ARRAY(m_data);
-                }
-                break;
+                BEATS_SAFE_DELETE_ARRAY(m_data);
             }
-
-            break;
+#if (BEYONDENGINE_PLATFORM == PLATFORM_WIN32)
+            for (int32_t i = 0; i < m_height / 2; ++i)
+            {
+                for (int32_t j = 0; j < m_width; ++j)
+                {
+                    uint32_t uCurIndex = (j + i * m_width) * bytePerPixel;
+                    uint32_t uMirrorIndex = (j + (m_height - 1 - i) * m_width) * bytePerPixel;
+                    for (int k = 0; k < 3; ++k)
+                    {
+                        unsigned char Tmp = m_data[uCurIndex];
+                        m_data[uCurIndex] = m_data[uMirrorIndex];
+                        m_data[uMirrorIndex] = Tmp;
+                        ++uCurIndex;
+                        ++uMirrorIndex;
+                    }
+                }
+            }
+#endif
         }
-    } while (0);
-    
-    return bReturn;
+    }
+    return bRet;
 }
 
-bool CImage::InitWithS3TCData( const unsigned char * data, ssize_t dataLen )
+bool CImage::InitWithS3TCData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename)
 {
     const uint32_t FOURCC_DXT1 = makeFourCC('D', 'X', 'T', '1');
     const uint32_t FOURCC_DXT3 = makeFourCC('D', 'X', 'T', '3');
@@ -1471,7 +1558,7 @@ bool CImage::InitWithS3TCData( const unsigned char * data, ssize_t dataLen )
     /* load the .dds file */
 
     S3TCTexHeader *header = (S3TCTexHeader *)data;
-    unsigned char *pixelData = new unsigned char[dataLen - sizeof(S3TCTexHeader)];
+    unsigned char *pixelData = BEATS_NEW_ARRAY(unsigned char, dataLen - sizeof(S3TCTexHeader), "Texture", filename);
     memcpy((void *)pixelData, data + sizeof(S3TCTexHeader), dataLen - sizeof(S3TCTexHeader));
 
     m_width = header->ddsd.width;
@@ -1488,7 +1575,7 @@ bool CImage::InitWithS3TCData( const unsigned char * data, ssize_t dataLen )
     if (CConfiguration::GetInstance()->SupportsS3TC())  //compressed data length
     {
         m_dataLen = dataLen - sizeof(S3TCTexHeader);
-        m_data = new unsigned char[m_dataLen];
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
         memcpy((void *)m_data,(void *)pixelData , m_dataLen);
     }
     else                                               //decompressed data length
@@ -1503,12 +1590,12 @@ bool CImage::InitWithS3TCData( const unsigned char * data, ssize_t dataLen )
             width >>= 1;
             height >>= 1;
         }
-        m_data = new unsigned char[ m_dataLen ];
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
     }
 
-    /* if hardware supports s3tc, set pixelformat before loading mipmaps, to support non-mipmapped textures  */
+    /* if hardware supports s3tc, set pixel format before loading mipmaps, to support non-mipmapped textures  */
     if (CConfiguration::GetInstance()->SupportsS3TC())
-    {   //decode texture throught hardware
+    {   //decode texture through hardware
 
         if (FOURCC_DXT1 == header->ddsd.DUMMYUNIONNAMEN4.ddpfPixelFormat.fourCC)
         {
@@ -1540,7 +1627,7 @@ bool CImage::InitWithS3TCData( const unsigned char * data, ssize_t dataLen )
         int size = ((width+3)/4)*((height+3)/4)*blockSize;
 
         if (CConfiguration::GetInstance()->SupportsS3TC())
-        {   //decode texture throught hardware
+        {   //decode texture through hardware
             m_mipmaps[i].address = (unsigned char *)m_data + encodeOffset;
             m_mipmaps[i].len = size;
         }
@@ -1589,7 +1676,7 @@ bool CImage::InitWithS3TCData( const unsigned char * data, ssize_t dataLen )
 
 
 
-bool CImage::InitWithATITCData( const unsigned char *data, ssize_t dataLen )
+bool CImage::InitWithATITCData(const unsigned char *data, ssize_t dataLen, const TCHAR* filename)
 {
     /* load the .ktx file */
     ATITCTexHeader *header = (ATITCTexHeader *)data;
@@ -1623,7 +1710,7 @@ bool CImage::InitWithATITCData( const unsigned char *data, ssize_t dataLen )
     if (CConfiguration::GetInstance()->SupportsATITC())  //compressed data length
     {
         m_dataLen = dataLen - sizeof(ATITCTexHeader) - header->bytesOfKeyValueData - 4;
-        m_data = new unsigned char[ m_dataLen ];
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
         memcpy((void *)m_data,(void *)pixelData , m_dataLen);
     }
     else                                               //decompressed data length
@@ -1638,7 +1725,7 @@ bool CImage::InitWithATITCData( const unsigned char *data, ssize_t dataLen )
             width >>= 1;
             height >>= 1;
         }
-        m_data = new unsigned char[ m_dataLen ];
+        m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
     }
 
     /* load the mipmaps */
@@ -1718,7 +1805,7 @@ bool CImage::InitWithATITCData( const unsigned char *data, ssize_t dataLen )
     return true;
 }
 
-bool CImage::InitWithTGAData( TImageTGA* tgaData )
+bool CImage::InitWithTGAData(TImageTGA* tgaData, const TCHAR* filename)
 {
     bool ret = false;
 
@@ -1775,7 +1862,7 @@ bool CImage::InitWithTGAData( TImageTGA* tgaData )
 
     }while(false);
 
-    m_data = new unsigned char[ m_dataLen ];
+    m_data = BEATS_NEW_ARRAY(unsigned char, m_dataLen, "Texture", filename);
     if ( m_data )
     {
         ret = true;
@@ -1806,7 +1893,7 @@ bool CImage::InitWithTGAData( TImageTGA* tgaData )
     return ret;
 }
 
-bool CImage::SaveImageToPNG( const TString& filePath, bool bIgnoreAlpha /*= true*/ )
+bool CImage::SaveImageToPNG( const TString& filePath)
 {
     bool bRet = false;
     do 
@@ -1816,9 +1903,7 @@ bool CImage::SaveImageToPNG( const TString& filePath, bool bIgnoreAlpha /*= true
         png_infop info_ptr;
         png_colorp palette;
         png_bytep *row_pointers;
-        char path[ MAX_PATH ];
-        CStringHelper::GetInstance()->ConvertToCHAR( filePath.c_str(), path, MAX_PATH );
-        fp = fopen(path, "wb");
+        fp = fopen(filePath.c_str(), "wb");
         if(NULL == fp)
         {
             break;
@@ -1849,24 +1934,13 @@ bool CImage::SaveImageToPNG( const TString& filePath, bool bIgnoreAlpha /*= true
 #endif
         png_init_io(png_ptr, fp);
 
-        if (!bIgnoreAlpha && HasAlpha())
-        {
-            png_set_IHDR(png_ptr, info_ptr, m_width, m_height, 8, PNG_COLOR_TYPE_RGB_ALPHA,
-                PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-        } 
-        else
-        {
-            png_set_IHDR(png_ptr, info_ptr, m_width, m_height, 8, PNG_COLOR_TYPE_RGB,
-                PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-        }
+        png_set_IHDR(png_ptr, info_ptr, m_width, m_height, 8, PNG_COLOR_TYPE_RGB,
+            PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
         palette = (png_colorp)png_malloc(png_ptr, PNG_MAX_PALETTE_LENGTH * sizeof (png_color));
         png_set_PLTE(png_ptr, info_ptr, palette, PNG_MAX_PALETTE_LENGTH);
-
         png_write_info(png_ptr, info_ptr);
-
         png_set_packing(png_ptr);
-
         row_pointers = new png_bytep[ m_height ];
         if(row_pointers == nullptr)
         {
@@ -1874,7 +1948,7 @@ bool CImage::SaveImageToPNG( const TString& filePath, bool bIgnoreAlpha /*= true
             png_destroy_write_struct(&png_ptr, &info_ptr);
             break;
         }
-        if (bIgnoreAlpha && HasAlpha())
+        if (HasAlpha())
         {
             unsigned char *pTempData = new unsigned char[ m_width * m_height * 3 ];
             if (NULL == pTempData)
@@ -1911,25 +1985,20 @@ bool CImage::SaveImageToPNG( const TString& filePath, bool bIgnoreAlpha /*= true
         }
         else
         {
-            size_t uColorComponentCount = HasAlpha() ? 4 : 3;
+            uint32_t uColorComponentCount = HasAlpha() ? 4 : 3;
             for (int i = 0; i < (int)m_height; i++)
             {
                 row_pointers[m_height - i - 1] = (png_bytep)m_data + i * m_width * uColorComponentCount;
             }
 
             png_write_image(png_ptr, row_pointers);
-
             BEATS_SAFE_DELETE_ARRAY(row_pointers);
             row_pointers = nullptr;
         }
-
         png_write_end(png_ptr, info_ptr);
-
         png_free(png_ptr, palette);
         palette = nullptr;
-
         png_destroy_write_struct(&png_ptr, &info_ptr);
-
         fclose(fp);
 
         bRet = true;
@@ -1952,10 +2021,7 @@ bool CImage::SaveImageToJPG( const TString& filePath )
         /* Now we can initialize the JPEG compression object. */
         jpeg_create_compress(&cinfo);
 
-        char path[ MAX_PATH ];
-        CStringHelper::GetInstance()->ConvertToCHAR( filePath.c_str(), path, MAX_PATH );
-
-        if((outfile = fopen(path, "wb")) == NULL)
+        if ((outfile = fopen(filePath.c_str(), "wb")) == NULL)
         {
             break;
         }
@@ -1983,7 +2049,6 @@ bool CImage::SaveImageToJPG( const TString& filePath )
                 fclose(outfile);
                 break;
             }
-
             for (int i = 0; i < m_height; ++i)
             {
                 for (int j = 0; j < m_width; ++j)
@@ -2000,11 +2065,7 @@ bool CImage::SaveImageToJPG( const TString& filePath )
                 row_pointer[0] = & pTempData[(cinfo.image_height - cinfo.next_scanline - 1) * row_stride];
                 (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
             }
-
-            if (pTempData != nullptr)
-            {
-                free(pTempData);
-            }
+            BEATS_SAFE_DELETE(pTempData);
         } 
         else
         {
@@ -2024,6 +2085,46 @@ bool CImage::SaveImageToJPG( const TString& filePath )
     return bRet;
 }
 
+bool CImage::SaveImageToBMP(const TString& filePath)
+{
+    CSerializer serializer;
+    BITMAPINFOHEADER bmih;
+    bmih.biSize = sizeof(BITMAPINFOHEADER);
+    bmih.biWidth = m_width;
+    bmih.biHeight = m_height;
+    bmih.biPlanes = 1;
+    bmih.biBitCount = 32;
+    bmih.biCompression = BI_RGB;
+    bmih.biSizeImage = m_width * m_height * 4  ;
+
+    BITMAPFILEHEADER bmfh;
+    int nBitsOffset = sizeof(BITMAPFILEHEADER) + bmih.biSize;
+    uint32_t lImageSize = bmih.biSizeImage;
+    uint32_t lFileSize = nBitsOffset + lImageSize;
+    bmfh.bfType = 'B' + ('M' << 8);
+    bmfh.bfOffBits = nBitsOffset;
+    bmfh.bfSize = lFileSize;
+    bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
+
+    // Write the bitmap file header
+    serializer.Serialize((const char*)&bmfh, sizeof(BITMAPFILEHEADER));
+
+    // And then the bitmap info header
+    serializer.Serialize((const char*)&bmih, sizeof(BITMAPINFOHEADER));
+
+    // Finally, write the image data itself
+    //-- the data represents our drawing
+    for (int i = 0; i < m_dataLen;)
+    {
+        std::swap(m_data[i], m_data[i + 2]);
+        m_data[i + 3] = 0xFF;
+        i += 4;
+    }
+    serializer.Serialize(m_data, m_dataLen);
+    serializer.Deserialize(filePath.c_str(), "wb+");
+    return true;
+}
+
 bool CImage::InitWithImageFileThreadSafe( const TString& fullpath )
 {
     bool ret = false;
@@ -2031,7 +2132,7 @@ bool CImage::InitWithImageFileThreadSafe( const TString& fullpath )
     CSerializer serializer(m_filePath.c_str());
     if (serializer.GetWritePos() > 0)
     {
-        ret = InitWithImageData(serializer.GetBuffer(), serializer.GetWritePos());
+        ret = InitWithImageData(serializer.GetBuffer(), serializer.GetWritePos(), fullpath.c_str());
     }
 
     return ret;
@@ -2135,7 +2236,7 @@ bool CImage::IsWebp( const unsigned char * data, ssize_t dataLen )
 bool CImage::IsPvr( const unsigned char * data, ssize_t dataLen )
 {
     bool ret = false;
-    if (static_cast<size_t>(dataLen) > sizeof(PVRv2TexHeader) && static_cast<size_t>(dataLen) > sizeof(PVRv3TexHeader))
+    if (static_cast<uint32_t>(dataLen) > sizeof(PVRv2TexHeader) && static_cast<uint32_t>(dataLen) > sizeof(PVRv3TexHeader))
     {
         const PVRv2TexHeader* headerv2 = static_cast<const PVRv2TexHeader*>(static_cast<const void*>(data));
         const PVRv3TexHeader* headerv3 = static_cast<const PVRv3TexHeader*>(static_cast<const void*>(data));
@@ -2145,39 +2246,24 @@ bool CImage::IsPvr( const unsigned char * data, ssize_t dataLen )
     return ret;
 }
 
-bool CImage::IsEtc( const unsigned char * data, ssize_t dataLen )
+bool CImage::IsEtc( const unsigned char * data, ssize_t /*dataLen*/ )
 {
     return etc1_pkm_is_valid((etc1_byte*)data) ? true : false;
 }
 
-bool CImage::IsS3TC( const unsigned char * data,ssize_t dataLen )
+bool CImage::IsS3TC( const unsigned char * data,ssize_t /*dataLen*/ )
 {
     S3TCTexHeader *header = (S3TCTexHeader *)data;
     return strncmp(header->fileCode, "DDS", 3) == 0;
 }
 
-bool CImage::IsATITC( const unsigned char *data, ssize_t dataLen )
+bool CImage::IsATITC( const unsigned char *data, ssize_t /*dataLen*/ )
 {
     ATITCTexHeader *header = (ATITCTexHeader *)data;
     return strncmp(&header->identifier[1], "KTX", 3) == 0;
 }
 
-int CImage::GetBitPerPixel()
-{
-    return _pixelFormatInfoTables.at( m_renderFormat ).bpp;
-}
-
-bool CImage::HasAlpha()
-{
-    return _pixelFormatInfoTables.at( m_renderFormat ).alpha;
-}
-
-bool CImage::IsCompressed()
-{
-    return _pixelFormatInfoTables.at( m_renderFormat ).compressed;
-}
-
-bool CImage::SaveToFile( const TString& fileName, bool bToRGB /*= true */ )
+bool CImage::SaveToFile( const TString& fileName)
 {
     bool bRet = false;
 
@@ -2194,19 +2280,10 @@ bool CImage::SaveToFile( const TString& fileName, bool bToRGB /*= true */ )
         {
             break;
         }
-        TString strLowerCasePath(fileName);
-        for (unsigned int i = 0; i < strLowerCasePath.length(); ++i)
-        {
-#ifdef _UNICODE
-            strLowerCasePath[i] = towlower(fileName[i]);
-#else
-            strLowerCasePath[i] = (TCHAR)tolower(fileName[i]);
-#endif
-        }
-
+        TString strLowerCasePath = CStringHelper::GetInstance()->ToLower(fileName);
         if (TString::npos != strLowerCasePath.find(_T(".png")))
         {
-            if(!SaveImageToPNG(fileName, bToRGB))
+            if(!SaveImageToPNG(fileName))
             {
                 break;
             }
@@ -2214,6 +2291,13 @@ bool CImage::SaveToFile( const TString& fileName, bool bToRGB /*= true */ )
         else if (TString::npos != strLowerCasePath.find(_T(".jpg")))
         {
             if(!SaveImageToJPG(fileName))
+            {
+                break;
+            }
+        }
+        else if (TString::npos != strLowerCasePath.find(_T(".bmp")))
+        {
+            if (!SaveImageToBMP(fileName))
             {
                 break;
             }
@@ -2227,9 +2311,4 @@ bool CImage::SaveToFile( const TString& fileName, bool bToRGB /*= true */ )
     } while (0);
 
     return bRet;
-}
-
-const PixelFormatInfoMap& CImage::GetPixelFormatInfoMap()
-{
-    return _pixelFormatInfoTables;
 }

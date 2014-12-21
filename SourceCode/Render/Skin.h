@@ -1,33 +1,48 @@
 ﻿#ifndef BEYOND_ENGINE_RENDER_SKIN_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_SKIN_H__INCLUDE
 
-#include "Resource/Resource.h"
-#ifdef SW_SKEL_ANIM
-#include "AnimationController.h"
-#endif
-#include "CommonTypes.h"
-class CRenderBatch;
-class CMaterial;
-class CSkin : public CResource
+struct SSkinBatchInfo
 {
-    DECLARE_REFLECT_GUID(CSkin, 0x3479A0EF, CResource)
-    DECLARE_RESOURCE_TYPE(eRT_Skin)
+    SSkinBatchInfo()
+    {
+    }
+    ~SSkinBatchInfo()
+    {
+    }
+    uint32_t m_uStartPos = 0xFFFFFFFF;
+    uint32_t m_uDataSize = 0;
+};
 
+class CSkin
+{
 public:
     CSkin();
     virtual ~CSkin();
 
-    virtual bool Load() override;
-    virtual bool Unload() override;
-    const std::vector<CRenderBatch*>& GetRenderBatches() const;
+    void Initialize();
+    void Uninitialize();
+    uint32_t GetVAO() const;
+    uint32_t GetVBO() const;
+    uint32_t GetEBO() const;
+    const std::map<std::string, SSkinBatchInfo>& GetBatchInfoMap() const;
 
-#ifdef SW_SKEL_ANIM
-    void CalcSkelAnim(const CAnimationController::BoneMatrixMap &matrices);
+    void Decode();
+
+    bool Load(CSerializer& serializer);
+
+    bool IsInitialized() const;
+#ifdef DEVELOP_VERSION
+    uint32_t m_uVertexCount = 0;
 #endif
-
 private:
-    std::vector<CRenderBatch*> m_renderBatches;
-    SharePtr<CMaterial> m_pSkinMaterial;
+    std::map<std::string, SSkinBatchInfo> m_batchInfoMap;
+    CSerializer* m_pVertexData;
+    CSerializer* m_pIndexData;
+    uint32_t m_uVAO;
+    uint32_t m_uVBO;
+    uint32_t m_uEBO;
+
+    bool m_bIsInitialized;
 };
 
 #endif

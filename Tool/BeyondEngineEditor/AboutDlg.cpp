@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "AboutDlg.h"
 #include "EditorConfig.h"
-#include "Resource/ResourcePathManager.h"
-#include "Utility/BeatsUtility/FilePathTool.h"
-#include "Utility/BeatsUtility/Serializer.h"
 
 CAboutDlg::CAboutDlg(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos, const wxSize &size, long style, const wxString &name)
     : super(parent, id, title, pos, size, style, name)
@@ -26,18 +23,8 @@ CAboutDlg::~CAboutDlg()
 
 int CAboutDlg::ShowModal()
 {
-    TString strReadmePath = CResourcePathManager::GetInstance()->GetResourcePath(CResourcePathManager::eRPT_Resource);
-    strReadmePath.append(_T("/../ReadMe.txt"));
-    int nRet = 0;
-    if (CFilePathTool::GetInstance()->Exists(strReadmePath.c_str()))
-    {
-        CSerializer serializer(strReadmePath.c_str());
-        serializer << 0;
-        m_pTextCtrl->SetLabelText((char*)serializer.GetReadPtr());
-        m_pShowAfterLaunchCheckBox->SetValue(CEditorConfig::GetInstance()->IsShowAboutDlgAfterLaunch());
-        nRet = super::ShowModal();
-    }
-    return nRet;
+    m_pShowAfterLaunchCheckBox->SetValue(CEditorConfig::GetInstance()->IsShowAboutDlgAfterLaunch());
+    return super::ShowModal();
 }
 
 void CAboutDlg::OnShowAfterLaunchCheckBoxClick(wxCommandEvent& event)

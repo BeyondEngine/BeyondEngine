@@ -8,8 +8,6 @@ public:
     enum EFloatStateParam
     {
         eFSP_ClearDepth,
-        eFSP_DepthFar,
-        eFSP_DepthNear,
         eFSP_LineWidth,
         eFSP_PointSize,
 
@@ -22,11 +20,11 @@ public:
     virtual ~CFloatRenderStateParam();
     virtual void Apply() override;
 
-    virtual ERenderState GetRenderStateType() const;
+    virtual ERenderStateParamType GetRenderStateType() const override;
 
-    virtual bool operator==( const CRenderStateParamBase& other ) const;
+    virtual bool operator==(const CRenderStateParamBase& other) const override;
 
-    virtual bool operator!=( const CRenderStateParamBase& other ) const;
+    virtual bool operator!=(const CRenderStateParamBase& other) const override;
 
     void SetFloatParamType( EFloatStateParam type );
     EFloatStateParam GetFloatParamType() const;

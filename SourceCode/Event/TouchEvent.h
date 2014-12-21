@@ -15,18 +15,18 @@ public:
     CTouchEvent( CTouchEvent&& other );
     CTouchEvent& operator=( CTouchEvent&& other );
 
-    size_t GetTouchNum() const;
-    CTouch *GetTouch(size_t index) const;
-    CTouch *GetTouchByID(int ID) const;
+    uint32_t GetTouchNum() const;
+    CTouch *GetTouch(uint32_t index) const;
+    CTouch *GetTouchByID(size_t ID) const;
 
     void AddTouch( CTouch* pTouch );
 
-    const kmVec2& GetTouchPoint();
+    const CVec2& GetTouchPoint();
     int GetDelta() const;
 
-private:
+protected:
     TTouchVector m_touchVector;
-    kmVec2 m_vec2TouchPoint;
+    CVec2 m_vec2TouchPoint;
     float m_fDistance;
     int m_iDelta;
 };

@@ -12,14 +12,17 @@ public:
     CLaunchTask();
     virtual ~CLaunchTask();
     virtual void Initialize() override;
-
+#ifdef EDITOR_MODE
+    virtual bool OnPropertyChange(void* pVariableAddr, CSerializer* pNewValueToBeSet) override;
+#endif
     virtual bool ExecuteImp(SActionContext* pContext) override;
     virtual void ReflectData(CSerializer& serializer) override;
+    const std::vector< SharePtr<CTaskBase> >& GetTaskList() const;
 
 private:
     std::vector<CTaskBase*> m_taskList;
-    // TODO: because the task manager will delete the task, so we hold a reference.
-    std::vector<SharePtr<CTaskBase>> m_taskShareList;
+    // Raw pointer in m_taskList only for reflection.
+    std::vector<SharePtr<CTaskBase> > m_taskShareList;
 };
 
 #endif

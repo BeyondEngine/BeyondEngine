@@ -1,9 +1,12 @@
 ﻿#include "stdafx.h"
 #include "Texture.h"
-#include "Utility/BeatsUtility/StringHelper.h"
 #include "external/Configuration.h"
 #include "TextureFormatConverter.h"
 #include "Renderer.h"
+#include "Utility/BeatsUtility/FilePathTool.h"
+#include "Resource/ResourceManager.h"
+#include "external/ZipUtils.h"
+#include "RenderManager.h"
 
 static PixelFormat g_defaultAlphaPixelFormat = PixelFormat::DEFAULT;
 
@@ -20,48 +23,79 @@ CTexture::CTexture()
 
 CTexture::~CTexture()
 {
-    BEATS_SAFE_DELETE( m_pImage );
+    if (IsInitialized())
+    {
+        Uninitialize();
+    }
+    BEATS_SAFE_DELETE(m_pEtcAlphaTexture);
 }
 
 GLuint CTexture::ID() const
 {
-    return m_uId;
+    GLuint uRet = m_uId;
+#ifdef DEVELOP_VERSION
+    if (!IsLoaded())
+    {
+        uRet = CRenderManager::GetInstance()->GetTempTexture()->ID();
+    }
+#endif
+    return uRet;
+}
+
+CTexture* CTexture::GetAlphaTexture() const
+{
+    return m_pEtcAlphaTexture;
 }
 
 bool CTexture::Load()
 {
     BEATS_ASSERT(!IsLoaded(), _T("Can't Load a texture which is already loaded!"));
-    bool bRet = false;
-    m_pImage = new CImage;
-    bRet = m_pImage->InitWithImageFile(GetFilePath());
-    BEATS_ASSERT(bRet, _T("Load file %s failed!"), GetFilePath().c_str());
-
-#ifdef _DEBUG
+    const TString& strFilePath = GetFilePath();
+    BEATS_ASSERT(strFilePath.length() > 0, _T("Can't load an image with empty path!"));
+    bool bRet = CFilePathTool::GetInstance()->Exists(strFilePath.c_str());
+    BEATS_ASSERT(bRet, _T("File %s doesn't exists!"), strFilePath.c_str());
     if (bRet)
     {
-        int imageWidth = m_pImage->GetWidth();
-        int imageHeight = m_pImage->GetHeight();
+        CSerializer filedata(strFilePath.c_str());
+        CResourceManager::GetInstance()->DecodeResourceData(filedata);
+        uint32_t uBufferSize = filedata.GetWritePos();
 
-        int maxTextureSize = CConfiguration::GetInstance()->GetMaxTextureSize();
-        BEATS_ASSERT(imageWidth <= maxTextureSize &&  imageHeight <= maxTextureSize, 
-            _T("WARNING: Image (%u x %u) is bigger than the supported %u x %u"), 
-            imageWidth, imageHeight, maxTextureSize, maxTextureSize);
+        if (strcmp((char*)filedata.GetReadPtr(), BEYONDENGINE_ZIP_FILE_HEADER) == 0)
+        {
+            TString strZipHead;
+            filedata >> strZipHead;
+            unsigned char* pBuffer = nullptr;
+            uBufferSize = uBufferSize - sizeof(BEYONDENGINE_ZIP_FILE_HEADER);
+            uBufferSize = CZipUtils::InflateMemory((unsigned char*)filedata.GetReadPtr(), uBufferSize, &pBuffer);
+            BEATS_ASSERT(uBufferSize > 0);
+            filedata.SetBuffer(pBuffer, uBufferSize);
+            filedata.SetWritePos(uBufferSize);
+        }
+        CImage* pImage = new CImage;
+        bRet = pImage->InitWithImageData(filedata.GetBuffer(), uBufferSize, strFilePath.c_str());
+        BEATS_ASSERT(bRet, _T("Load file %s failed!"), GetFilePath().c_str());
+        if (bRet)
+        {
+            LoadWithImage(pImage);
+            if (pImage->GetFileType() == CImage::eF_ETC)
+            {
+                uint32_t uOriginalFileSize = etc1_get_encoded_data_size(pImage->GetWidth(), pImage->GetHeight()) + ETC_PKM_HEADER_SIZE;
+                bool bContainAlphaData = uBufferSize == uOriginalFileSize * 2;
+                if (bContainAlphaData)
+                {
+                    BEATS_ASSERT(uBufferSize % 2 == 0);
+                    uBufferSize = uBufferSize / 2;
+                    m_pEtcAlphaTexture = new CTexture;
+                    CImage* pAlphaImage = new CImage;
+                    filedata.SetReadPos(uBufferSize);
+                    pAlphaImage->InitWithImageData((const unsigned char*)filedata.GetReadPtr(), uBufferSize, strFilePath.c_str());
+                    m_pEtcAlphaTexture->LoadWithImage(pAlphaImage);
+                    m_pEtcAlphaTexture->SetLoadFlag(true);
+                }
+            }
+        }
     }
-#endif
-    if (m_pImage->GetNumberOfMipmaps() == 0 && !m_pImage->IsCompressed())
-    {
-        unsigned char* outTempData = nullptr;
-        ssize_t outTempDataLen = 0;
-        m_pixelFormat = ConvertDataToFormat(m_pImage->GetData(), m_pImage->GetDataLength(), m_pImage->GetRenderFormat(), g_defaultAlphaPixelFormat, &outTempData, &outTempDataLen);
-
-        m_pData = new CSerializer((size_t)0, NULL);
-        m_pData->SetBuffer(outTempData, outTempDataLen);
-        m_pData->SetReadPos(0);
-        m_pData->SetWritePos(outTempDataLen);
-    }
-
-    super::Load();
-    return bRet;
+    return bRet && super::Load();
 }
 
 bool CTexture::InitWithMipmaps( const SMipmapInfo* mipmaps, int mipmapsNum, PixelFormat pixelFormat, int pixelsWide, int pixelsHigh )
@@ -72,7 +106,7 @@ bool CTexture::InitWithMipmaps( const SMipmapInfo* mipmaps, int mipmapsNum, Pixe
     BEATS_ASSERT(pixelFormat != PixelFormat::NONE && pixelFormat != PixelFormat::AUTO, _T("the \"pixelFormat\" param must be a certain value!"));
     BEATS_ASSERT(pixelsWide>0 && pixelsHigh>0, _T("Invalid size"));
     BEATS_ASSERT(mipmapsNum > 0, _T("mipmap number is less than 1"));
-    BEATS_WARNING( CImage::GetPixelFormatInfoMap().find(pixelFormat) != CImage::GetPixelFormatInfoMap().end(), _T("WARNING: unsupported pixelformat: %lx"), (unsigned long)pixelFormat );
+    BEATS_WARNING(CImage::GetPixelFormatInfoMap().find(pixelFormat) != CImage::GetPixelFormatInfoMap().end(), _T("WARNING: unsupported pixelformat: %x"), (uint32_t)pixelFormat);
 
     if(CImage::GetPixelFormatInfoMap().find(pixelFormat) != CImage::GetPixelFormatInfoMap().end())
     {
@@ -148,6 +182,7 @@ bool CTexture::InitWithMipmaps( const SMipmapInfo* mipmaps, int mipmapsNum, Pixe
 
             m_bPremultipliedAlpha = false;
             m_uMipmapCount = mipmapsNum;
+            bRet = true;
         }
     }
     return bRet;
@@ -166,7 +201,9 @@ bool CTexture::InitWithData(const void *data, ssize_t dataLen, PixelFormat pixel
 
 bool CTexture::UpdateSubImage( GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, const GLvoid *data )
 {
-    const PixelFormatInfo& info = CImage::GetPixelFormatInfoMap().at(m_pixelFormat);
+    auto iter = CImage::GetPixelFormatInfoMap().find(m_pixelFormat);
+    BEATS_ASSERT(iter != CImage::GetPixelFormatInfoMap().end());
+    const PixelFormatInfo& info = iter->second;
     CRenderer* pRenderer = CRenderer::GetInstance();
     pRenderer->BindTexture(GL_TEXTURE_2D, m_uId);
     pRenderer->TextureSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, width, height, info.format, info.type, data);
@@ -197,30 +234,86 @@ PixelFormat CTexture::ConvertDataToFormat(const unsigned char* data, ssize_t dat
 
 int CTexture::Width() const
 {
-    return m_iWidth;
+    int nRet = m_iWidth;
+#ifdef DEVELOP_VERSION
+    if (!IsLoaded())
+    {
+        nRet = CRenderManager::GetInstance()->GetTempTexture()->Width();
+    }
+#endif
+    return nRet;
 }
 
 int CTexture::Height() const
 {
-    return m_iHeight;
+    int nRet = m_iHeight;
+#ifdef DEVELOP_VERSION
+    if (!IsLoaded())
+    {
+        nRet = CRenderManager::GetInstance()->GetTempTexture()->Height();
+    }
+#endif
+    return nRet;
 }
 
-bool CTexture::operator==( const CTexture& other )
+CImage::EFormat CTexture::GetFileFormat() const
 {
-    return m_uId == other.m_uId;
+    return m_fileFormat;
 }
 
-bool CTexture::operator!=( const CTexture& other )
+#ifdef DEVELOP_VERSION
+TString CTexture::GetDescription() const
 {
-    return m_uId != other.m_uId;
+    TString strRet = super::GetDescription();
+    TCHAR szBuffer[256];
+    _stprintf(szBuffer, _T("Size: %d x %d, Pixel Format: %d, "), m_iWidth, m_iHeight, m_pixelFormat);
+    strRet.append(szBuffer);
+    return strRet;
+}
+#endif
+#ifdef EDITOR_MODE
+void CTexture::Reload()
+{
+    super::Reload();
+    Uninitialize();
+    Initialize();
+}
+#endif
+
+void CTexture::LoadWithImage(CImage* pImage)
+{
+    BEATS_ASSERT(pImage != nullptr && m_pImage == nullptr);
+    m_pImage = pImage;
+    m_iWidth = m_pImage->GetWidth();
+    m_iHeight = m_pImage->GetHeight();
+
+#ifdef _DEBUG
+    int maxTextureSize = CConfiguration::GetInstance()->GetMaxTextureSize();
+    BEATS_ASSERT(m_iWidth <= maxTextureSize &&  m_iHeight <= maxTextureSize,
+        _T("WARNING: Image (%u x %u) is bigger than the supported %u x %u"),
+        m_iWidth, m_iHeight, maxTextureSize, maxTextureSize);
+#endif
+    unsigned char* outTempData = nullptr;
+    ssize_t outTempDataLen = 0;
+    m_pixelFormat = pImage->GetRenderFormat();
+    if (m_pImage->GetNumberOfMipmaps() == 0 && !m_pImage->IsCompressed())
+    {
+        m_pixelFormat = ConvertDataToFormat(m_pImage->GetData(), m_pImage->GetDataLength(), m_pImage->GetRenderFormat(), g_defaultAlphaPixelFormat, &outTempData, &outTempDataLen);
+        if (m_pImage->GetData() != outTempData)
+        {
+            BEATS_ASSERT(m_pixelFormat != pImage->GetRenderFormat());
+            m_pImage->SetData(m_pixelFormat, outTempData, outTempDataLen);
+        }
+    }
 }
 
 void CTexture::Initialize()
 {
     super::Initialize();
-    bool bRet = false;
-    if ( m_pImage )
+    bool bRet = m_pImage != nullptr;
+    if (bRet)
     {
+        m_fileFormat = m_pImage->GetFileType();
         int imageWidth = m_pImage->GetWidth();
         int imageHeight = m_pImage->GetHeight();
 
@@ -236,7 +329,7 @@ void CTexture::Initialize()
         }
         else
         {
-            InitWithData(m_pData->GetBuffer(), m_pData->GetWritePos(), m_pixelFormat, imageWidth, imageHeight);
+            InitWithData(m_pImage->GetData(), m_pImage->GetDataLength(), m_pixelFormat, imageWidth, imageHeight);
             // set the premultiplied tag
             if (!m_pImage->HasPremultipliedAlpha())
             {
@@ -247,23 +340,33 @@ void CTexture::Initialize()
             {
                 m_bPremultipliedAlpha = m_pImage->IsPremultipliedAlpha();
             }
-            if (m_pData != NULL)
-            {
-                BEATS_SAFE_DELETE(m_pImage);
-                m_pData->SetBuffer(NULL, 0, false);
-                BEATS_SAFE_DELETE(m_pData);
-            }
             bRet = true;
+        }
+        if (m_pImage != NULL)
+        {
+            BEATS_SAFE_DELETE(m_pImage);
         }
     }
     BEATS_ASSERT(bRet, _T("Init texture %s failed!"), m_strPath.m_value.c_str());
+    if (m_pEtcAlphaTexture)
+    {
+        m_pEtcAlphaTexture->Initialize();
+    }
 }
 
 void CTexture::Uninitialize()
 {
-    super::Uninitialize();
-    if (m_uId != 0)
+    if (IsInitialized())
     {
-        CRenderer::GetInstance()->DeleteTexture(1, &m_uId);
+        if (m_uId != 0)
+        {
+            CRenderer::GetInstance()->DeleteTexture(1, &m_uId);
+            m_uId = 0;
+        }
+        if (m_pEtcAlphaTexture)
+        {
+            m_pEtcAlphaTexture->Uninitialize();
+        }
+        super::Uninitialize();
     }
 }

@@ -20,9 +20,9 @@ void CShadeModeRenderStateParam::Apply()
 #endif
 }
 
-ERenderState CShadeModeRenderStateParam::GetRenderStateType() const
+ERenderStateParamType CShadeModeRenderStateParam::GetRenderStateType() const
 {
-    return eRS_ShadeMode;
+    return eRSPT_ShadeMode;
 }
 
 void CShadeModeRenderStateParam::SetValue( EShadeModeType value )
@@ -37,14 +37,14 @@ CShadeModeRenderStateParam::EShadeModeType CShadeModeRenderStateParam::GetValue(
 
 bool CShadeModeRenderStateParam::operator==( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_ShadeMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_ShadeMode );
     CShadeModeRenderStateParam* pOther = ( CShadeModeRenderStateParam* )&other;
     return m_nValue == pOther->m_nValue;
 }
 
 bool CShadeModeRenderStateParam::operator!=( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_ShadeMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_ShadeMode );
     CShadeModeRenderStateParam* pOther = ( CShadeModeRenderStateParam* )&other;
     return m_nValue != pOther->m_nValue;
 }

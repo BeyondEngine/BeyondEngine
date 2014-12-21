@@ -27,15 +27,17 @@ public:
     void RefreshItemGridCell( const SPerformanceRecord* pRecord);
     SPerformanceRecord* GetRecord( const wxTreeItemId& treeItemId );
     void RefreshItemGridRowLab(const SPerformanceRecord* pRecord);
-    void ClearGridRow( size_t startRowIndex, size_t count );
+    void ClearGridRow( uint32_t startRowIndex, uint32_t count );
+    void ClearGridRowLabel();
     void ClearGrid();
-    void SetGridRowsCount(wxGrid* pGrid, size_t count);
+    void SetGridRowsCount(wxGrid* pGrid, uint32_t count);
     void ClearPeakValue( SPerformanceRecord* pRecord );
     void OnClickPerformanceClearBtn(wxCommandEvent& event);
     void OnClickPerformancePauseBtn( wxCommandEvent& event);
     void OnClose(wxCloseEvent& event);
     void OnTreeItemChanged(wxTreeEvent& event);
     void OnClickClearPeakValueBtn( wxCommandEvent& event);
+
 private:
     wxTreeCtrl*     m_pPerformanceTreeCtrl;
     wxStaticText*   m_pCurResultLabel;
@@ -46,6 +48,13 @@ private:
     wxStaticText*   m_pPeakValueTxtLabel;
     wxStaticText*   m_pDrawCallLabel;
     wxStaticText*   m_pDrawCallTxtLabel;
+    wxStaticText*   m_pParticleCountLabel = nullptr;
+    wxStaticText*   m_pParticleCountTxtLabel = nullptr;
+    wxStaticText*   m_pEmitterCountLabel = nullptr;
+    wxStaticText*   m_pEmitterCountTxtLabel = nullptr;
+    wxStaticText*   m_pParticleUpdateCountLabel = nullptr;
+    wxStaticText*   m_pParticleUpdateCountTxtLabel = nullptr;
+
     wxStaticText*   m_pTotalRunTimeLabel;
     wxStaticText*   m_pTotalRunTimeTxtLabel;
     wxStaticText*   m_pFrameCountLabel;
@@ -62,8 +71,9 @@ private:
     bool            m_bIsPaused;
     bool            m_bIsResult;
     IMAGEHLP_LINEW64 m_info;
-    std::map<size_t, wxTreeItemId> m_performTreeItemMap;
-    std::map<size_t, float>        m_updateValueMap;
+    std::map<uint32_t, wxTreeItemId> m_performTreeItemMap;
+    std::map<uint32_t, float>        m_updateValueMap;
+    std::map<TString, uint32_t>      m_emitterIndexMap;
 DECLARE_EVENT_TABLE();
 };
 

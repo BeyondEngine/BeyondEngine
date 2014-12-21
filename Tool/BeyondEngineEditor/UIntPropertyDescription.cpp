@@ -2,6 +2,7 @@
 #include "UIntPropertyDescription.h"
 #include "Utility/BeatsUtility/StringHelper.h"
 #include "Utility/BeatsUtility/Serializer.h"
+#include "Component/ComponentPublic.h"
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
 
@@ -11,7 +12,7 @@ CUIntPropertyDescription::CUIntPropertyDescription(CSerializer* pSerializer)
 , m_maxValue(ULONG_MAX)
 , m_spinStep(0)
 {
-    size_t value = 0;
+    uint32_t value = 0;
     if (pSerializer != NULL)
     {
         (*pSerializer) >> value;
@@ -26,26 +27,26 @@ CUIntPropertyDescription::CUIntPropertyDescription(const CUIntPropertyDescriptio
 , m_spinStep(rRef.m_spinStep)
 
 {
-    size_t value = 0;
+    uint32_t value = 0;
     InitializeValue(value);
 }
 
 CUIntPropertyDescription::~CUIntPropertyDescription()
 {
-    DestroyValue<size_t>();
+    DestroyValue<uint32_t>();
 }
 
 bool CUIntPropertyDescription::AnalyseUIParameterImpl(const std::vector<TString>& result)
 {
     std::vector<TString> cache;
-    for (size_t i = 0; i < result.size(); ++i)
+    for (uint32_t i = 0; i < result.size(); ++i)
     {
         cache.clear();
         CStringHelper::GetInstance()->SplitString(result[i].c_str(), PROPERTY_KEYWORD_SPLIT_STR, cache);
         BEATS_ASSERT(cache.size() == 2);
         if (_tcsicmp(cache[0].c_str(), UIParameterAttrStr[eUIPAT_DefaultValue]) == 0)
         {
-            size_t uValue = 0;
+            uint32_t uValue = 0;
             GetValueByTChar(cache[1].c_str(), &uValue);
             wxVariant var((wxLongLong)uValue);
             SetValue(var, true);
@@ -69,15 +70,15 @@ bool CUIntPropertyDescription::AnalyseUIParameterImpl(const std::vector<TString>
             BEATS_ASSERT(false, _T("Unknown parameter for UInt property %s"), cache[0].c_str());
         }
     }
-    BEATS_ASSERT(*(size_t*)m_valueArray[eVT_CurrentValue] <= m_maxValue && *(size_t*)m_valueArray[eVT_CurrentValue] >= m_minValue && m_minValue >= 0);
+    BEATS_ASSERT(*(uint32_t*)m_valueArray[eVT_CurrentValue] <= m_maxValue && *(uint32_t*)m_valueArray[eVT_CurrentValue] >= m_minValue && m_minValue >= 0);
     return true;
 }
 
 wxPGProperty* CUIntPropertyDescription::CreateWxProperty()
 {
-    wxPGProperty* pProperty = new wxUIntProperty(wxPG_LABEL, wxPG_LABEL, *(size_t*)m_valueArray[eVT_CurrentValue]);
+    wxPGProperty* pProperty = new wxUIntProperty(wxPG_LABEL, wxPG_LABEL, *(uint32_t*)m_valueArray[eVT_CurrentValue]);
     pProperty->SetClientData(this);
-    wxVariant var((wxLongLong)(*(size_t*)m_valueArray[eVT_CurrentValue]));
+    wxVariant var((wxLongLong)(*(uint32_t*)m_valueArray[eVT_CurrentValue]));
     pProperty->SetDefaultValue(var);
     pProperty->SetModifiedStatus(!IsDataSame(true));
     pProperty->SetAttribute( wxPG_ATTR_MIN, (wxULongLong)m_minValue );
@@ -93,7 +94,7 @@ wxPGProperty* CUIntPropertyDescription::CreateWxProperty()
 
 void CUIntPropertyDescription::SetValue( wxVariant& value, bool bSaveValue /*= true*/ )
 {
-    size_t uNewValue = value.GetULongLong().GetLo();
+    uint32_t uNewValue = value.GetULongLong().GetLo();
     SetValueWithType(&uNewValue, eVT_CurrentValue);
     if (bSaveValue)
     {
@@ -103,17 +104,17 @@ void CUIntPropertyDescription::SetValue( wxVariant& value, bool bSaveValue /*= t
 
 bool CUIntPropertyDescription::CopyValue(void* pSourceValue, void* pTargetValue)
 {
-    bool bRet = *(size_t*)pTargetValue != *(size_t*)pSourceValue;
+    bool bRet = *(uint32_t*)pTargetValue != *(uint32_t*)pSourceValue;
     if (bRet)
     {
-        *(size_t*)pTargetValue = *(size_t*)pSourceValue;
+        *(uint32_t*)pTargetValue = *(uint32_t*)pSourceValue;
     }
     return bRet;
 }
 
 bool CUIntPropertyDescription::IsDataSame( bool bWithDefaultOrXML )
 {
-    bool bRet = *(size_t*)m_valueArray[(bWithDefaultOrXML ? eVT_DefaultValue : eVT_SavedValue)] == *(size_t*)m_valueArray[eVT_CurrentValue];
+    bool bRet = *(uint32_t*)m_valueArray[(bWithDefaultOrXML ? eVT_DefaultValue : eVT_SavedValue)] == *(uint32_t*)m_valueArray[eVT_CurrentValue];
     return bRet;
 }
 
@@ -125,7 +126,7 @@ CPropertyDescriptionBase* CUIntPropertyDescription::CreateNewInstance()
 
 void CUIntPropertyDescription::GetValueAsChar( EValueType type, char* pOut ) const
 {
-    size_t uValue = *(size_t*)m_valueArray[type];
+    uint32_t uValue = *(uint32_t*)m_valueArray[type];
     sprintf(pOut, "%u", uValue);
 }
 
@@ -133,20 +134,20 @@ bool CUIntPropertyDescription::GetValueByTChar(const TCHAR* pIn, void* pOutValue
 {
     TCHAR* pEndChar = NULL;
     _set_errno(0);
-    size_t uValue = _tcstoul(pIn, &pEndChar, 10);
+    uint32_t uValue = _tcstoul(pIn, &pEndChar, 10);
     BEATS_ASSERT(pIn[0] != _T('-'), _T("Negative number can't be set into CUIntPropertyDescription"));
     BEATS_ASSERT(_tcslen(pEndChar) == 0, _T("Read uint from string %s error, stop at %s"), pIn, pEndChar);
     BEATS_ASSERT(errno == 0, _T("Call _tcstoul failed! string %s radix: 10"), pIn);
-    *(size_t*)pOutValue = uValue;
+    *(uint32_t*)pOutValue = uValue;
     return true;
 }
 
 void CUIntPropertyDescription::Serialize(CSerializer& serializer, EValueType eValueType /*= eVT_SavedValue*/)
 {
-    serializer << *(size_t*)m_valueArray[eValueType];
+    serializer << *(uint32_t*)m_valueArray[eValueType];
 }
 
 void CUIntPropertyDescription::Deserialize(CSerializer& serializer, EValueType eValueType /*= eVT_CurrentValue*/)
 {
-    serializer >> *(size_t*)m_valueArray[eValueType];
+    serializer >> *(uint32_t*)m_valueArray[eValueType];
 }

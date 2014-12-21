@@ -13,16 +13,16 @@ class ReferenceMaker;
 class ClassDescFactor : public ClassDesc
 {
 public:
-	ClassDescFactor();
-	~ClassDescFactor();
+    ClassDescFactor();
+    ~ClassDescFactor();
 
-	virtual int				IsPublic();
-	virtual void*			Create(BOOL loading = FALSE);
-	virtual const MCHAR*	ClassName();
-	virtual SClass_ID		SuperClassID();
-	virtual Class_ID		ClassID();
-	virtual const MCHAR*	Category();
-	virtual MCHAR* GetRsrcString(INT_PTR id);
+    virtual int                IsPublic();
+    virtual void*            Create(BOOL loading = FALSE);
+    virtual const MCHAR*    ClassName();
+    virtual SClass_ID        SuperClassID();
+    virtual Class_ID        ClassID();
+    virtual const MCHAR*    Category();
+    virtual MCHAR* GetRsrcString(INT_PTR id);
 };
 
 #endif

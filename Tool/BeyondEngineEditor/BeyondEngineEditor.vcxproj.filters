@@ -61,12 +61,6 @@
     <Filter Include="头文件\wxUIControl\GLWindow">
       <UniqueIdentifier>{c905db63-8ad5-40e7-bbaa-1630064ce2e3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\wxUIControl\DataView">
-      <UniqueIdentifier>{606dc744-5829-43a8-8703-2496ff095718}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\wxUIControl\DataView">
-      <UniqueIdentifier>{b52fb846-1af8-495d-ac92-96d8da7c846f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="源文件\wxUIControl\TransparentBGText">
       <UniqueIdentifier>{5d883d8f-10a6-41f7-97da-754f6d9c0384}</UniqueIdentifier>
     </Filter>
@@ -85,12 +79,6 @@
     <Filter Include="头文件\wxUIControl\TreeItemData">
       <UniqueIdentifier>{fe076a22-ecbb-448b-845e-d31e2ab15e91}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\wxUIControl\UserDefinedEvent">
-      <UniqueIdentifier>{6de1c2e7-8e67-47c4-ab91-6c8391759b7f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\wxUIControl\UserDefinedEvent">
-      <UniqueIdentifier>{4ca2d374-f76b-4ace-bd09-d40623abf97d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\wxUIControl\wxWidgetsProperty\PGEditor">
       <UniqueIdentifier>{e2c8784c-bb84-4645-a653-b0d16d1d47d3}</UniqueIdentifier>
     </Filter>
@@ -103,15 +91,18 @@
     <Filter Include="源文件\wxUIControl\Gradient">
       <UniqueIdentifier>{c69afd0e-aac0-4189-b99c-91d8cce2705b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\OperationRecordSystem">
+      <UniqueIdentifier>{7f15787b-7eb5-4a0b-bdce-fd4e5205ce86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\OperationRecordSystem">
+      <UniqueIdentifier>{8001deb9-5b81-4784-a5e0-10f93cc23fde}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="timebarframe.cpp">
-      <Filter>源文件\wxUIControl\TimeFrameBar</Filter>
-    </ClCompile>
-    <ClCompile Include="timebaritem.cpp">
       <Filter>源文件\wxUIControl\TimeFrameBar</Filter>
     </ClCompile>
     <ClCompile Include="timebaritemcontainer.cpp">
@@ -137,9 +128,6 @@
     </ClCompile>
     <ClCompile Include="EngineProperGridManager.cpp">
       <Filter>源文件\wxUIControl\wxProperty</Filter>
-    </ClCompile>
-    <ClCompile Include="EditAnimationDialog.cpp">
-      <Filter>源文件\ExtraWindow</Filter>
     </ClCompile>
     <ClCompile Include="PtrPropertyDescription.cpp">
       <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
@@ -192,12 +180,6 @@
     <ClCompile Include="MapPropertyDescription.cpp">
       <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
     </ClCompile>
-    <ClCompile Include="SplineGLWindow.cpp">
-      <Filter>源文件\wxUIControl\GLWindow</Filter>
-    </ClCompile>
-    <ClCompile Include="AnimationGLWindow.cpp">
-      <Filter>源文件\wxUIControl\GLWindow</Filter>
-    </ClCompile>
     <ClCompile Include="EditDialogBase.cpp">
       <Filter>源文件\ExtraWindow</Filter>
     </ClCompile>
@@ -216,29 +198,11 @@
     <ClCompile Include="EditPerformanceDialog.cpp">
       <Filter>源文件\ExtraWindow</Filter>
     </ClCompile>
-    <ClCompile Include="DataViewTreeModelNode.cpp">
-      <Filter>源文件\wxUIControl\DataView</Filter>
-    </ClCompile>
-    <ClCompile Include="DataViewTreeModel.cpp">
-      <Filter>源文件\wxUIControl\DataView</Filter>
-    </ClCompile>
-    <ClCompile Include="DataViewCheckRender.cpp">
-      <Filter>源文件\wxUIControl\DataView</Filter>
-    </ClCompile>
-    <ClCompile Include="DataViewCtrl.cpp">
-      <Filter>源文件\wxUIControl\DataView</Filter>
-    </ClCompile>
-    <ClCompile Include="DataViewListModel.cpp">
-      <Filter>源文件\wxUIControl\DataView</Filter>
-    </ClCompile>
     <ClCompile Include="TransparentText.cpp">
       <Filter>源文件\wxUIControl\TransparentBGText</Filter>
     </ClCompile>
     <ClCompile Include="FilePropertyDescription.cpp">
       <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
-    </ClCompile>
-    <ClCompile Include="UIViewAgent.cpp">
-      <Filter>源文件\ViewAgent</Filter>
     </ClCompile>
     <ClCompile Include="TerrainViewAgent.cpp">
       <Filter>源文件\ViewAgent</Filter>
@@ -255,20 +219,11 @@
     <ClCompile Include="ComponentTreeItemData.cpp">
       <Filter>源文件\wxUIControl\TreeItemData</Filter>
     </ClCompile>
-    <ClCompile Include="ComponentInstanceTreeItemData.cpp">
-      <Filter>源文件\wxUIControl\TreeItemData</Filter>
-    </ClCompile>
     <ClCompile Include="SceneViewAgent.cpp">
       <Filter>源文件\ViewAgent</Filter>
     </ClCompile>
     <ClCompile Include="AniViewAgent.cpp">
       <Filter>源文件\ViewAgent</Filter>
-    </ClCompile>
-    <ClCompile Include="EffectViewAgent.cpp">
-      <Filter>源文件\ViewAgent</Filter>
-    </ClCompile>
-    <ClCompile Include="timebarevent.cpp">
-      <Filter>源文件\wxUIControl\UserDefinedEvent</Filter>
     </ClCompile>
     <ClCompile Include="TexturePropertyDescription.cpp">
       <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
@@ -280,9 +235,6 @@
       <Filter>源文件\wxUIControl\wxWidgetsProperty\PGEditor</Filter>
     </ClCompile>
     <ClCompile Include="TexturePreviewDialog.cpp">
-      <Filter>源文件\ExtraWindow</Filter>
-    </ClCompile>
-    <ClCompile Include="SplineDialog.cpp">
       <Filter>源文件\ExtraWindow</Filter>
     </ClCompile>
     <ClCompile Include="WxGLRenderWindow.cpp">
@@ -336,6 +288,75 @@
     <ClCompile Include="AboutDlg.cpp">
       <Filter>源文件\ExtraWindow</Filter>
     </ClCompile>
+    <ClCompile Include="ComponentProxyTreeItemData.cpp">
+      <Filter>源文件\wxUIControl\TreeItemData</Filter>
+    </ClCompile>
+    <ClCompile Include="LanguageTextPropertyDescription.cpp">
+      <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClCompile>
+    <ClCompile Include="wxSoundPreviewEditor.cpp">
+      <Filter>源文件\wxUIControl\wxWidgetsProperty\PGEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundFileProperty.cpp">
+      <Filter>源文件\wxUIControl\wxProperty</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundFilePropertyDescription.cpp">
+      <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClCompile>
+    <ClCompile Include="WaitingForProcessDialog.cpp">
+      <Filter>源文件\ExtraWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="SetVersionDialog.cpp">
+      <Filter>源文件\ExtraWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeBarFrameData.cpp">
+      <Filter>源文件\wxUIControl\TimeFrameBar</Filter>
+    </ClCompile>
+    <ClCompile Include="ScrollableTreeCtrl.cpp">
+      <Filter>源文件\wxUIControl\TimeFrameBar</Filter>
+    </ClCompile>
+    <ClCompile Include="SelectResolutionDialog.cpp">
+      <Filter>源文件\ExtraWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomResolutionDialog.cpp">
+      <Filter>源文件\ExtraWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="wxPGEditorBase.cpp">
+      <Filter>源文件\wxUIControl\wxWidgetsProperty\PGEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="MapElementPropertyDescription.cpp">
+      <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClCompile>
+    <ClCompile Include="OperationRecordManager.cpp">
+      <Filter>源文件\OperationRecordSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ChangeValueRecord.cpp">
+      <Filter>源文件\OperationRecordSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ScanFileDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CoordinateSettingWnd.cpp">
+      <Filter>源文件\ExtraWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomPropertyDialog.cpp">
+      <Filter>源文件\ExtraWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomValuePropertyDescription.cpp">
+      <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleControlWnd.cpp">
+      <Filter>源文件\ExtraWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomColorPropertyDescription.cpp">
+      <Filter>源文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuEditor.cpp">
+      <Filter>源文件\wxUIControl\wxWidgetsProperty\PGEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="SearchComponentDialog.cpp">
+      <Filter>源文件\ExtraWindow</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -345,9 +366,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="timebarframe.h">
-      <Filter>头文件\wxUIControl\TimeFrameBar</Filter>
-    </ClInclude>
-    <ClInclude Include="timebaritem.h">
       <Filter>头文件\wxUIControl\TimeFrameBar</Filter>
     </ClInclude>
     <ClInclude Include="timebaritemcontainer.h">
@@ -373,9 +391,6 @@
     </ClInclude>
     <ClInclude Include="EngineProperGridManager.h">
       <Filter>头文件\wxUIControl\wxProperty</Filter>
-    </ClInclude>
-    <ClInclude Include="EditAnimationDialog.h">
-      <Filter>头文件\ExtraWindow</Filter>
     </ClInclude>
     <ClInclude Include="wxWidgetsPropertyBase.h">
       <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
@@ -425,12 +440,6 @@
     <ClInclude Include="MapPropertyDescription.h">
       <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
     </ClInclude>
-    <ClInclude Include="AnimationGLWindow.h">
-      <Filter>头文件\wxUIControl\GLWindow</Filter>
-    </ClInclude>
-    <ClInclude Include="SplineGLWindow.h">
-      <Filter>头文件\wxUIControl\GLWindow</Filter>
-    </ClInclude>
     <ClInclude Include="EditDialogBase.h">
       <Filter>头文件\ExtraWindow</Filter>
     </ClInclude>
@@ -449,21 +458,6 @@
     <ClInclude Include="EditPerformanceDialog.h">
       <Filter>头文件\ExtraWindow</Filter>
     </ClInclude>
-    <ClInclude Include="DataViewTreeModel.h">
-      <Filter>头文件\wxUIControl\DataView</Filter>
-    </ClInclude>
-    <ClInclude Include="DataViewTreeModelNode.h">
-      <Filter>头文件\wxUIControl\DataView</Filter>
-    </ClInclude>
-    <ClInclude Include="DataViewCheckRender.h">
-      <Filter>头文件\wxUIControl\DataView</Filter>
-    </ClInclude>
-    <ClInclude Include="DataViewCtrl.h">
-      <Filter>头文件\wxUIControl\DataView</Filter>
-    </ClInclude>
-    <ClInclude Include="DataViewListModel.h">
-      <Filter>头文件\wxUIControl\DataView</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -472,9 +466,6 @@
     </ClInclude>
     <ClInclude Include="FilePropertyDescription.h">
       <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
-    </ClInclude>
-    <ClInclude Include="UIViewAgent.h">
-      <Filter>头文件\ViewAgent</Filter>
     </ClInclude>
     <ClInclude Include="TerrainViewAgent.h">
       <Filter>头文件\ViewAgent</Filter>
@@ -491,20 +482,11 @@
     <ClInclude Include="ComponentTreeItemData.h">
       <Filter>头文件\wxUIControl\TreeItemData</Filter>
     </ClInclude>
-    <ClInclude Include="ComponentInstanceTreeItemData.h">
-      <Filter>头文件\wxUIControl\TreeItemData</Filter>
-    </ClInclude>
     <ClInclude Include="SceneViewAgent.h">
       <Filter>头文件\ViewAgent</Filter>
     </ClInclude>
     <ClInclude Include="AniViewAgent.h">
       <Filter>头文件\ViewAgent</Filter>
-    </ClInclude>
-    <ClInclude Include="EffectViewAgent.h">
-      <Filter>头文件\ViewAgent</Filter>
-    </ClInclude>
-    <ClInclude Include="timebarevent.h">
-      <Filter>头文件\wxUIControl\UserDefinedEvent</Filter>
     </ClInclude>
     <ClInclude Include="TexturePropertyDescription.h">
       <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
@@ -516,9 +498,6 @@
       <Filter>头文件\wxUIControl\wxWidgetsProperty\PGEditor</Filter>
     </ClInclude>
     <ClInclude Include="TexturePreviewDialog.h">
-      <Filter>头文件\ExtraWindow</Filter>
-    </ClInclude>
-    <ClInclude Include="SplineDialog.h">
       <Filter>头文件\ExtraWindow</Filter>
     </ClInclude>
     <ClInclude Include="WxGLRenderWindow.h">
@@ -570,6 +549,78 @@
       <Filter>头文件\wxUIControl\GLWindow</Filter>
     </ClInclude>
     <ClInclude Include="AboutDlg.h">
+      <Filter>头文件\ExtraWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentProxyTreeItemData.h">
+      <Filter>头文件\wxUIControl\TreeItemData</Filter>
+    </ClInclude>
+    <ClInclude Include="LanguageTextPropertyDescription.h">
+      <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClInclude>
+    <ClInclude Include="wxSoundPreviewEditor.h">
+      <Filter>头文件\wxUIControl\wxWidgetsProperty\PGEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="SoundFileProperty.h">
+      <Filter>头文件\wxUIControl\wxProperty</Filter>
+    </ClInclude>
+    <ClInclude Include="SoundFilePropertyDescription.h">
+      <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClInclude>
+    <ClInclude Include="WaitingForProcessDialog.h">
+      <Filter>头文件\ExtraWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="SetVersionDialog.h">
+      <Filter>头文件\ExtraWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeBarFrameData.h">
+      <Filter>头文件\wxUIControl\TimeFrameBar</Filter>
+    </ClInclude>
+    <ClInclude Include="ScrollableTreeCtrl.h">
+      <Filter>头文件\wxUIControl\TimeFrameBar</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectResolutionDialog.h">
+      <Filter>头文件\ExtraWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomResolutionDialog.h">
+      <Filter>头文件\ExtraWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="wxPGEditorBase.h">
+      <Filter>头文件\wxUIControl\wxWidgetsProperty\PGEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="MapElementPropertyDescription.h">
+      <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClInclude>
+    <ClInclude Include="OperationRecordManager.h">
+      <Filter>头文件\OperationRecordSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="OperationRecord.h">
+      <Filter>头文件\OperationRecordSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ChangeValueRecord.h">
+      <Filter>头文件\OperationRecordSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ScanFileDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CoordinateSettingWnd.h">
+      <Filter>头文件\ExtraWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomPropertyDialog.h">
+      <Filter>头文件\ExtraWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomValuePropertyDescription.h">
+      <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleControlWnd.h">
+      <Filter>头文件\ExtraWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomColorPropertyDescription.h">
+      <Filter>头文件\wxUIControl\wxWidgetsProperty</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuEditor.h">
+      <Filter>头文件\wxUIControl\wxWidgetsProperty\PGEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="SearchComponentDialog.h">
       <Filter>头文件\ExtraWindow</Filter>
     </ClInclude>
   </ItemGroup>

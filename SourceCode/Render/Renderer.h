@@ -7,10 +7,10 @@ class CRenderer
 {
     BEATS_DECLARE_SINGLETON(CRenderer);
 public:
-
+    void Initialize();
     //Shader
     void GetBufferParameteriv(GLenum target, GLenum pname, GLint* params);
-    void UseProgram(GLuint uProgram);
+    bool UseProgram(GLuint uProgram);
     GLuint CreateShader(GLenum type);
     void DeleteShader(GLuint uProgram);
     void ShaderSource(GLuint shader, GLsizei count, const GLchar** strings, const GLint* lengths);
@@ -19,13 +19,16 @@ public:
     void GetShaderiv(GLuint shader, GLenum pname, GLint* param);
     void GetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei* length, GLchar* infoLog);
     void LinkProgram(GLuint program);
+    void GetProgramInfoLog(GLuint program, GLsizei maxLength, GLsizei *length, GLchar *infoLog);
     void AttachShader(GLuint program, GLuint shader);
     void DetachShader(GLuint program, GLuint shader);
     GLuint CreateProgram();
     void DeleteProgram(GLuint uProgram);
     void BindAttribLocation(GLuint uProgram, ECommonAttribIndex attribIndex);
     GLint GetUniformLocation(GLuint uProgram, const char *name) const;
+#ifndef GL_ES_VERSION_2_0
     void GetActiveUniformBlockiv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params);
+#endif
     void SetUniform1i(GLint location, GLint i1);
     void SetUniform2i(GLint location, GLint i1, GLint i2);
     void SetUniform3i(GLint location, GLint i1, GLint i2, GLint i3);
@@ -46,7 +49,9 @@ public:
     void SetUniformMatrix2fv(GLint location, const GLfloat *matrixArray, GLsizei numberOfMatrices);
     void SetUniformMatrix3fv(GLint location, const GLfloat *matrixArray, GLsizei numberOfMatrices);
     void SetUniformMatrix4fv(GLint location, const GLfloat *matrixArray, GLsizei numberOfMatrices);
+#ifndef GL_ES_VERSION_2_0
     void UniformBlockBinding(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
+#endif
 
     void DrawArrays(GLenum mode, GLint first, GLsizei count);
     void DrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* pIndices );
@@ -57,7 +62,9 @@ public:
     void DeleteVertexArrays(GLsizei n, GLuint *arrays);
     void GenBuffers(GLsizei n, GLuint* buffers);
     void BindBuffer(GLenum target, GLuint buffer);
+#ifndef GL_ES_VERSION_2_0
     void BindBufferRange(GLenum target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size);
+#endif
     void DeleteBuffers(GLsizei n, GLuint *buffers);
     void EnableVertexAttribArray(GLuint attribute);
     void DisableVertexAttribArray(GLuint attribute);
@@ -101,7 +108,7 @@ public:
     void BlendFunc(GLenum sfactor, GLenum dfactor);
     void BlendEquation(GLenum func);
     void BlendColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a);
-    void PolygonMode (GLenum face, GLenum mode);
+    void PolygonMode(GLenum frontMode, GLenum backMode);
     void ClearBuffer(GLbitfield bit);
     void ClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     void ClearDepth(GLclampf depth);
@@ -109,13 +116,15 @@ public:
     GLvoid* MapBuffer(GLenum target, GLenum access);
     void UnmapBuffer(GLenum target);
     void DepthMask(bool bWriteable);
-    void EdgeFlag(bool bEdgeFlag);
+    void ScissorTest(bool bEnable);
     void FrontFace(GLenum frontFace);
     void CullFace(GLenum cullFace);
-
     void LineWidth(GLfloat fLineWidth);
+#ifndef GL_ES_VERSION_2_0
     void PointSize(GLfloat fPointSize);
-    void DepthRange(float fNear, float fFar);
+    void ShadeModel(GLenum shadeModel);
+    void AlphaFunc(GLenum func, GLclampf ref);
+#endif
     void DepthFunc(GLenum depthFunc);
 
     void StencilFunc(GLenum stencilFunc);
@@ -124,14 +133,10 @@ public:
     void ClearStencil(GLint nClearValue);
     void StencilOp(GLenum fail, GLenum zFail, GLenum zPass);
 
-    void ShadeModel(GLenum shadeModel);
-
-    void AlphaFunc(GLenum func, GLclampf ref );
-
     CRenderState* GetCurrentState() const;
 
 private:
-    CRenderState* m_pCurrState;
+    CRenderState* m_pCurrState = nullptr;
 };
 
 #endif

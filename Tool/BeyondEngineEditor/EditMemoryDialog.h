@@ -1,7 +1,7 @@
 #ifndef BEYONDENGINEEDITOR_EditMemoryDialog_H__INCLUDE
 #define BEYONDENGINEEDITOR_EditMemoryDialog_H__INCLUDE
 #include "EditDialogBase.h"
-#include "wx\generic\grid.h"
+#include "wx/generic/grid.h"
 #include <wx/spinbutt.h>
 #include <dbghelp.h>
 

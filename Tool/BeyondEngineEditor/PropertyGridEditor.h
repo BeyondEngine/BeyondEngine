@@ -4,6 +4,7 @@
 #include "EditDialogBase.h"
 
 class wxGrid;
+class wxGridEvent;
 class wxPGProperty;
 class CPropertyDescriptionBase;
 class CEnumPropertyDescription;
@@ -22,28 +23,34 @@ public:
 
 public:
     virtual int ShowModal() override;
+    void ShowModal(CPropertyDescriptionBase* pProperty, wxDialog* pParent);
     void SetProperty(wxPGProperty* pProperty);
     wxPGProperty* GetProperty() const;
 
 private:
     void InitEnumCell(int row, int col, CEnumPropertyDescription* pEnumProperty);
     void ApplyCellValueToProperty(CPropertyDescriptionBase* pProperty, int nRow, int nCol);
-
+    CPropertyDescriptionBase* GetPropertyByRowAndCol(int nRow, int nCol) const;
 private:
-    void OnConfirmBtnClicked(wxCommandEvent& event);
-    void OnCancelBtnClicked(wxCommandEvent& event);
+    void OnGridValueChanged(wxGridEvent& event);
+    void OnImportBtnClicked(wxCommandEvent& event);
+    void OnExportBtnClicked(wxCommandEvent& event);
     void OnAppendBtnClicked(wxCommandEvent& event);
     void OnDeleteBtnClicked(wxCommandEvent& event);
+    void OnPasteData(wxKeyEvent& event);
     void OnCloseBtnClicked(wxCloseEvent& event);
+    void OnEditorShown(wxGridEvent& event);
     void InsertProperty(CPropertyDescriptionBase* pProperty, bool InPtrProperty);
     void CloseDialog();
-
+    void ImportData(wxString& data);
+    std::vector<wxString> SplitString(wxString& data, wxString& str);
+    void UpdateCellValue(int row, int col, CPropertyDescriptionBase* pProperty);
 private:
     wxGrid* m_pGrid;
     wxButton* m_pAppendButton;
     wxButton* m_pDeleteButton;
-    wxButton* m_pConfirmButton;
-    wxButton* m_pCancelButton;
+    wxButton* m_pImportButton;
+    wxButton* m_pExportButton;
     wxPGProperty* m_pGridProperty;
     std::vector<CPropertyDescriptionBase*> m_cols;
 };

@@ -75,7 +75,7 @@ void CBatchEditWnd::OnApplyBtnClicked(wxCommandEvent& /*event*/)
     wxString strPropertyName = m_pPropertyNameCtrl->GetValue();
     if (strPropertyName.IsEmpty())
     {
-        wxMessageBox(_T("property name 不能为空！"));
+        wxMessageBox(_T("property name 不能为空！"), wxMessageBoxCaptionStr, wxOK | wxCENTRE, this);
     }
     else
     {
@@ -85,24 +85,24 @@ void CBatchEditWnd::OnApplyBtnClicked(wxCommandEvent& /*event*/)
             unsigned long uGuidRef = 0;
             m_pGuidTextCtrl->GetValue().ToULong(&uGuidRef, 16);
             std::set<CComponentProxy*> operatingComponentProxy;
-            std::set<size_t> derivedClassSet;
+            std::set<uint32_t> derivedClassSet;
             bool bApplyToDerivedClass = m_pApplyToDerivedCheckBox->GetValue();
             if (bApplyToDerivedClass)
             {
-                std::vector<size_t> derivedClassGuid;
+                std::set<uint32_t> derivedClassGuid;
                 CComponentProxyManager::GetInstance()->QueryDerivedClass(uGuidRef, derivedClassGuid, true);
-                for (size_t i = 0; i < derivedClassGuid.size(); ++i)
+                for (auto guid : derivedClassGuid)
                 {
-                    BEATS_ASSERT(derivedClassSet.find(derivedClassGuid[i]) == derivedClassSet.end());
-                    derivedClassSet.insert(derivedClassGuid[i]);
+                    BEATS_ASSERT(derivedClassSet.find(guid) == derivedClassSet.end());
+                    derivedClassSet.insert(guid);
                 }
             }
             if (m_pOperatingRange->GetSelection() == 0)
             {
-                const std::map<size_t, CComponentProxy*>& curSceneComponentsMap = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
+                const std::map<uint32_t, CComponentProxy*>& curSceneComponentsMap = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
                 for (auto iter = curSceneComponentsMap.begin(); iter != curSceneComponentsMap.end(); ++iter)
                 {
-                    size_t uGuid = iter->second->GetGuid();
+                    uint32_t uGuid = iter->second->GetGuid();
                     if (uGuid == uGuidRef || (bApplyToDerivedClass && derivedClassSet.find(uGuid) != derivedClassSet.end()))
                     {
                         BEATS_ASSERT(operatingComponentProxy.find(iter->second) == operatingComponentProxy.end());
@@ -112,10 +112,10 @@ void CBatchEditWnd::OnApplyBtnClicked(wxCommandEvent& /*event*/)
             }
             else
             {
-                const std::map<size_t, std::map<size_t, CComponentBase*>*>* pComponentInstanceMap = CComponentProxyManager::GetInstance()->GetComponentInstanceMap();
+                const std::map<uint32_t, std::map<uint32_t, CComponentBase*>*>* pComponentInstanceMap = CComponentProxyManager::GetInstance()->GetComponentInstanceMap();
                 for (auto iter = pComponentInstanceMap->begin(); iter != pComponentInstanceMap->end(); ++iter)
                 {
-                    size_t uGuid = iter->first;
+                    uint32_t uGuid = iter->first;
                     if (uGuid == uGuidRef || (bApplyToDerivedClass && derivedClassSet.find(uGuid) != derivedClassSet.end()))
                     {
                         for (auto subIter = iter->second->begin(); subIter != iter->second->end(); ++subIter)
@@ -130,7 +130,7 @@ void CBatchEditWnd::OnApplyBtnClicked(wxCommandEvent& /*event*/)
             }
             for (auto iter = operatingComponentProxy.begin(); iter != operatingComponentProxy.end(); ++iter)
             {
-                CPropertyDescriptionBase* pProperty = (*iter)->GetPropertyDescription(strPropertyName);
+                CPropertyDescriptionBase* pProperty = (*iter)->GetProperty(strPropertyName);
                 pProperty->GetValueByTChar(m_pNewValueCtrl->GetValue(), pProperty->GetValue(eVT_CurrentValue));
                 // Force update the host component, because we have set to the current value by GetValueByTChar.
                 pProperty->SetValueWithType(pProperty->GetValue(eVT_CurrentValue), eVT_CurrentValue, true);

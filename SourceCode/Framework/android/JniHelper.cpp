@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "JniHelper.h"
 #include <string.h>
 #include <pthread.h>
@@ -28,7 +28,7 @@ extern "C"
 
         if (nullptr == _clazz)
         {
-            BEATS_ASSERT("Classloader failed to find class of %s", className);
+            BEATS_ASSERT(false, "Classloader failed to find class of %s", className);
             env->ExceptionClear();
         }
         env->DeleteLocalRef(_jstrClassName);
@@ -75,7 +75,7 @@ JNIEnv* JniHelper::cacheEnv(JavaVM* jvm)
 
         if (jvm->AttachCurrentThread(&_env, nullptr) < 0)
         {
-            BEATS_ASSERT("Failed to get the environment using AttachCurrentThread()");
+            BEATS_ASSERT(false, "Failed to get the environment using AttachCurrentThread()");
 
             return nullptr;
         }
@@ -88,9 +88,9 @@ JNIEnv* JniHelper::cacheEnv(JavaVM* jvm)
 
     case JNI_EVERSION :
         // Cannot recover from this error
-        BEATS_ASSERT("JNI interface version 1.4 not supported");
+        BEATS_ASSERT(false, "JNI interface version 1.4 not supported");
     default :
-        BEATS_ASSERT("Failed to get the environment using GetEnv()");
+        BEATS_ASSERT(false, "Failed to get the environment using GetEnv()");
         return nullptr;
     }
 }
@@ -103,6 +103,7 @@ JNIEnv* JniHelper::getEnv()
         BEATS_ASSERT(_psJavaVM != NULL, _T("_psJavaVM can't be NULL"));
         _env = JniHelper::cacheEnv(_psJavaVM);
     }
+    BEATS_ASSERT(_env != nullptr, _T("env can't be null!"));
     return _env;
 }
 
@@ -145,6 +146,7 @@ bool JniHelper::getStaticMethodInfo(JniMethodInfo &methodinfo,
                                     const char *methodName,
                                     const char *paramCode) 
 {
+    BEATS_ASSERT(methodinfo.env == nullptr && methodinfo.classID == nullptr && methodinfo.methodID == 0);
     if ((nullptr == className) ||
         (nullptr == methodName) ||
         (nullptr == paramCode)) 
@@ -155,14 +157,14 @@ bool JniHelper::getStaticMethodInfo(JniMethodInfo &methodinfo,
     JNIEnv *env = JniHelper::getEnv();
     if (!env)
     {
-        BEATS_ASSERT("Failed to get JNIEnv");
+        BEATS_ASSERT(false, "Failed to get JNIEnv");
         return false;
     }
 
     jclass classID = _getClassID(className);
     if (! classID)
     {
-        BEATS_ASSERT("Failed to find class %s", className);
+        BEATS_ASSERT(false, "Failed to find class %s", className);
         env->ExceptionClear();
         return false;
     }
@@ -171,7 +173,7 @@ bool JniHelper::getStaticMethodInfo(JniMethodInfo &methodinfo,
     jmethodID methodID = env->GetStaticMethodID(classID, methodName, paramCode);
     if (! methodID)
     {
-        BEATS_ASSERT("Failed to find static method id of %s", methodName);
+        BEATS_ASSERT(false, "Failed to find static method id of %s", methodName);
         env->ExceptionClear();
         return false;
     }
@@ -203,7 +205,7 @@ bool JniHelper::getMethodInfo_DefaultClassLoader(JniMethodInfo &methodinfo,
     jclass classID = env->FindClass(className);
     if (! classID)
     {
-        BEATS_ASSERT("Failed to find class %s", className);
+        BEATS_ASSERT(false, "Failed to find class %s", className);
         env->ExceptionClear();
         return false;
     }
@@ -211,7 +213,7 @@ bool JniHelper::getMethodInfo_DefaultClassLoader(JniMethodInfo &methodinfo,
     jmethodID methodID = env->GetMethodID(classID, methodName, paramCode);
     if (! methodID)
     {
-        BEATS_ASSERT("Failed to find method id of %s", methodName);
+        BEATS_ASSERT(false, "Failed to find method id of %s", methodName);
         env->ExceptionClear();
         return false;
     }
@@ -244,7 +246,7 @@ bool JniHelper::getMethodInfo(JniMethodInfo &methodinfo,
     jclass classID = _getClassID(className);
     if (! classID)
     {
-        BEATS_ASSERT("Failed to find class %s", className);
+        BEATS_ASSERT(false, "Failed to find class %s", className);
         env->ExceptionClear();
         return false;
     }
@@ -252,7 +254,7 @@ bool JniHelper::getMethodInfo(JniMethodInfo &methodinfo,
     jmethodID methodID = env->GetMethodID(classID, methodName, paramCode);
     if (! methodID)
     {
-        BEATS_ASSERT("Failed to find method id of %s", methodName);
+        BEATS_ASSERT(false, "Failed to find method id of %s", methodName);
         env->ExceptionClear();
         return false;
     }
@@ -266,20 +268,15 @@ bool JniHelper::getMethodInfo(JniMethodInfo &methodinfo,
 
 std::string JniHelper::jstring2string(jstring jstr)
 {
-    if (jstr == nullptr)
+    std::string strRet;
+    if (jstr != nullptr)
     {
-        return "";
+        JNIEnv *env = JniHelper::getEnv();
+        BEATS_ASSERT(env != NULL, _T("env is null!"));
+        const char* chars = env->GetStringUTFChars(jstr, nullptr);
+        BEATS_ASSERT(chars != NULL, _T("GetStringUTFChars returns a null ptr."));
+        strRet.assign(chars);
+        env->ReleaseStringUTFChars(jstr, chars);
     }
-
-    JNIEnv *env = JniHelper::getEnv();
-    if (!env)
-    {
-        return nullptr;
-    }
-
-    const char* chars = env->GetStringUTFChars(jstr, nullptr);
-    std::string ret(chars);
-    env->ReleaseStringUTFChars(jstr, chars);
-
-    return ret;
+    return strRet;
 }

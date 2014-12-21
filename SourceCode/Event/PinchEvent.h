@@ -3,6 +3,7 @@
 
 #include "BaseEvent.h"
 #include "GestureState.h"
+class CTouch;
 
 class CPinchEvent : public CBaseEvent
 {

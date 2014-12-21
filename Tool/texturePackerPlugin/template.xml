@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- {{smartUpdateKey}} -->
+<Imageset Name="{{texture.trimmedName}}" Imagefile="{{texture.fullName}}" NativeHorzRes="{{texture.size.width}}" NativeVertRes="{{texture.size.height}}" AutoScaled="false">
+{% for sprite in allSprites %}        <Image Name="{{sprite.trimmedName}}" XPos="{{sprite.frameRect.x}}" YPos="{{sprite.frameRect.y}}" Width="{{sprite.frameRect.width}}" Height="{{sprite.frameRect.height}}" Trimmed="{{sprite.trimmed}}" SrcX="{{sprite.cornerOffset.x}}" SrcY="{{sprite.cornerOffset.y}}" SrcWidth="{{sprite.untrimmedSize.width}}" SrcHeight="{{sprite.untrimmedSize.height}}"/>{% if not forloop.last %}
+{% endif %}{% endfor %}
+</Imageset>

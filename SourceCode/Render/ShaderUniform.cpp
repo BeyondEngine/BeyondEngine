@@ -1,7 +1,7 @@
-﻿
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "ShaderUniform.h"
 #include "Renderer.h"
+#include "RenderManager.h"
 
 CShaderUniform::CShaderUniform()
     : m_type(eSUT_Count)
@@ -16,22 +16,14 @@ CShaderUniform::CShaderUniform(const TString& strName, EShaderUniformType type)
 }
 
 CShaderUniform::CShaderUniform( const CShaderUniform& other )
+    : m_type(other.m_type)
+    , m_strName(other.m_strName)
+    , m_data(other.m_data)
 {
-    m_type = other.m_type;
-    m_strName = other.m_strName;
-    m_data = other.m_data;
 }
 
 CShaderUniform::~CShaderUniform()
 {
-}
-
-void CShaderUniform::ReflectData(CSerializer& serializer)
-{
-    super::ReflectData(serializer);
-    DECLARE_PROPERTY(serializer, m_strName, true, 0xFFFFFFFF, _T("变量名"), NULL, NULL, NULL);
-    DECLARE_PROPERTY(serializer, m_type, true, 0xFFFFFFFF, _T("变量类型"), NULL, NULL, NULL);
-    DECLARE_PROPERTY(serializer, m_data, true, 0xFFFFFFFF, _T("变量数据"), NULL, NULL, NULL);
 }
 
 void CShaderUniform::SetData(const std::vector<float>& data )
@@ -95,15 +87,12 @@ void CShaderUniform::SetType(EShaderUniformType type)
     m_data.resize(nDataSize);
 }
 
-void CShaderUniform::SendUniform()
+void CShaderUniform::SendUniform() const
 {
-    BEATS_ASSERT( CheckType(), _T("Shader uniform's type %d doesn't match data size %d"), m_type, m_data.size() );
+    BEATS_ASSERT( CheckType(), _T("Shader uniform's type %d doesn't match data size %d"), (uint32_t)m_type, (uint32_t)m_data.size() );
     BEATS_ASSERT(!m_strName.empty(), _T("Shader uniform's name should not be empty!"));
     GLuint currProgram = CRenderer::GetInstance()->GetCurrentState()->GetShaderProgram();
-    char name[ MAX_PATH ];
-    CStringHelper::GetInstance()->ConvertToCHAR( m_strName.c_str(), name, MAX_PATH );
-    GLint nameLocation = CRenderer::GetInstance()->GetUniformLocation( currProgram, name );
-    BEATS_ASSERT(nameLocation != -1, _T("Get uniform location failed! %s"), m_strName.c_str());
+    GLint nameLocation = CRenderManager::GetInstance()->GetUniformLocation(currProgram, m_strName.c_str());
     if ( -1 != nameLocation )
     {
         switch ( m_type)
@@ -148,9 +137,9 @@ void CShaderUniform::SendUniform()
     }
 }
 
-bool CShaderUniform::CheckType()
+bool CShaderUniform::CheckType() const
 {
-    size_t size = 0;
+    uint32_t size = 0;
     switch ( m_type )
     {
     case eSUT_1i:
@@ -186,7 +175,7 @@ bool CShaderUniform::CheckType()
 
 bool CShaderUniform::operator==( const CShaderUniform& other ) const
 {
-    return ( m_strName == other.m_strName && m_type == other.m_type && ComparePtrVector( m_data, other.m_data ));
+    return ( m_strName == other.m_strName && m_type == other.m_type && m_data == other.m_data );
 }
 
 bool CShaderUniform::operator!=( const CShaderUniform& other ) const
@@ -194,28 +183,7 @@ bool CShaderUniform::operator!=( const CShaderUniform& other ) const
     return !(*this == other);
 }
 
-bool CShaderUniform::ComparePtrVector( const std::vector<float> & v1, const std::vector<float> & v2 ) const
-{
-    bool bReturn = true;
-    if ( v1.size() == v2.size() )
-    {
-        for ( size_t i = 0; i < v1.size(); ++i )
-        {
-            if ( v1[ i ] != v2[ i ] )
-            {
-                bReturn = false;
-                break;
-            }
-        }
-    }
-    else
-    {
-        bReturn = false;
-    }
-    return bReturn;
-}
-
-const CShaderUniform& CShaderUniform::operator=( const CShaderUniform& other )
+CShaderUniform& CShaderUniform::operator=( const CShaderUniform& other )
 {
     if ( this != &other )
     {

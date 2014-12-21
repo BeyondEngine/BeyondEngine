@@ -35,9 +35,9 @@ void CIntRenderStateParam::Apply()
     }
 }
 
-ERenderState CIntRenderStateParam::GetRenderStateType() const
+ERenderStateParamType CIntRenderStateParam::GetRenderStateType() const
 {
-    return eRS_IntMode;
+    return eRSPT_IntMode;
 }
 
 void CIntRenderStateParam::SetType( EIntStateParam type )
@@ -62,14 +62,14 @@ int CIntRenderStateParam::GetValue() const
 
 bool CIntRenderStateParam::operator==( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_IntMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_IntMode );
     CIntRenderStateParam* pOther = ( CIntRenderStateParam* )&other;
     return ( m_type == pOther->m_type && m_nValue == pOther->m_nValue );
 }
 
 bool CIntRenderStateParam::operator!=( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_IntMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_IntMode );
     CIntRenderStateParam* pOther = ( CIntRenderStateParam* )&other;
     return ( m_type != pOther->m_type || m_nValue != pOther->m_nValue );
 }

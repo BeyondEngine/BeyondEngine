@@ -11,41 +11,47 @@
 #include "RenderStateParam/FunctionRenderStateParam.h"
 #include "RenderStateParam/IntRenderStateParam.h"
 #include "RenderStateParam/PolygonModeRenderStateParam.h"
-#include "RenderStateParam/RectRenderStateParam.h"
 #include "RenderStateParam/UintRenderStateParam.h"
 
 class CRenderState
 {
-    typedef std::vector< CRenderStateParamBase* > TParamStateVector;
-    typedef TParamStateVector::iterator TParamStateVectorIter;
-    typedef TParamStateVector::const_iterator TParamStateVectorIterConst;
-
 public:
     CRenderState();
-    virtual ~CRenderState();
+    ~CRenderState();
 
     void SetBoolState(CBoolRenderStateParam::EBoolStateParam state, bool bEnable);
     bool GetBoolState(CBoolRenderStateParam::EBoolStateParam state);
 
     void SetDepthMask(bool bWriteable);
     bool GetDepthMask() const;
+    void SetScissorTest(bool bEnable);
+    bool GetScissorTest() const;
 
-    void SetEdgeFlag(bool bEdgeFlag);
-    bool GetEdgetFlag() const;
+    void SetActiveTexture(uint32_t uChannel);
+    uint32_t GetActiveTexture() const;
+    uint32_t GetCurrBindingTexture() const;
+    void SetCurrBindingTexture(uint32_t uTextureId);
+    std::map<unsigned char, uint32_t>& GetBindingTextureMap();
 
-    void SetActiveTexture(GLenum activeTexture);
-    GLenum GetActiveTexture() const;
+    void SetBlendSrcFactor(GLenum src);
+    void SetBlendTargetFactor(GLenum target);
 
-    void SetBlendFuncSrcFactor(GLenum src);
-    void SetBlendFuncTargetFactor(GLenum target);
+#if BEYONDENGINE_PLATFORM == PLATFORM_WIN32
     GLenum GetBlendSrcFactor();
     GLenum GetBlendTargetFactor();
-    void SetBlendEquation(GLenum func);
-    GLenum GetBlendEquation();
     void SetAlphaFunc(GLenum func);
     GLenum GetAlphaFunc();
     void SetAlphaRef(float fRef);
     float GetAlphaRef();
+    void SetPointSize(float fPointSize);
+    float GetPointSize();
+    void SetShadeModel(GLenum shadeModel);
+    GLenum GetShadeModel();
+    void SetPolygonMode(GLenum frontMode, GLenum backMode);
+    void GetPolygonMode(CPolygonModeRenderStateParam::EPolygonModeType& frontType, CPolygonModeRenderStateParam::EPolygonModeType& backType);
+#endif
+    void SetBlendEquation(GLenum func);
+    GLenum GetBlendEquation();
 
     void SetShaderProgram(GLuint program);
     GLuint GetShaderProgram()const;
@@ -58,13 +64,9 @@ public:
 
     void SetLineWidth(float fLineWidth);
     float GetLineWidth();
-    void SetPointSize(float fPointSize);
-    float GetPointSize();
 
-    void SetDepthNear(float fDepthNear);
-    void SetDepthFar(float fDepthFar);
-    float GetDepthNear();
-    float GetDepthFar();
+    void SetDepthRange(float fDepthNear, float fDepthFar);
+    void GetDepthRange(float& fDepthNear, float& fDepthFar);
     void SetDepthFunc(GLenum func);
     GLenum GetDepthFunc();
 
@@ -79,58 +81,39 @@ public:
     void SetStencilOp( GLenum fail, GLenum zFail, GLenum zPass );
     void GetStencilOp( GLenum& fail, GLenum& zFail, GLenum& zPass );
     
-    void SetScissorRect(kmScalar x, kmScalar y, kmScalar width, kmScalar height);
-    void GetScissorRect(kmVec4 &rect) const;
-
-    void SetShadeModel(GLenum shadeModel);
-    GLenum GetShadeModel();
-
-    void SetPolygonMode( GLenum face, GLenum mode );
-    void GetPolygonMode( GLenum& face, GLenum& mode );
+    void SetScissorRect(float x, float y, float width, float height);
+    const CVec4& GetScissorRect() const;
+    void SetViewport(float x, float y, float width, float height);
+    const CVec4& GetViewport() const;
 
     void SetColor( CUintRenderStateParam::EUintStateParam type, GLclampf r, GLclampf g, GLclampf b, GLclampf a );
     void GetColor( CUintRenderStateParam::EUintStateParam type , GLclampf& r, GLclampf& g, GLclampf& b, GLclampf& a );
 
-
     void Restore();
 
-    bool operator==( const CRenderState& other ) const;
-
-    bool operator!=( const CRenderState& other ) const;
-
     CRenderState* Clone();
-
+    uint32_t GetBindingVAO() const;
+    uint32_t GetBindingVBO() const;
+    uint32_t GetBindingEBO() const;
+    void SetBindingVAO(uint32_t uVAO);
+    void SetBindingVBO(uint32_t uVBO);
+    void SetBindingEBO(uint32_t uEBO);
 
 private:
-
-    CRenderStateParamBase* GetRenderStateParamBasePtr( ERenderState state ) const;
-
-    CFloatRenderStateParam* GetFloatRenderStateParamPtr( CFloatRenderStateParam::EFloatStateParam type ) const;
-
-    CFunctionRenderStateParam* GetFuncRenderStateParamPtr( CFunctionRenderStateParam::EFunctionStateParam type ) const;
-
-    CIntRenderStateParam* GetIntRenderStateParamPtr( CIntRenderStateParam::EIntStateParam type ) const;
-
-    CBoolRenderStateParam* GetBoolRenderStateParamPtr( CBoolRenderStateParam::EBoolStateParam type ) const;
-
-    CUintRenderStateParam* GetUnitRenderStateParamPtr( CUintRenderStateParam::EUintStateParam type ) const;
-
-    CRenderStateParamBase* GetRectRenderStateParamPtr( CRectRenderStateParam::ERectStateParam type) const;
-
-    bool ComparePtrVector( const TParamStateVector & v1, const TParamStateVector & v2 ) const;
+    CRenderStateParamBase* GetRenderStateParamBasePtr(ERenderStateParamType state, int nSubType) const;
 
 private:
     bool m_bDepthMark;
-    bool m_bEdgeFlag;
-    size_t m_uCurrShaderProgram;
-    size_t m_uCurrActiveTexture;
-    TParamStateVector m_pRenderStateParams;
-    TParamStateVector m_boolRenderStateVector;
-    TParamStateVector m_funcRenderStateVector;
-    TParamStateVector m_floatRenderStateVector;
-    TParamStateVector m_intRenderStateVector;
-    TParamStateVector m_unitRenderStateVector;
-    TParamStateVector m_rectRenderStateVector;
+    bool m_bScissorTest = false;
+    CVec4 m_scissorRect;
+    CVec4 m_viewport;
+    uint32_t m_uCurrShaderProgram;
+    uint32_t m_uCurrActiveTexture;
+    uint32_t m_uVAO;
+    uint32_t m_uVBO;
+    uint32_t m_uEBO;
+    std::map<ERenderStateParamType, std::map<int, CRenderStateParamBase*> > m_renderStateParamMap;
+    std::map<unsigned char, uint32_t> m_bindingTexture;
 };
 
 #endif

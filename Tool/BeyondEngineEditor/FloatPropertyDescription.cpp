@@ -2,8 +2,8 @@
 #include "FloatPropertyDescription.h"
 #include "Utility/BeatsUtility/StringHelper.h"
 #include "Utility/BeatsUtility/Serializer.h"
+#include "Component/ComponentPublic.h"
 #include <float.h>
-
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
 
@@ -38,7 +38,7 @@ CFloatPropertyDescription::~CFloatPropertyDescription()
 bool CFloatPropertyDescription::AnalyseUIParameterImpl( const std::vector<TString>& result)
 {
     std::vector<TString> cache;
-    for (size_t i = 0; i < result.size(); ++i)
+    for (uint32_t i = 0; i < result.size(); ++i)
     {
         cache.clear();
         CStringHelper::GetInstance()->SplitString(result[i].c_str(), PROPERTY_KEYWORD_SPLIT_STR, cache);
@@ -143,4 +143,9 @@ void CFloatPropertyDescription::Serialize(CSerializer& serializer, EValueType eV
 void CFloatPropertyDescription::Deserialize(CSerializer& serializer, EValueType eValueType /*= eVT_CurrentValue*/)
 {
     serializer >> *(float*)m_valueArray[eValueType];
+}
+
+void CFloatPropertyDescription::SetSpinStep(float fSpinStep)
+{
+    m_fSpinStep = fSpinStep;
 }

@@ -1,18 +1,15 @@
-﻿#ifndef BEYOND_ENGINE_SCENE_NODE_H_INCLUDE
-#define BEYOND_ENGINE_SCENE_NODE_H_INCLUDE
+﻿#ifndef BEYOND_ENGINE_SCENE_NODE_H__INCLUDE
+#define BEYOND_ENGINE_SCENE_NODE_H__INCLUDE
 
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentInstance.h"
+#include "Component/Component/ComponentInstance.h"
+#include "NodeAnimation/NodeAnimationElement.h"
 
-class CNode;
-class CAttachableObject;
-class CEventDispatcher;
 class CTouchEvent;
+class CRenderGroup;
 enum ENodeType 
 {
     eNT_Node2D,
     eNT_Node3D,
-    eNT_RenderBatch,
-    eNT_NodeGUI,
 
     eNT_Count,
     eNT_Force32Bit = 0xFFFFFFFF
@@ -20,27 +17,20 @@ enum ENodeType
 
 struct SAnimationProperty
 {
-    SAnimationProperty()
-    {
-        m_posForAnimation.Zero();
-        m_rotationForAnimation.Zero();
-        m_scaleForAnimation.Fill(1.0f, 1.0f, 1.0f);
-    }
-    ~SAnimationProperty()
-    {
-
-    }
-    void Reset()
-    {
-        m_posForAnimation.Zero();
-        m_scaleForAnimation.Fill(1.0f, 1.0f, 1.0f);
-        m_rotationForAnimation.Zero();
-        m_color = 0;
-    }
+    SAnimationProperty(CNode* pOwner);
+    ~SAnimationProperty();
+    void Reset();
+    void SetPos(const CVec3& pos);
+    const CVec3& GetPos() const;
+    void SetRotation(const CVec3& rotate);
+    const CVec3& GetRotation() const;
+    void SetScale(const CVec3& scale);
+    const CVec3& GetScale() const;
+private:
+    CNode* m_pOwner = nullptr;
     CVec3 m_posForAnimation;
     CVec3 m_scaleForAnimation;
     CVec3 m_rotationForAnimation;
-    CColor m_color;
 };
 
 class CNode : public CComponentInstance
@@ -48,33 +38,37 @@ class CNode : public CComponentInstance
     DECLARE_REFLECT_GUID( CNode, 0x1458a517, CComponentInstance )
 public:
     CNode();
-    CNode(ENodeType type);
     virtual ~CNode();
 
-    virtual void Uninitialize() override;
-    virtual void ReflectData( CSerializer& serializer ) override;
-
-    virtual bool OnPropertyChange( void* pVariableAddr, CSerializer* pSerializer ) override;
-    virtual bool OnDependencyListChange(void* pComponentAddr, enum EDependencyChangeAction action, CComponentBase* pComponent);
+#if defined(DEVELOP_VERSION) && !defined(EDITOR_MODE)
     virtual void Initialize() override;
-
-    CEventDispatcher *EventDispatcher() const;
-
+    virtual void Uninitialize() override;
+#endif
+    virtual bool Load() override;
+    virtual bool Unload() override;
+    virtual void ReflectData( CSerializer& serializer ) override;
+#ifdef EDITOR_MODE
+    virtual bool OnPropertyChange( void* pVariableAddr, CSerializer* pSerializer ) override;
+    virtual bool OnDependencyListChange(void* pComponentAddr, enum EDependencyChangeAction action, CComponentBase* pComponent) override;
+#endif
     virtual void SetVisible( bool bVisible );
-    virtual bool IsVisible() const;
-    virtual void Activate();
-    virtual void Deactivate();
-    virtual bool IsActive() const;
+    bool IsVisible(bool bInheritFromParent = false) const;
+    virtual void Activate(bool bApplyToChild = true);
+    virtual void Deactivate(bool bApplyToChild = true);
+    bool IsActive(bool bInheritFromParent = false) const;
 
-    virtual bool SetPosition( float x, float y, float z);
+    virtual bool SetPosition(const CVec3& position);
     const CVec3& GetPosition() const;
-    CVec3 GetWorldPosition();
+    CVec3 GetWorldPosition() const;
 
-    virtual bool SetScale( float x, float y, float z);
+    virtual bool SetScale(const CVec3& scale);
     const CVec3& GetScale() const;
 
-    virtual bool SetRotation( float x, float y, float z);
+    bool SetRotation(const CVec3& rotation);
     const CVec3& GetRotation() const;
+
+    bool IsIgnoreParentRotation() const;
+    void SetIgnoreParentRotation(bool bIgnore);
 
     virtual void AddChild( CNode* pChild );
     CNode *GetChildByName(const TString &name) const;
@@ -84,28 +78,26 @@ public:
     virtual bool RemoveChild( CNode* pNode );
     const TString& GetName() const;
     virtual void SetName(const TString& strName);
-    CNode* GetParentNode() const;
-    CAttachableObject* GetAttachedObject() const;
+    virtual CNode* GetParentNode() const;
+    CNode* GetRootNode() const;
 
-    ENodeType GetType() const;
+    virtual ENodeType GetType() const;
 
     virtual void Update( float dtt );
-    void Render();
-    bool IsRenderingWorldTM();
-    void SetRenderWorldTM(bool bRender);
+    virtual void Render();
 
-    virtual void SetParentNode( CNode* pParent );
+    void SetParentNode( CNode* pParent );
+    virtual void OnParentNodeChanged(CNode* pParent);
 
-    virtual bool HitTest(float x, float y) const;
     virtual bool OnTouchEvent(CTouchEvent *event);
     virtual bool HandleTouchEvent(CTouchEvent *event);
+    virtual bool HitTest(const CVec2& pt);
 
     void InvalidateLocalTM();
-    void InvalidateWorldTM();
-    virtual const kmMat4& GetLocalTM();
-    void SetLocalTM(const kmMat4& localTM);
-    const kmMat4& GetWorldTM();
-    virtual void OnWorldTransformUpdate();
+    virtual void InvalidateWorldTM();
+    virtual const CMat4& GetLocalTM() const;
+    void SetLocalTM(const CMat4& localTM);
+    virtual const CMat4& GetWorldTM() const;
 
     SAnimationProperty* GetAnimationProperty() const;
     void SetAnimationProperty(SAnimationProperty* pProperty);
@@ -113,32 +105,39 @@ public:
     CColor GetColorScale(bool bInherit) const;
     void SetColorScale(CColor color);
 
-    bool HasChild( CNode* pNode );
+    CNode* CloneNode(bool bResurcive, bool bOnlyCloneComponent, std::vector<CComponentInstance*>* pNewNodes = NULL, std::vector<CComponentInstance*>* pClonedNodes = NULL);
+    CQuaternion GetWorldQuaternion() const;
+    virtual void NodeAnimationUpdate(ENodeAnimationElementType type, uint32_t uCurrFrame, const CVec3& currValue);
+    virtual void NodeAnimationReset(ENodeAnimationElementType type);
 
-    CNode* CloneNode(bool bResurcive, bool bOnlyCloneComponent, std::vector<CNode*>* pNewNodes = NULL, std::vector<CNode*>* pClonedNodes = NULL);
-private:
+    virtual void SetRenderGroupID(ERenderGroupID id);
+    ERenderGroupID GetRenderGroupID() const;
+    CRenderGroup* GetRenderGroup() const;
+
+protected:
     virtual void PreRender( );
     virtual void DoRender( );
     virtual void PostRender( );
 
 protected:
-    bool m_bLocalTransformInvalid;
-    bool m_bWorldTransformInvalid;
+    mutable bool m_bLocalTransformInvalid;
+    mutable bool m_bWorldTransformInvalid;
     CVec3 m_pos;
     CVec3 m_scale;
     CVec3 m_rotation; // degree
     SAnimationProperty* m_pAnimationProperty;
     TString m_strName;
-    kmMat4 m_mat4LocalTransform;
-    kmMat4 m_mat4WorldTransform;
-private:
+    mutable CMat4 m_mat4LocalTransform;
+    mutable CMat4 m_mat4WorldTransform;
+    bool m_bNeedPopGroupID = false;
+    ERenderGroupID m_renderGroupID = LAYER_UNSET;
+    ERenderGroupID m_defaultGroupID = LAYER_UNSET;
+protected:
     bool m_bActive;
     bool m_bVisible;
-    bool m_bRenderWorldTransform;
-    ENodeType m_type;
+    bool m_bIgnoreParentRotation = false;
     CColor m_colorScale;// This is a temp solution for scale color, the min scale is 0, max scale is 0xFF / 100 for each component
     CNode* m_pParentNode;
-    CEventDispatcher* m_pEventDispatcher;
     std::vector<CNode*> m_nodeChildren;
 #ifdef _DEBUG
     std::set<CNode*> m_childrenMapForDebug;

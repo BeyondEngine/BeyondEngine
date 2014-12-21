@@ -41,13 +41,13 @@ public:
     virtual bool StringToValue( wxVariant& variant, const wxString& text, int argFlags = 0 ) const;
 
 private:
-    bool        m_bChildAppended;
-    double      m_dConstantValue_1;
-    double      m_dConstantValue_2;
-    wxPGProperty* m_pConstantProperty1;
-    wxPGProperty* m_pConstantProperty2;
-    wxBitmap*   m_pCurveBitmap; 
-    wxImage*    m_pImage; 
+    bool        m_bChildAppended = false;
+    double      m_dConstantValue_1 = 0;
+    double      m_dConstantValue_2 = 0;
+    wxPGProperty* m_pConstantProperty1 = nullptr;
+    wxPGProperty* m_pConstantProperty2 = nullptr;
+    wxBitmap*   m_pCurveBitmap = nullptr;
+    wxImage*    m_pImage = nullptr; 
 };
 
 #endif

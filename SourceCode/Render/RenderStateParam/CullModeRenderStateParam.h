@@ -20,14 +20,14 @@ public:
 
     virtual void Apply() override;
 
-    virtual ERenderState GetRenderStateType() const;
+    virtual ERenderStateParamType GetRenderStateType() const override;
 
     void SetCullModeType( ECullModeType type );
     ECullModeType GetCullModeType() const;
 
-    virtual bool operator==( const CRenderStateParamBase& other ) const;
+    virtual bool operator==(const CRenderStateParamBase& other) const override;
 
-    virtual bool operator!=( const CRenderStateParamBase& other ) const;
+    virtual bool operator!=(const CRenderStateParamBase& other) const override;
 
     virtual CRenderStateParamBase* Clone() override;
 private:

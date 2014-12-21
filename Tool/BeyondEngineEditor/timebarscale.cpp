@@ -8,10 +8,10 @@
 
 const static int SCALELINELENGTHOFFSET = 5;
 const static int SCALETEXTOFFSETY  = -23;
+#define SCALEBARHIGHT 24
 
 CTimeBarScale::CTimeBarScale( wxWindow *parent )
     : wxPanel (parent)
-    , m_iCursorPositionX(0)
 {
     SetMinSize(wxSize(0, SCALEBARHIGHT));
 }
@@ -19,91 +19,84 @@ CTimeBarScale::CTimeBarScale( wxWindow *parent )
 BEGIN_EVENT_TABLE(CTimeBarScale, wxPanel)
 EVT_MOUSE_EVENTS(CTimeBarScale::OnMouse)
 EVT_PAINT(CTimeBarScale::OnPaint)
+EVT_MOUSE_CAPTURE_LOST(CTimeBarScale::OnMouseCaptureLost)
 END_EVENT_TABLE()
 
 void CTimeBarScale::DrawScale()
 {
-    int iCount = m_pTimeBarFrame->GetFrameCount();
+    int iCount = m_pTimeBarFrame->GetFrameCountForDraw();
     SetBackgroundStyle(wxBG_STYLE_PAINT);
     wxAutoBufferedPaintDC ScaleDC(this); 
-    if ( iCount > 0 )
+    static const uint32_t ScaleTextOffset = 5;
+    wxPoint ViewStart = m_pTimeBarFrame->GetItemContainer()->GetViewStart();
+    wxRect ScaleRect = GetRect();
+    int iCellWidth = m_pTimeBarFrame->GetCellWidth();
+    int iTextPositionX = 0;
+    int iTextPositionY = ScaleRect.height + SCALETEXTOFFSETY;
+    int iScaleLineLength = ScaleRect.height - SCALELINELENGTHOFFSET;
+    int nOffset = iCellWidth * 0.5f;
+    ScaleDC.SetPen(*wxWHITE_PEN);
+    ScaleDC.DrawRectangle(ScaleRect);
+    ScaleDC.SetPen(*wxBLACK_PEN);
+    ScaleDC.SetFont(*wxSMALL_FONT);
+    for (int i = 0; i < iCount; ++i)
     {
-        static const size_t ScaleTextOffset = 5;
-        wxPoint ViewStart = m_pTimeBarFrame->GetItemContainer()->GetViewStart();
-        wxRect ScaleRect = GetRect();
-        int iCellWidth = m_pTimeBarFrame->GetCellWidth();
-        int iPositionX = m_pTimeBarFrame->GetCursorPositionX() - ViewStart.x * iCellWidth;
-        int iTextPositionX = -1;
-        int iTextPositionY = ScaleRect.height + SCALETEXTOFFSETY;
-        int iScaleLineLength = ScaleRect.height - SCALELINELENGTHOFFSET;
-        ScaleDC.DrawRectangle(ScaleRect);
-        ScaleDC.SetFont(*wxSMALL_FONT);
-
-        for(int i = 0; i < iCount; ++i)
+        iTextPositionX = i*iCellWidth + nOffset;
+        int iLineHeight = iScaleLineLength;
+        if ((ViewStart.x + i) % ScaleTextOffset == 0)
         {
-            iTextPositionX = i*iCellWidth;
-            int iLineHeight = iScaleLineLength;
-            if((ViewStart.x + i) % ScaleTextOffset == 0 || i == iCount -1)
-            {
-                ScaleDC.DrawText(wxString::Format(_T("%d"),i + ViewStart.x), iTextPositionX, iTextPositionY);
-                iLineHeight -= 4;
-            }
-            ScaleDC.DrawLine(iTextPositionX , ScaleRect.height, iTextPositionX , iLineHeight);
+            wxString strText = wxString::Format(_T("%d"), i + ViewStart.x);
+            ScaleDC.DrawText(strText, iTextPositionX - ScaleDC.GetTextExtent(strText).x * 0.5f, iTextPositionY);
+            iLineHeight -= 4;
         }
-        if (iPositionX >= 0)
-        {
-            wxPen pen = *wxRED_PEN;
-            pen.SetWidth(CURSORWIDTH);
-            ScaleDC.SetPen(pen);
-            ScaleDC.DrawLine(iPositionX, ScaleRect.height, iPositionX, 0);
-        }
+        ScaleDC.DrawLine(iTextPositionX, ScaleRect.height, iTextPositionX, iLineHeight);
     }
-    else
+    int iPositionX = m_pTimeBarFrame->GetCursorPos() * iCellWidth - ViewStart.x * iCellWidth + nOffset;
+    if (iPositionX >= 0)
     {
-        ScaleDC.Clear();
+        wxPen pen = m_pTimeBarFrame->IsEnableFramePanel() ? *wxRED_PEN : *wxGREY_PEN;
+        pen.SetWidth(CURSORWIDTH);
+        ScaleDC.SetPen(pen);
+        ScaleDC.DrawLine(iPositionX, ScaleRect.height, iPositionX, iScaleLineLength - 4);
     }
 }
 
 void CTimeBarScale::OnMouse( wxMouseEvent& event )
 {
-    CTimeBarItemContainer* pContiner = m_pTimeBarFrame->GetItemContainer();
-    int iCellWidth = m_pTimeBarFrame->GetCellWidth();
-    if (event.ButtonDown(wxMOUSE_BTN_LEFT))
+    if (m_pTimeBarFrame->IsEnableFramePanel())
     {
-        if (!HasCapture())
+        CTimeBarItemContainer* pContiner = m_pTimeBarFrame->GetItemContainer();
+        if (event.ButtonDown(wxMOUSE_BTN_LEFT))
         {
-            CaptureMouse();
-        }
-        m_pTimeBarFrame->SetClickOnScalebar(true);
-        wxPoint pstn = event.GetPosition();
-        int iScale = PointToScale(pstn);
-        int iPositionX = iScale + pContiner->GetViewStart().x;
-        iPositionX *= iCellWidth;
-        iPositionX += iCellWidth/2;
-        m_pTimeBarFrame->SetCursorPositionX(iPositionX);
-        m_pTimeBarFrame->ClickOnScaleBar();
-    }
-    else if (event.ButtonUp(wxMOUSE_BTN_LEFT))
-    {
-        if (HasCapture())
-        {
-            ReleaseMouse();
-        }
-    }
-    else if (event.Dragging())
-    {   
-        wxPoint pstn= event.GetPosition();
-        if (pstn.x % FREQUENCYREDUCTIONFACTOR == 0)
-        {
+            if (!HasCapture())
+            {
+                CaptureMouse();
+            }
+            m_pTimeBarFrame->SetClickOnScalebar(true);
+            wxPoint pstn = event.GetPosition();
             int iScale = PointToScale(pstn);
             int iPositionX = iScale + pContiner->GetViewStart().x;
-            iPositionX *= iCellWidth;
-            iPositionX += iCellWidth/2;
-            m_pTimeBarFrame->SetCursorPositionX(iPositionX);
-            m_pTimeBarFrame->ClickOnScaleBar();
-        } 
+            m_pTimeBarFrame->SetCursorPos(iPositionX);
+            m_pTimeBarFrame->RefreshControl();
+        }
+        else if (event.ButtonUp(wxMOUSE_BTN_LEFT))
+        {
+            if (HasCapture())
+            {
+                ReleaseMouse();
+            }
+        }
+        else if (event.Dragging())
+        {
+            wxPoint pstn = event.GetPosition();
+            {
+                int iScale = PointToScale(pstn);
+                int iPositionX = iScale + pContiner->GetViewStart().x;
+                m_pTimeBarFrame->SetCursorPos(iPositionX);
+                m_pTimeBarFrame->RefreshControl();
+            }
+        }
     }
-    event.Skip();
 }
 
 void CTimeBarScale::SetTimeBarFrameWindow( CTimeBarFrame* pSplitterWindow )
@@ -131,4 +124,9 @@ wxPoint CTimeBarScale::ScaleToPoint( int iScale )
 void CTimeBarScale::OnPaint( wxPaintEvent& /*event*/ )
 {
     DrawScale();
+}
+
+void CTimeBarScale::OnMouseCaptureLost(wxMouseCaptureLostEvent& /*event*/)
+{
+    //don't remove this or here cause a warning
 }

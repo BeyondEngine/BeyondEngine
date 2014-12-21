@@ -1,32 +1,19 @@
 ﻿#include "stdafx.h"
 #include "SkeletonBone.h"
+#include "Skeleton.h"
 
-CSkeletonBone::CSkeletonBone( SharePtr<CSkeletonBone> pParent, ESkeletonBoneType type )
+CSkeletonBone::CSkeletonBone(uint8_t uIndex, const TString& strName, CSkeleton* /*pSkeleton*/)
     : m_bVisible(false)
     , m_bCoordinateVisible(false)
-    , m_pParent(pParent)
-    , m_type(type)
+    , m_uIndex(uIndex)
+    , m_strName(strName)
+    , m_pParent(nullptr)
 {
 }
 
 CSkeletonBone::~CSkeletonBone()
 {
 
-}
-
-ESkeletonBoneType CSkeletonBone::GetBoneType() const
-{
-    return m_type; 
-}
-
-const kmMat4& CSkeletonBone::GetTPosMatrix() const
-{
-    return m_TPosMatrix;
-}
-
-void CSkeletonBone::SetTPosMatrix( const kmMat4& matrix )
-{
-    m_TPosMatrix = matrix;
 }
 
 void CSkeletonBone::SetVisible(bool bRender)
@@ -39,37 +26,65 @@ bool CSkeletonBone::GetVisible()const
     return m_bVisible;
 }
 
-void CSkeletonBone::SetCoordinateVisible(bool bRender)
-{
-    m_bCoordinateVisible = bRender;
-}
-
 bool CSkeletonBone::GetCoordinateVisible()const
 {
     return m_bCoordinateVisible;
 }
 
-SharePtr<CSkeletonBone> CSkeletonBone::GetParent()
+void CSkeletonBone::SetCoordinateVisible(bool bRender)
+{
+    m_bCoordinateVisible = bRender;
+}
+
+void CSkeletonBone::SetTPosWorldTM(const CMat4& worldTM)
+{
+    m_TPosWorldTM = worldTM;
+    SetCurrentWorldTM(m_TPosWorldTM);
+}
+
+const CMat4& CSkeletonBone::GetTPosWorldTM()
+{
+    return m_TPosWorldTM;
+}
+
+const CMat4& CSkeletonBone::GetCurrentWorldTM()
+{
+    return m_currWorldTM;
+}
+
+void CSkeletonBone::SetCurrentWorldTM(const CMat4& mat)
+{
+    m_currWorldTM = mat;
+}
+
+CSkeletonBone* CSkeletonBone::GetParent() const
 {
     return m_pParent;
 }
 
-void CSkeletonBone::SetParent(SharePtr<CSkeletonBone> parent)
+void CSkeletonBone::SetParent(CSkeletonBone* parent)
 {
+    BEATS_ASSERT(m_pParent == NULL);
     m_pParent = parent;
+    m_pParent->AddChildBone(this);
 }
 
-void CSkeletonBone::SetParentType(ESkeletonBoneType type)
+const std::vector<CSkeletonBone*>& CSkeletonBone::GetChildrenBone() const
 {
-    m_parentType = type;
+    return m_childrenBone;
 }
 
-ESkeletonBoneType CSkeletonBone::GetParentType() const
+void CSkeletonBone::AddChildBone(CSkeletonBone* pChild)
 {
-    return m_parentType;
+    m_childrenBone.push_back(pChild);
 }
 
-const std::vector<SharePtr<CSkeletonBone>>& CSkeletonBone::GetChild() const
+uint8_t CSkeletonBone::GetIndex() const
 {
-    return m_child;
+    return m_uIndex;
+}
+
+const TString& CSkeletonBone::GetName() const
+{
+    return m_strName;
 }

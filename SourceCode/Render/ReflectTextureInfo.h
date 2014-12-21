@@ -1,30 +1,34 @@
 #ifndef BEYOND_ENGINE_RENDER_REFLECTTEXTUREINFO_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_REFLECTTEXTUREINFO_H__INCLUDE
 
-class CTextureFrag;
-class CTextureAtlas;
+#include "Render/TextureFrag.h"
+#define DELAY_LOAD_TEXTURE
 struct SReflectTextureInfo
 {
     SReflectTextureInfo();
     ~SReflectTextureInfo();
-    SReflectTextureInfo( const SReflectTextureInfo& other );
 
-    void SetTextureFrag(const TString &strAtlasName, const TString &strFragName);
-    CTextureFrag *GetTextureFrag() const;
-    SharePtr<CTextureAtlas> GetAtlas() const;
-    void Deserialize(CSerializer *pSerializer);
+    SReflectTextureInfo& operator = (const SReflectTextureInfo& rhs);
+    void SetTextureFrag(SharePtr<CTextureFrag> pFrag);
+    bool SetTextureFrag(const TString &strAtlasName, const TString &strFragName);
+    SharePtr<CTextureFrag> GetTextureFrag() const;
+    void Deserialize(CSerializer *pSerializer, CComponentInstance* pOwner);
     void Serialize(CSerializer *pSerializer) const;
-
-    CTextureFrag *m_pFrag;
+private:
+    mutable SharePtr<CTextureFrag> m_pFrag;
+#ifdef DELAY_LOAD_TEXTURE
+    TString m_strAtlasName;
+    TString m_strFragName;
+#endif
 #ifdef _DEBUG
     TString m_strValue;
 #endif
 };
 
 template<>
-inline void DeserializeVariable(SReflectTextureInfo& value, CSerializer* pSerializer)
+inline void DeserializeVariable(SReflectTextureInfo& value, CSerializer* pSerializer, CComponentInstance* pOwner)
 {
-    value.Deserialize(pSerializer);
+    value.Deserialize(pSerializer, pOwner);
 }
 
 template<>

@@ -3,6 +3,7 @@
 
 #include "BeyondEngineEditorGLWindow.h"
 
+class CViewAgentBase;
 class CEditorSceneWindow : public CBeyondEngineEditorGLWindow
 {
     typedef CBeyondEngineEditorGLWindow super;
@@ -21,6 +22,8 @@ public:
     virtual CCamera* GetCamera() override;
     virtual void SetContextToCurrent() override;
 
+    void SetViewAgent(CViewAgentBase* pWxView);
+
 private:
     void OnSize(wxSizeEvent& event);
 
@@ -28,6 +31,7 @@ private:
     CGridRenderObject*  m_pNodeGrid;
     CCamera* m_pDefault3DCamera;
     CCamera* m_pDefault2DCamera;
+    CViewAgentBase* m_pWxView;
 
     wxDECLARE_NO_COPY_CLASS(CEditorSceneWindow);
     DECLARE_EVENT_TABLE()

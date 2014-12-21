@@ -56,6 +56,21 @@
     <ClCompile Include="ModelExporter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\SourceCode\Utility\BeatsUtility\Serializer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\SourceCode\Utility\BeatsUtility\FilePathTool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\SourceCode\Utility\BeatsUtility\StringHelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\SourceCode\Utility\Memory\MemoryAnalyzer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\SourceCode\Utility\BeatsUtility\Platform\win32\FilePathTool_Win32.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="maxplugin.def">

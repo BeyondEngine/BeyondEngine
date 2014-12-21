@@ -3,8 +3,8 @@
 #include "Utility/BeatsUtility/Serializer.h"
 #include "EngineEditor.h"
 #include "ListPropertyDescription.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxyManager.h"
-#include "Utility/TinyXML/tinyxml.h"
+#include "Component/Component/ComponentProxyManager.h"
+#include "Component/ComponentPublic.h"
 #include <wx/propgrid/propgrid.h>
 
 static const TString EMPTY_STRING = _T("Empty");
@@ -21,6 +21,8 @@ CListPropertyDescription::CListPropertyDescription(CSerializer* pSerializer)
         EReflectPropertyType childType;
         (*pSerializer) >> childType;
         m_pChildTemplate = CComponentProxyManager::GetInstance()->CreateProperty(childType, pSerializer);
+        m_pChildTemplate->GetBasicInfo()->m_displayName = _T("List_Child");
+        m_pChildTemplate->GetBasicInfo()->m_variableName = _T("List_Child");
     }
     InitializeValue(EMPTY_STRING);
 }
@@ -44,7 +46,7 @@ CListPropertyDescription::~CListPropertyDescription()
 bool CListPropertyDescription::AnalyseUIParameterImpl(const std::vector<TString>& result)
 {
     std::vector<TString> cache;
-    for (size_t i = 0; i < result.size(); ++i)
+    for (uint32_t i = 0; i < result.size(); ++i)
     {
         cache.clear();
         CStringHelper::GetInstance()->SplitString(result[i].c_str(), PROPERTY_KEYWORD_SPLIT_STR, cache, false);
@@ -77,7 +79,7 @@ bool CListPropertyDescription::AnalyseUIParameterImpl(const std::vector<TString>
             }
             else
             {
-                BEATS_ASSERT(false, _T("eUIPAT_DefaultValue for List property is not implemented!"));
+                m_pChildTemplate->AnalyseUIParameter(result[i].c_str());
             }
         }
         else
@@ -92,7 +94,7 @@ wxPGProperty* CListPropertyDescription::CreateWxProperty()
 {
     wxPGProperty* pProperty = new wxStringProperty(wxPG_LABEL, wxPG_LABEL);
     pProperty->SetClientData(this);
-    if (!m_bFixCount)
+    if (!m_bFixCount && GetBasicInfo()->m_bEditable)
     {
         CEngineEditor* pEnginEditor = static_cast<CEngineEditor*>(wxApp::GetInstance());
         wxPGEditor* pEditor = m_bGridStyle ? pEnginEditor->GetGridEditor() : pEnginEditor->GetPtrEditor();
@@ -144,12 +146,12 @@ void CListPropertyDescription::SetFixed(bool bFixedFlag)
     m_bFixCount = bFixedFlag;
 }
 
-size_t CListPropertyDescription::GetMaxCount() const
+uint32_t CListPropertyDescription::GetMaxCount() const
 {
     return m_uMaxCount;
 }
 
-void CListPropertyDescription::SetMaxCount(size_t uMaxCount)
+void CListPropertyDescription::SetMaxCount(uint32_t uMaxCount)
 {
     m_uMaxCount = uMaxCount;
 }
@@ -170,16 +172,14 @@ CPropertyDescriptionBase* CListPropertyDescription::CreateInstance()
     CPropertyDescriptionBase* pRet = NULL;
     if (m_pChildren->size() < m_uMaxCount)
     {
-        TCHAR szChildName[32];
-        _stprintf(szChildName, _T("List_Child_%d"), m_pChildren->size());
-        SBasicPropertyInfo basicInfo = *(GetBasicInfo().Get());
-        basicInfo.m_displayName.assign(szChildName);
-        basicInfo.m_variableName.assign(szChildName);
         CPropertyDescriptionBase* pProperty = m_pChildTemplate->Clone(true);
-        pProperty->SetBasicInfo(basicInfo);
         pProperty->SetOwner(this->GetOwner());
         pProperty->SetParent(this);
         pRet = pProperty;
+        if (IsInitialized())
+        {
+            pRet->Initialize();
+        }
     }
     BEATS_ASSERT(pRet != NULL);
     return pRet;
@@ -193,7 +193,7 @@ bool CListPropertyDescription::IsContainerProperty()
 void CListPropertyDescription::Initialize()
 {
     super::Initialize();
-    for (size_t i = 0; i < m_pChildren->size(); ++i)
+    for (uint32_t i = 0; i < m_pChildren->size(); ++i)
     {
         CPropertyDescriptionBase* pPropertyBase = m_pChildren->at(i);
         BEATS_ASSERT(pPropertyBase != NULL);
@@ -205,7 +205,7 @@ void CListPropertyDescription::Initialize()
 void CListPropertyDescription::Uninitialize()
 {
     super::Uninitialize();
-    for (size_t i = 0; i < m_pChildren->size(); ++i)
+    for (uint32_t i = 0; i < m_pChildren->size(); ++i)
     {
         CPropertyDescriptionBase* pPropertyBase = m_pChildren->at(i);
         BEATS_ASSERT(pPropertyBase != NULL);
@@ -213,55 +213,82 @@ void CListPropertyDescription::Uninitialize()
     }
 }
 
-CPropertyDescriptionBase* CListPropertyDescription::AddChild(CPropertyDescriptionBase* pProperty)
+CPropertyDescriptionBase* CListPropertyDescription::InsertChild(CPropertyDescriptionBase* pProperty, uint32_t uPreIndex)
 {
     if (pProperty == NULL)
     {
         pProperty = CreateInstance();
     }
-    super::AddChild(pProperty);
+    super::InsertChild(pProperty, uPreIndex);
+    bool bSyncProperty = !CComponentInstanceManager::GetInstance()->IsInLoadingPhase() && GetOwner() && !GetOwner()->GetTemplateFlag();
+    EReflectOperationType originalOperateType = EReflectOperationType::ChangeValue;
+    CPropertyDescriptionBase* pOriginalProperty = CComponentProxyManager::GetInstance()->GetCurrReflectProperty(&originalOperateType);
+    if (bSyncProperty)
+    {
+        CComponentProxyManager::GetInstance()->SetCurrReflectProperty(pProperty, EReflectOperationType::AddChild);
+    }
     ResetName();
+    if (bSyncProperty)
+    {
+        CComponentProxyManager::GetInstance()->SetCurrReflectProperty(pOriginalProperty, originalOperateType);
+    }
     return pProperty;
 }
 
-bool CListPropertyDescription::DeleteChild(CPropertyDescriptionBase* pProperty, bool bKeepOrder)
+bool CListPropertyDescription::RemoveChild(CPropertyDescriptionBase* pProperty, bool bDelete)
 {
     BEATS_ASSERT((*m_pChildren).size() > 0 && pProperty != NULL);
-    bool bRet = super::DeleteChild(pProperty, bKeepOrder);
+    bool bSyncProperty = !CComponentInstanceManager::GetInstance()->IsInLoadingPhase() && GetOwner() && !GetOwner()->GetTemplateFlag();
+    EReflectOperationType originalOperateType = EReflectOperationType::ChangeValue;
+    CPropertyDescriptionBase* pOriginalProperty = CComponentProxyManager::GetInstance()->GetCurrReflectProperty(&originalOperateType);
+    if (bSyncProperty)
+    {
+        CComponentProxyManager::GetInstance()->SetCurrReflectProperty(this, EReflectOperationType::RemoveChild);
+        CSerializer& removeChildInfo = CComponentProxyManager::GetInstance()->GetRemoveChildInfo();
+        removeChildInfo.Reset();
+        removeChildInfo << false;
+        SerializeContainerElementLocation(removeChildInfo, pProperty);
+    }
+    bool bRet = super::RemoveChild(pProperty, bDelete);
     if (bRet)
     {
-        ResetChildName();
         ResetName();
+        if (bSyncProperty)
+        {
+            CComponentProxyManager::GetInstance()->SetCurrReflectProperty(pOriginalProperty, originalOperateType);
+        }
     }
     BEATS_ASSERT(bRet, _T("Can't Find the property to delete!"));
     return bRet;
 }
 
-void CListPropertyDescription::DeleteAllChild()
+void CListPropertyDescription::RemoveAllChild(bool bDelete)
 {
-    super::DeleteAllChild();
-    ResetName();
-}
-
-void CListPropertyDescription::ResetChildName()
-{
-    for (size_t i = 0; i < m_pChildren->size(); ++i)
+    bool bSyncProperty = !CComponentInstanceManager::GetInstance()->IsInLoadingPhase() && GetOwner() && !GetOwner()->GetTemplateFlag();
+    EReflectOperationType originalOperateType = EReflectOperationType::ChangeValue;
+    CPropertyDescriptionBase* pOriginalProperty = CComponentProxyManager::GetInstance()->GetCurrReflectProperty(&originalOperateType);
+    if (bSyncProperty)
     {
-        TCHAR szChildName[32];
-        _stprintf(szChildName, _T("Child_%d"), i);
-        (*m_pChildren)[i]->GetBasicInfo()->m_displayName.assign(szChildName);
-        (*m_pChildren)[i]->GetBasicInfo()->m_variableName.assign(szChildName);
+        CComponentProxyManager::GetInstance()->SetCurrReflectProperty(this, EReflectOperationType::RemoveChild);
+        CSerializer& removeChildInfo = CComponentProxyManager::GetInstance()->GetRemoveChildInfo();
+        removeChildInfo.Reset();
+        removeChildInfo << true;
+    }
+    super::RemoveAllChild(bDelete);
+    ResetName();
+    if (bSyncProperty)
+    {
+        CComponentProxyManager::GetInstance()->SetCurrReflectProperty(pOriginalProperty, originalOperateType);
     }
 }
 
-void CListPropertyDescription::ResetName()
+void CListPropertyDescription::ResetName(bool bForceSet)
 {
     wxString strName = GetCurrentName();
     const TCHAR* pszCurValue = ((TString*)GetValue(eVT_CurrentValue))->c_str();
-    if (strName.compare(pszCurValue) != 0)
+    if (bForceSet || strName.compare(pszCurValue) != 0)
     {
-        wxVariant var(strName);
-        SetValue(var, false);
+        SetValueWithType(&strName, eVT_CurrentValue, bForceSet);
     }
 }
 
@@ -275,17 +302,17 @@ TString CListPropertyDescription::GetCurrentName()
     return TString(strName);
 }
 
-void CListPropertyDescription::LoadFromXML( TiXmlElement* pNode )
+void CListPropertyDescription::LoadFromXML(rapidxml::xml_node<>* pNode)
 {
     super::LoadFromXML(pNode);
-    TiXmlElement* pVarElement = pNode->FirstChildElement("VariableNode");
+    rapidxml::xml_node<>* pVarElement = pNode->first_node("VariableNode");
     while (pVarElement != NULL)
     {
         int iVarType = 0;
-        pVarElement->Attribute("Type", &iVarType);
+        iVarType = atoi(pVarElement->first_attribute("Type")->value());
         if (iVarType == m_pChildTemplate->GetType())
         {
-            CPropertyDescriptionBase* pNewProperty = AddChild(NULL);
+            CPropertyDescriptionBase* pNewProperty = InsertChild(NULL);
             BEATS_ASSERT(pNewProperty != 0, _T("Create property failed when load from xml for list property description."));
             if (pNewProperty != NULL)
             {
@@ -296,8 +323,9 @@ void CListPropertyDescription::LoadFromXML( TiXmlElement* pNode )
         {
             BEATS_WARNING(false, _T("UnMatch type of property!"));
         }
-        pVarElement = pVarElement->NextSiblingElement("VariableNode");
+        pVarElement = pVarElement->next_sibling("VariableNode");
     }
+    ResetName();
 }
 
 CPropertyDescriptionBase* CListPropertyDescription::Clone(bool bCloneValue)
@@ -305,11 +333,11 @@ CPropertyDescriptionBase* CListPropertyDescription::Clone(bool bCloneValue)
     CListPropertyDescription* pNewProperty = static_cast<CListPropertyDescription*>(super::Clone(bCloneValue));
     if (bCloneValue)
     {
-        for (size_t i = 0; i < m_pChildren->size(); ++i)
+        for (uint32_t i = 0; i < m_pChildren->size(); ++i)
         {
             CPropertyDescriptionBase* pPropertyBase = (*m_pChildren)[i];
             CPropertyDescriptionBase* pNewChildPropertyBase = pPropertyBase->Clone(true);
-            pNewProperty->AddChild(pNewChildPropertyBase);
+            pNewProperty->InsertChild(pNewChildPropertyBase);
         }
     }
     return pNewProperty;
@@ -323,7 +351,7 @@ CPropertyDescriptionBase* CListPropertyDescription::CreateNewInstance()
 
 void CListPropertyDescription::GetValueAsChar( EValueType type, char* pOut ) const
 {
-    CStringHelper::GetInstance()->ConvertToCHAR(((TString*)GetValue(type))->c_str(), pOut, 128);
+    _tcscpy(pOut, ((TString*)GetValue(type))->c_str());
 }
 
 bool CListPropertyDescription::GetValueByTChar(const TCHAR* /*pIn*/, void* /*pOutValue*/)
@@ -335,7 +363,7 @@ bool CListPropertyDescription::GetValueByTChar(const TCHAR* /*pIn*/, void* /*pOu
 void CListPropertyDescription::Serialize(CSerializer& serializer, EValueType eValueType /*= eVT_SavedValue*/)
 {
     serializer << m_pChildren->size();
-    for (size_t i = 0; i < m_pChildren->size(); ++i)
+    for (uint32_t i = 0; i < m_pChildren->size(); ++i)
     {
         (*m_pChildren)[i]->Serialize(serializer, eValueType);
     }
@@ -343,13 +371,46 @@ void CListPropertyDescription::Serialize(CSerializer& serializer, EValueType eVa
 
 void CListPropertyDescription::Deserialize(CSerializer& serializer, EValueType eValueType /*= eVT_CurrentValue*/)
 {
-    DeleteAllChild();
-    size_t uChildCount = 0;
+    RemoveAllChild();
+    uint32_t uChildCount = 0;
     serializer >> uChildCount;
-    for (size_t i = 0; i < uChildCount; ++i)
+    for (uint32_t i = 0; i < uChildCount; ++i)
     {
-        CPropertyDescriptionBase* pChild = AddChild(NULL);
+        CPropertyDescriptionBase* pChild = InsertChild(NULL);
         pChild->Deserialize(serializer, eValueType);
+    }
+    ResetName();
+}
+
+bool CListPropertyDescription::OnChildChanged(uint32_t /*uChildIndex*/)
+{
+    // Refresh the value without trigger on reflect logic
+    TString strCurName = GetCurrentName();
+    CopyValue(&strCurName, GetValue(eVT_CurrentValue));
+    return true;
+}
+
+void CListPropertyDescription::SetOwner(CComponentProxy* pOwner)
+{
+    super::SetOwner(pOwner);
+    for (uint32_t i = 0; i < m_pChildren->size(); ++i)
+    {
+        (*m_pChildren)[i]->SetOwner(pOwner);
     }
 }
 
+void CListPropertyDescription::ChangeOrder(CPropertyDescriptionBase* pChild, uint32_t uPreIndex)
+{
+    BEATS_ASSERT((*m_pChildren).size() > 0 && pChild != NULL);
+    if (GetChildIndex(pChild) != uPreIndex)
+    {
+        CComponentProxyManager::GetInstance()->SetCurrReflectProperty(this, EReflectOperationType::ChangeListOrder);
+        CSerializer& serializer = CComponentProxyManager::GetInstance()->GetRemoveChildInfo();
+        serializer.Reset();
+        SerializeContainerElementLocation(serializer, pChild);
+        serializer << uPreIndex;
+        super::RemoveChild(pChild, false);
+        super::InsertChild(pChild, uPreIndex);
+        ResetName(true);
+    }
+}

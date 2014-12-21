@@ -1,7 +1,7 @@
 #ifndef BEYOND_ENGINE_EDITOR_WXUICONTROL_TRANSPARENTBGTEXT_TRANSPARENTTEXT_H__INCLUDE
 #define BEYOND_ENGINE_EDITOR_WXUICONTROL_TRANSPARENTBGTEXT_TRANSPARENTTEXT_H__INCLUDE
 
-#include "wx\msw\stattext.h"
+#include "wx/msw/stattext.h"
 
 class CTransparentText : public wxStaticText
 {

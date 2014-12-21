@@ -2,6 +2,7 @@
 #include "DoublePropertyDescription.h"
 #include "Utility/BeatsUtility/StringHelper.h"
 #include "Utility/BeatsUtility/Serializer.h"
+#include "Component/ComponentPublic.h"
 #include <float.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
@@ -38,7 +39,7 @@ bool CDoublePropertyDescription::AnalyseUIParameterImpl(const std::vector<TStrin
 {
     std::vector<TString> cache;
     BEATS_ASSERT(result.size() <= 4);
-    for (size_t i = 0; i < result.size(); ++i)
+    for (uint32_t i = 0; i < result.size(); ++i)
     {
         cache.clear();
         CStringHelper::GetInstance()->SplitString(result[i].c_str(), PROPERTY_KEYWORD_SPLIT_STR, cache);

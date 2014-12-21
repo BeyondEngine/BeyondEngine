@@ -12,25 +12,24 @@ public:
     CPtrPropertyDescription(const CPtrPropertyDescription& rRef);
     virtual ~CPtrPropertyDescription();
 
-    size_t GetPtrGuid();
-    void SetDerivedGuid(size_t uDerivedGuid);
-    size_t GetDerivedGuid() const;
+    uint32_t GetPtrGuid() const;
+    void SetPtrGuid(uint32_t uGuid);
+    void SetDerivedGuid(uint32_t uDerivedGuid);
+    uint32_t GetDerivedGuid() const;
     bool CreateInstance(bool bCallInitFunc = true);
+    bool DestroyInstance();
 
-    //When destroy instance in editor, we need to delete the component, otherwise, user will manage the host component.
-    bool DestroyInstance(bool bDeleteHostComponent);
-
-    virtual void SetValue(wxVariant& value, bool bSaveValue);
+    virtual void SetValue(wxVariant& value, bool bSaveValue) override;
 
     virtual CComponentProxy* GetInstanceComponent() const override;
 
-    virtual bool AnalyseUIParameterImpl(const std::vector<TString>& parameterUnit);
-    virtual wxPGProperty* CreateWxProperty();
-    virtual void LoadFromXML(TiXmlElement* pNode);
-    virtual bool IsDataSame(bool bWithDefaultOrXML);
+    virtual bool AnalyseUIParameterImpl(const std::vector<TString>& parameterUnit) override;
+    virtual wxPGProperty* CreateWxProperty() override;
+    virtual void LoadFromXML(rapidxml::xml_node<>* pNode) override;
+    virtual bool IsDataSame(bool bWithDefaultOrXML) override;
 
-    virtual CPropertyDescriptionBase* Clone(bool bCloneValue);
-    virtual CPropertyDescriptionBase* CreateNewInstance();
+    virtual CPropertyDescriptionBase* Clone(bool bCloneValue) override;
+    virtual CPropertyDescriptionBase* CreateNewInstance() override;
 
     virtual bool CopyValue(void* pSourceValue, void* pTargetValue) override;
     virtual void GetValueAsChar(EValueType type, char* pOut) const override;
@@ -39,13 +38,16 @@ public:
     virtual void Deserialize(CSerializer& serializer, EValueType eValueType = eVT_CurrentValue) override;
     virtual void Initialize() override;
     virtual void Uninitialize() override;
+    virtual uint32_t HACK_GetPtrReflectGuid() const override;
+    virtual void HACK_InformPtrPropertyToDeleteInstance() override;
+private:
+    void UpdateDisplayString(uint32_t uComponentGuid, bool bUpdateHostComponent = true);
 
 private:
-    void UpdateDisplayString(size_t uComponentGuid);
-
-private:
-    size_t m_uDerivedGuid;
-    size_t m_uComponentGuid;
+    // This flag indicate when we call CComponentInstance::CloneInstance, if this variable should be cloned.
+    bool m_bCanBeCloned;
+    uint32_t m_uDerivedGuid;
+    uint32_t m_uComponentGuid;
     CComponentProxy* m_pInstance;
     // This flag indicate if this property should have instance according to XML data. 
     bool m_bHasInstance;

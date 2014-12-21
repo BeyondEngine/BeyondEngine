@@ -7,84 +7,130 @@
 #include "FontManager.h"
 #include "Render/RenderBatch.h"
 #include "Render/RenderManager.h"
-#include "Utility/Utf8String.h"
 
 CFontFace::CFontFace(const TString &name)
-    : m_strName(name)
-    , m_fBorderWeight(1.0f)
+: m_strName(name)
+, m_fBorderWeight(3.0f)
 {
 }
 
 CFontFace::~CFontFace()
 {
-    for(auto glyph : m_glyphMap)
+    m_glyphMapLocker.lock();
+    BEATS_SAFE_DELETE_MAP(m_glyphMap);
+    m_glyphMapLocker.unlock();
+}
+
+void CFontFace::PrepareCharacters(const TString &chars, std::vector<const CFontGlyph *>& glyphs)
+{
+    PrepareCharacters(CStringHelper::GetInstance()->Utf8ToWString(chars.c_str()).c_str(), glyphs);
+}
+
+void CFontFace::PrepareCharacters(const wchar_t *wchars, std::vector<const CFontGlyph *>& glyphs)
+{
+    bool bGlyphHasRest = false;
+    for (uint32_t i = 0; wchars[i];)
     {
-        BEATS_SAFE_DELETE(glyph.second);
+        bool bGlyphResetFlag = false;
+        const CFontGlyph * glyph = PrepareChar(wchars[i], bGlyphResetFlag);
+        if (bGlyphResetFlag)
+        {
+            glyphs.clear();
+            if (bGlyphHasRest)
+            {
+                BEATS_ASSERT(false, "the text %s is too long for free type texture buffer!", wchars);
+                break;
+            }
+            else
+            {
+                bGlyphHasRest = true;
+                i = 0;
+            }
+        }
+        else
+        {
+            BEATS_ASSERT(glyph);
+            if (glyph)
+            {
+                glyphs.push_back(glyph);
+            }
+            ++i;
+        }
     }
 }
 
-void CFontFace::PrepareCharacters(const TString &chars)
+CVec2 CFontFace::GetTextSize(const TString& text, float fontSize, bool hasBorder)
 {
-#ifdef UNICODE
-    PrepareCharacters(chars.c_str());
-#else
-    PrepareCharacters(Utf8ToWString(chars.c_str()).c_str());
-#endif
-}
+    float startX = 0;
+    float maxHeight = 0.0f;
 
-void CFontFace::PrepareCharacters(const wchar_t *wchars)
-{
-    for(size_t i = 0; wchars[i]; ++i)
+    std::vector<const CFontGlyph *> glyphs;
+    GetGlyphs(text, glyphs);
+
+    for (auto glyph : glyphs)
     {
-        PrepareChar(wchars[i]);
+        if (glyph)
+        {
+            startX += glyph->GetWidth(hasBorder) * fontSize;
+            maxHeight = glyph->GetHeight(hasBorder) > maxHeight ? glyph->GetHeight(hasBorder) : maxHeight;
+        }
     }
+    return CVec2(startX, maxHeight * fontSize);
 }
 
-void CFontFace::RenderText(const TString &text, kmScalar x, kmScalar y, float fFontSize,
-                          CColor color, CColor borderColor, const kmMat4 *transform,
-                          bool bGUI, const CRect *pRect)
+float CFontFace::RenderText(const TString &text, float x, float y, ERenderGroupID renderGroupId, float fFontSize,
+    const CColor& color, const CColor& borderColor, const CMat4 *transform,
+    const CRect *pRect, float fAlphaScale)
 {
     BEYONDENGINE_PERFORMDETECT_START(ePNT_RenderText2)
-    auto glyphs = GetGlyphs(text);
+        std::vector<const CFontGlyph *> glyphs;
+        GetGlyphs(text, glyphs);
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_RenderText2)
+
     BEYONDENGINE_PERFORMDETECT_START(ePNT_RenderText3)
-    for(auto glyph : glyphs)
+    CRenderBatch* pRenderBatch = GetRenderBatch(renderGroupId);
+#ifdef DEVELOP_VERSION
+    CEngineCenter::GetInstance()->m_uRenderTextCounter += glyphs.size();
+    if (pRenderBatch->m_usage == ERenderBatchUsage::eRBU_Count && m_eFontType == e_free_type_font)
     {
-        DrawGlyph(glyph, x, y, fFontSize, color, borderColor, transform, bGUI, pRect );
+        pRenderBatch->m_usage = ERenderBatchUsage::eRBU_Text;
+    }
+    BEATS_ASSERT(m_eFontType != e_free_type_font || pRenderBatch->m_usage == ERenderBatchUsage::eRBU_Text);
+#endif
+    for (auto glyph : glyphs)
+    {
+        DrawGlyph(pRenderBatch, glyph, x, y, fFontSize, color, borderColor, transform, pRect, fAlphaScale);
         x += glyph->GetWidth(borderColor.a != 0) * fFontSize;
     }
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_RenderText3)
+        return x;
 }
 
-const CFontGlyph *CFontFace::GetGlyph( unsigned long character ) const
+float CFontFace::GetScaleFactor() const
 {
-    auto itr = m_glyphMap.find(character);
-    return itr != m_glyphMap.end() ? itr->second : nullptr;
+    return 1.0f;
 }
 
-std::vector<const CFontGlyph *> CFontFace::GetGlyphs(const TString &text)
+void CFontFace::GetGlyphs(const TString &text, std::vector<const CFontGlyph *>& glyphs)
 {
-#ifdef UNICODE
-    const wchar_t *wchars = text.c_str();
-#else
-    std::wstring wstr = Utf8ToWString(text.c_str());
+    std::wstring wstr = CStringHelper::GetInstance()->Utf8ToWString(text.c_str());
     const wchar_t *wchars = wstr.c_str();
-#endif
-
-    PrepareCharacters(wchars);
-    std::vector<const CFontGlyph *> glyphs;
-    for(size_t i = 0; wchars[i]; ++i)
-    {
-        const CFontGlyph *glyph = GetGlyph(wchars[i]);
-        if(glyph)
-            glyphs.push_back(glyph);
-    }
-    return glyphs;
+    PrepareCharacters(wchars, glyphs);
 }
 
 const TString& CFontFace::GetName()const
 {
     return m_strName;
+}
+
+void CFontFace::SetFontType(EFontType type)
+{
+    m_eFontType = type;
+}
+
+EFontType CFontFace::GetFontType()
+{
+    return m_eFontType;
 }
 
 void CFontFace::Clear()
@@ -99,4 +145,9 @@ void CFontFace::SetBorderWeight(float fBorderWeight)
 float CFontFace::GetBorderWeight() const
 {
     return m_fBorderWeight;
+}
+
+int CFontFace::GetFontSize()
+{
+    return m_nSize;
 }

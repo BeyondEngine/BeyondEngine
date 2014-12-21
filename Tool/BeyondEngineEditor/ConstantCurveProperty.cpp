@@ -1,16 +1,9 @@
-
 #include "stdafx.h"
 #include "ConstantCurveProperty.h"
 #define X_UNNULL_SIZE wxSize(1,0);
 
 CConstantCurveProperty::CConstantCurveProperty(const wxString& label, const wxString& name, double value)
     : CSingleTypeChoicePropertyBase(label, name, value)
-    , m_dConstantValue_1(0.0)
-    , m_dConstantValue_2(0.0)
-    , m_pConstantProperty1(NULL)
-    , m_pConstantProperty2(NULL)
-    , m_bChildAppended(false)
-    , m_pCurveBitmap(NULL)
 {
     CreatConstantProperty();
 }

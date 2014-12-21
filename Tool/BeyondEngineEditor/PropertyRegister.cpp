@@ -15,9 +15,13 @@
 #include "MapPropertyDescription.h"
 #include "FilePropertyDescription.h"
 #include "TexturePropertyDescription.h"
+#include "SoundFilePropertyDescription.h"
 #include "GradientColorPropertyDescription.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxyManager.h"
-
+#include "Component/Component/ComponentProxyManager.h"
+#include "LanguageTextPropertyDescription.h"
+#include "Component/ComponentPublic.h"
+#include "RandomValuePropertyDescription.h"
+#include "RandomColorPropertyDescription.h"
 
 
     REGISTER_PROPERTY_DESC(eRPT_Bool, CBoolPropertyDescription)
@@ -35,5 +39,9 @@
     REGISTER_PROPERTY_DESC(eRPT_Vec4F, CVec4PropertyDescription)
     REGISTER_PROPERTY_DESC(eRPT_Map, CMapPropertyDescription)
     REGISTER_PROPERTY_DESC(eRPT_File, CFilePropertyDescription)
+    REGISTER_PROPERTY_DESC(eRPT_SoundFile, CSoundFilePropertyDescription)
     REGISTER_PROPERTY_DESC(eRPT_Texture, CTexturePropertyDescription)
     REGISTER_PROPERTY_DESC(eRPT_GradientColor, CGradientColorPropertyDescription)
+    REGISTER_PROPERTY_DESC(eRPT_LanguageText, CLanguageTextPropertyDescription)
+    REGISTER_PROPERTY_DESC(eRPT_RandomValue, CRandomValuePropertyDescription)
+    REGISTER_PROPERTY_DESC(eRPT_RandomColor, CRandomColorPropertyDescription)

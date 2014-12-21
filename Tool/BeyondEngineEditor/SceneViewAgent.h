@@ -5,13 +5,10 @@
 
 class CSceneViewAgent : public CViewAgentBase
 {
+    typedef CViewAgentBase super;
     BEATS_DECLARE_SINGLETON(CSceneViewAgent);
 public:
     virtual void InView() override;
-    virtual void OutView() override;
-    virtual void ProcessMouseEvent(wxMouseEvent& event) override;
-    virtual void SelectComponent(CComponentProxy* pComponentInstance) override;
-
 };
 
 #endif

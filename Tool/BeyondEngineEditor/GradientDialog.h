@@ -1,5 +1,5 @@
-#ifndef BEYOND_ENGINE_EDITOR_EXTRAWINDOW_GradientDialog_H__INCLUDE
-#define BEYOND_ENGINE_EDITOR_EXTRAWINDOW_GradientDialog_H__INCLUDE
+#ifndef BEYOND_ENGINE_EDITOR_EXTRAWINDOW_GRADIENTDIALOG_H__INCLUDE
+#define BEYOND_ENGINE_EDITOR_EXTRAWINDOW_GRADIENTDIALOG_H__INCLUDE
 
 #include "EditDialogBase.h"
 
@@ -16,16 +16,18 @@ public:
 
     virtual ~CGradientDialog();
     virtual int ShowModal();
-    void InitCtrls();
     bool CheckPosIsOnly(float fPos);
     int GetPosCount();
     float GetPosByIndex(int nIndex);
     wxColor GetColorByIndex(int nIndex);
+    CGradientCtrl* GetGradientCtrl() const;
+    void Reset();
+    void OnYesBtnClicked(wxCommandEvent& event);
+    void OnCancelBtnClicked(wxCommandEvent& event);
 
 private:
     CGradientCtrl* m_pGradientCtrl;
     std::vector<float> m_allCursorPosList;
-    DECLARE_EVENT_TABLE()
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <wx/numdlg.h>
+#include <wx/msw/private.h>
 #include "BeyondEngineEditorComponentWindow.h"
 #include "EditorMainFrame.h"
 #include "EngineEditor.h"
@@ -9,14 +10,13 @@
 #include "Render/ShaderProgram.h"
 #include "Render/Shader.h"
 #include "Resource/ResourceManager.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentInstance.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxyManager.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxy.h"
-#include "Utility/BeatsUtility/ComponentSystem/Dependency/DependencyDescription.h"
-#include "Utility/BeatsUtility/ComponentSystem/Dependency/DependencyDescriptionLine.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentGraphic.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProject.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentReference.h"
+#include "Component/Component/ComponentInstance.h"
+#include "Component/Component/ComponentProxyManager.h"
+#include "Component/Component/ComponentProxy.h"
+#include "Component/Component/DependencyDescription.h"
+#include "Component/Component/DependencyDescriptionLine.h"
+#include "Component/Component/ComponentGraphic.h"
+#include "Component/Component/ComponentProject.h"
 #include "Render/RenderGroupManager.h"
 #include "Utility/PerformDetector/PerformDetector.h"
 #include "WxGLRenderWindow.h"
@@ -27,8 +27,10 @@
 #include "Scene/SceneManager.h"
 #include "Framework/Application.h"
 #include "ComponentGraphics_GL.h"
-#include "GUI/WindowManager.h"
-#include "GUI/Window/Window.h"
+#include "Render/RenderGroup.h"
+#include "Render/Sprite.h"
+#include "EditorSceneWindow.h"
+#include "SearchComponentDialog.h"
 
 BEGIN_EVENT_TABLE(CBeyondEngineEditorComponentWindow, wxGLCanvas)
     EVT_SIZE(CBeyondEngineEditorComponentWindow::OnSize)
@@ -43,7 +45,7 @@ BEGIN_EVENT_TABLE(CBeyondEngineEditorComponentWindow, wxGLCanvas)
     EVT_MOUSE_CAPTURE_LOST(CBeyondEngineEditorGLWindow::OnCaptureLost)
 END_EVENT_TABLE()
 
-static const float MAX_Z_VALUE = -1000.f;
+static const float MAX_Z_VALUE = -100.f;
 static const float MIN_CELL_SIZE = 5.f;
 static const int MIN_SKEW_DEPENDENCY = 4;
 static const int MIN_SKEW_DEPENDENCY_HIGHT = 3;
@@ -54,8 +56,11 @@ enum EComponentMenuType
     eCMT_Paste,
     eCMT_Delete,
     eCMT_Search,
-    eCMT_CreateRef,
     eCMT_SetUserDefineName,
+    eCMT_ClearPos,
+    eCMT_ClearAnchor,
+    eCMT_ClearScale,
+    eCMT_CameraAim,
 
     eCMT_Count,
     eCMT_Force32Bit = 0xFFFFFFFF
@@ -81,10 +86,10 @@ CBeyondEngineEditorComponentWindow::CBeyondEngineEditorComponentWindow(wxWindow 
                                                      , m_pSelectedDependencyLine(NULL)
                                                      , m_pClickedComponent(NULL)
                                                      , m_pNode(NULL)
+                                                     , m_startDragPos(CVec2(0, 0))
 {
     BEATS_ASSERT(pContext);
     m_pMainFrame = static_cast<CEngineEditor*>(wxApp::GetInstance())->GetMainFrame();
-    kmVec2Fill(&m_startDragPos, 0, 0);
 
     m_pComponentMenu = new wxMenu;
     m_pAddDependencyMenu = new wxMenu;
@@ -92,7 +97,10 @@ CBeyondEngineEditorComponentWindow::CBeyondEngineEditorComponentWindow(wxWindow 
     m_pComponentMenu->Append(eCMT_Paste, _T("粘贴"));
     m_pComponentMenu->Append(eCMT_Delete, _T("删除"));
     m_pComponentMenu->Append(eCMT_Search, _T("搜索"));
-    m_pComponentMenu->Append(eCMT_CreateRef, _T("创建引用"));
+    m_pComponentMenu->Append(eCMT_ClearPos, _T("清除位置"));
+    m_pComponentMenu->Append(eCMT_ClearAnchor, _T("清除锚点"));
+    m_pComponentMenu->Append(eCMT_ClearScale, _T("清除缩放"));
+    m_pComponentMenu->Append(eCMT_CameraAim, _T("相机对准"));
     m_pComponentMenu->Append(eCMT_SetUserDefineName, _T("设置名称"));
 
     m_pComponentMenu->Connect(wxEVT_COMMAND_MENU_SELECTED, wxMenuEventHandler(CBeyondEngineEditorComponentWindow::OnComponentMenuClicked), NULL, this);
@@ -113,8 +121,13 @@ CBeyondEngineEditorComponentWindow::~CBeyondEngineEditorComponentWindow()
 {
     BEATS_SAFE_DELETE(m_pComponentMenu);
     BEATS_SAFE_DELETE(m_pAddDependencyMenu);
+    if (m_pCopyComponent != NULL)
+    {
+        m_pCopyComponent->Uninitialize();
+    }
     BEATS_SAFE_DELETE(m_pCopyComponent);
     BEATS_SAFE_DELETE(m_pCamera);
+    m_pNode->Uninitialize();
     BEATS_SAFE_DELETE(m_pNode);
 }
 CCamera* CBeyondEngineEditorComponentWindow::GetCamera()
@@ -124,23 +137,23 @@ CCamera* CBeyondEngineEditorComponentWindow::GetCamera()
 
 void CBeyondEngineEditorComponentWindow::UpdateAllDependencyLine()
 {
-    const std::map<size_t, std::map<size_t, CComponentBase*>*>* pInstanceMap = CComponentProxyManager::GetInstance()->GetInstance()->GetComponentInstanceMap();
-    std::map<size_t, std::map<size_t, CComponentBase*>*>::const_reverse_iterator iter = pInstanceMap->rbegin();
+    const std::map<uint32_t, std::map<uint32_t, CComponentBase*>*>* pInstanceMap = CComponentProxyManager::GetInstance()->GetInstance()->GetComponentInstanceMap();
+    std::map<uint32_t, std::map<uint32_t, CComponentBase*>*>::const_reverse_iterator iter = pInstanceMap->rbegin();
     for (; iter != pInstanceMap->rend(); ++iter)
     {
-        std::map<size_t, CComponentBase*>::const_reverse_iterator subIter = iter->second->rbegin();
+        std::map<uint32_t, CComponentBase*>::const_reverse_iterator subIter = iter->second->rbegin();
         for (; subIter != iter->second->rend(); ++subIter)
         {
             CComponentProxy* pComponent = static_cast<CComponentProxy*>(subIter->second);
             const std::vector<CDependencyDescription*>* pDependencies = pComponent->GetDependencies();
             if (pDependencies != NULL)
             {
-                size_t uDepedencyCount = pDependencies->size();
-                for (size_t i = 0; i < uDepedencyCount; ++i)
+                uint32_t uDepedencyCount = pDependencies->size();
+                for (uint32_t i = 0; i < uDepedencyCount; ++i)
                 {
                     CDependencyDescription* pDesc = pComponent->GetDependency(i);
-                    size_t uDependencyLineCount = pDesc->GetDependencyLineCount();
-                    for (size_t j = 0; j < uDependencyLineCount; ++j)
+                    uint32_t uDependencyLineCount = pDesc->GetDependencyLineCount();
+                    for (uint32_t j = 0; j < uDependencyLineCount; ++j)
                     {
                         pDesc->GetDependencyLine(j)->UpdateRect(m_fCellSize, true);
                     }
@@ -150,16 +163,24 @@ void CBeyondEngineEditorComponentWindow::UpdateAllDependencyLine()
     }
 }
 
-void CBeyondEngineEditorComponentWindow::DeleteSelectedComponent()
+void CBeyondEngineEditorComponentWindow::DeleteComponent(CComponentProxy* pComponent, bool bReminder)
 {
-    CComponentProxy* pSelectedComponent = m_pMainFrame->GetSelectedComponent();
-    if (pSelectedComponent != NULL)
+    if (pComponent != NULL)
     {
-        int iResult = wxMessageBox(_T("真的要删除这个组件吗？"), _T("删除确认"), wxYES_NO | wxCENTRE);
+        int iResult = bReminder ? wxMessageBox(_T("真的要删除这个组件吗？"), _T("删除确认"), wxYES_NO | wxCENTRE) : wxYES;
         if (iResult == wxYES)
         {
             m_pMainFrame->SelectComponent(NULL);
-            CComponentProxyManager::GetInstance()->OnDeleteComponentInScene(pSelectedComponent);
+            if (wxIsShiftDown())
+            {
+                std::set<CComponentProxy*> proxySet;
+                CollectDependencyComponent(pComponent, proxySet);
+                for (std::set<CComponentProxy*>::iterator iter = proxySet.begin(); iter != proxySet.end(); ++iter)
+                {
+                    CComponentProxyManager::GetInstance()->OnDeleteComponentInScene(*iter);
+                }
+            }
+            CComponentProxyManager::GetInstance()->OnDeleteComponentInScene(pComponent);
         }
     }
 }
@@ -176,10 +197,10 @@ void CBeyondEngineEditorComponentWindow::DeleteSelectedDependencyLine()
     }
 }
 
-void CBeyondEngineEditorComponentWindow::ConvertWorldPosToGridPos(const kmVec2* pVectorPos, int* pOutGridX, int* pOutGridY)
+void CBeyondEngineEditorComponentWindow::ConvertWorldPosToGridPos(const CVec2* pVectorPos, int* pOutGridX, int* pOutGridY)
 {
-    *pOutGridX = floor(pVectorPos->x / m_fCellSize);
-    *pOutGridY = ceil(pVectorPos->y / m_fCellSize);
+    *pOutGridX = floor(pVectorPos->X() / m_fCellSize);
+    *pOutGridY = ceil(pVectorPos->Y() / m_fCellSize);
 }
 
 void CBeyondEngineEditorComponentWindow::ConvertGridPosToWorldPos( int gridX, int gridY, float* pOutWorldPosX, float* pOutWorldPosY)
@@ -191,9 +212,9 @@ void CBeyondEngineEditorComponentWindow::ConvertGridPosToWorldPos( int gridX, in
 void CBeyondEngineEditorComponentWindow::ConvertWindowPosToWorldPos(const wxPoint& windowPos, float* pOutWorldPosX, float* pOutWorldPosY)
 {
     wxSize clientSize = GetClientSize();
-    const kmVec3& cameraPos = GetCamera()->GetViewPos();
-    *pOutWorldPosX = (windowPos.x - clientSize.x * 0.5f) - cameraPos.x;
-    *pOutWorldPosY = (windowPos.y - clientSize.y * 0.5f) - cameraPos.y;
+    const CVec3& cameraPos = GetCamera()->GetViewPos();
+    *pOutWorldPosX = (windowPos.x - clientSize.x * 0.5f) + cameraPos.X();
+    *pOutWorldPosY = (windowPos.y - clientSize.y * 0.5f) + cameraPos.Y();
 }
 
 void CBeyondEngineEditorComponentWindow::OnSize(wxSizeEvent& /*event*/)
@@ -210,10 +231,10 @@ void CBeyondEngineEditorComponentWindow::OnMouseMidScroll(wxMouseEvent& event)
 {
     // Resize render area.
     int rotation = event.GetWheelRotation();
-    const kmVec3& cameraPos = GetCamera()->GetViewPos();
+    const CVec3& cameraPos = GetCamera()->GetViewPos();
 
-    int gridPosX = cameraPos.x / m_fCellSize;
-    int gridPosY = cameraPos.y / m_fCellSize;
+    int gridPosX = cameraPos.X() / m_fCellSize;
+    int gridPosY = cameraPos.Y() / m_fCellSize;
 
     float delta = m_fCellSize* 0.1f * rotation / event.GetWheelDelta();
     m_fCellSize += delta;
@@ -221,12 +242,12 @@ void CBeyondEngineEditorComponentWindow::OnMouseMidScroll(wxMouseEvent& event)
     {
         m_fCellSize = MIN_CELL_SIZE;
     }
-    float maxSize = min(GetSize().GetWidth(), GetSize().GetHeight());
+    float maxSize = MIN(GetSize().GetWidth(), GetSize().GetHeight());
     if (m_fCellSize > maxSize)
     {
         m_fCellSize = maxSize;
     }
-    GetCamera()->SetViewPos(gridPosX * m_fCellSize, gridPosY * m_fCellSize, cameraPos.z);
+    GetCamera()->SetViewPos(CVec3(gridPosX * m_fCellSize, gridPosY * m_fCellSize, cameraPos.Z()));
     UpdateAllDependencyLine();
     m_pNode->SetCellSize(m_fCellSize);
     event.Skip(true);
@@ -238,15 +259,15 @@ void CBeyondEngineEditorComponentWindow::OnMouseMove(wxMouseEvent& event)
     // Drag the screen
     if(event.RightIsDown())
     {
-        float deltaX = pos.x - m_startDragPos.x;
-        float deltaY = pos.y - m_startDragPos.y;
-        kmVec3 cameraPos = GetCamera()->GetViewPos();
-        cameraPos.x += deltaX;
-        cameraPos.y += deltaY;
-        GetCamera()->SetViewPos(cameraPos.x, cameraPos.y, cameraPos.z);
-        m_startDragPos.x = pos.x;
-        m_startDragPos.y = pos.y;
-        //BEATS_PRINT(_T("Screen Moved, Current Client Pos %f, %f\n"), m_currentClientPos.x, m_currentClientPos.y);
+        float deltaX = pos.x - m_startDragPos.X();
+        float deltaY = pos.y - m_startDragPos.Y();
+        CVec3 cameraPos = GetCamera()->GetViewPos();
+        cameraPos.X() -= deltaX;
+        cameraPos.Y() -= deltaY;
+        GetCamera()->SetViewPos(cameraPos);
+        m_startDragPos.X() = pos.x;
+        m_startDragPos.Y() = pos.y;
+        //BEATS_PRINT(_T("Screen Moved, Current Client Pos %f, %f\n"), m_currentClientPos.X(), m_currentClientPos.Y());
     }
     if (event.LeftIsDown())
     {
@@ -258,20 +279,52 @@ void CBeyondEngineEditorComponentWindow::OnMouseMove(wxMouseEvent& event)
         {
             if (m_pDraggingDependency == NULL)
             {
-                kmVec2 worldPos;
-                ConvertWindowPosToWorldPos(pos, &worldPos.x, &worldPos.y);
+                CVec2 worldPos;
+                ConvertWindowPosToWorldPos(pos, &worldPos.X(), &worldPos.Y());
                 int gridPosX = 0;
                 int gridPosY = 0;
                 ConvertWorldPosToGridPos(&worldPos, &gridPosX, &gridPosY);
+                int deltaX = 0;
+                int deltaY = 0;
+                pSelectedComponent->GetGraphics()->GetPosition(&deltaX, &deltaY);
+                deltaX = gridPosX - deltaX;
+                deltaY = gridPosY - deltaY;
                 pSelectedComponent->GetGraphics()->SetPosition(gridPosX, gridPosY);
                 const std::vector<CDependencyDescription*>* pDependencies = pSelectedComponent->GetDependencies();
+                if (wxIsCtrlDown())
+                {
+                    std::set<CComponentProxy*> proxySet;
+                    if (wxIsAltDown())
+                    {
+                        std::map<uint32_t, CComponentProxy*>& components = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
+                        for (auto iter = components.begin(); iter != components.end(); ++iter)
+                        {
+                            if (iter->second != pSelectedComponent)
+                            {
+                                proxySet.insert(iter->second);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        CollectDependencyComponent(pSelectedComponent, proxySet);
+                    }
+                    for (std::set<CComponentProxy*>::iterator iter = proxySet.begin(); iter != proxySet.end(); ++iter)
+                    {
+                        int nNewPosX = 0;
+                        int nNewPosY = 0;
+                        (*iter)->GetGraphics()->GetPosition(&nNewPosX, &nNewPosY);
+                        (*iter)->GetGraphics()->SetPosition(nNewPosX + deltaX, nNewPosY + deltaY);
+                    }
+                    UpdateAllDependencyLine();
+                }
                 if (pDependencies != NULL)
                 {
-                    for (size_t i = 0; i < pDependencies->size(); ++i)
+                    for (uint32_t i = 0; i < pDependencies->size(); ++i)
                     {
                         CDependencyDescription* pDesc = pDependencies->at(i);
-                        size_t uLineCount = pDesc->GetDependencyLineCount();
-                        for (size_t j = 0; j < uLineCount; ++j)
+                        uint32_t uLineCount = pDesc->GetDependencyLineCount();
+                        for (uint32_t j = 0; j < uLineCount; ++j)
                         {
                             pDesc->GetDependencyLine(j)->UpdateRect(m_fCellSize, true);
                         }
@@ -280,13 +333,13 @@ void CBeyondEngineEditorComponentWindow::OnMouseMove(wxMouseEvent& event)
                 const std::vector<CDependencyDescriptionLine*>* pBeConnectedLines = pSelectedComponent->GetBeConnectedDependencyLines();
                 if (pBeConnectedLines != NULL)
                 {
-                    for (size_t i = 0; i < pBeConnectedLines->size(); ++i)
+                    for (uint32_t i = 0; i < pBeConnectedLines->size(); ++i)
                     {
                         CDependencyDescriptionLine* pDescLine = pBeConnectedLines->at(i);
                         pDescLine->UpdateRect(m_fCellSize, true);
                     }
                 }
-                //BEATS_PRINT(_T("You must dragging component instance %s to worldPos %f %f, gridPos %d %d\n"), pSelectedComponent->GetClassName(), worldPos.x, worldPos.y, gridPosX, gridPosY);
+                //BEATS_PRINT(_T("You must dragging component instance %s to worldPos %f %f, gridPos %d %d\n"), pSelectedComponent->GetClassName(), worldPos.X(), worldPos.Y(), gridPosX, gridPosY);
             }
             else
             {
@@ -325,10 +378,15 @@ void CBeyondEngineEditorComponentWindow::OnMouseRightUp(wxMouseEvent& event)
             void* pData = NULL;
             m_pClickedComponent = HitTestForComponent(pos, &aeraRectType, &pData);
             m_pMainFrame->SelectComponent(m_pClickedComponent);
-            m_pComponentMenu->Enable(eCMT_Copy, m_pClickedComponent != NULL);
-            m_pComponentMenu->Enable(eCMT_Delete, m_pClickedComponent != NULL);
-            m_pComponentMenu->Enable(eCMT_Paste, m_pClickedComponent == NULL && m_pCopyComponent != NULL);
-            m_pComponentMenu->Enable(eCMT_SetUserDefineName, m_pClickedComponent != NULL);
+            m_pComponentMenu->Enable(eCMT_Copy, m_pClickedComponent != nullptr);
+            m_pComponentMenu->Enable(eCMT_Delete, m_pClickedComponent != nullptr);
+            m_pComponentMenu->Enable(eCMT_Paste, m_pClickedComponent == nullptr && m_pCopyComponent != nullptr);
+            m_pComponentMenu->Enable(eCMT_SetUserDefineName, m_pClickedComponent != nullptr);
+            bool bClickOnSprite = m_pClickedComponent != nullptr && dynamic_cast<CSprite*>(m_pClickedComponent->GetHostComponent()) != NULL;
+            m_pComponentMenu->Enable(eCMT_ClearPos, bClickOnSprite);
+            m_pComponentMenu->Enable(eCMT_ClearAnchor, bClickOnSprite);
+            m_pComponentMenu->Enable(eCMT_ClearScale, bClickOnSprite);
+            m_pComponentMenu->Enable(eCMT_CameraAim, m_pClickedComponent != nullptr && dynamic_cast<CNode3D*>(m_pClickedComponent->GetHostComponent()) != NULL);
             if (!m_menuItemAndGuidMap.empty())
             {
                 for (auto iter = m_menuItemAndGuidMap.begin(); iter != m_menuItemAndGuidMap.end(); ++iter)
@@ -342,24 +400,32 @@ void CBeyondEngineEditorComponentWindow::OnMouseRightUp(wxMouseEvent& event)
             {
                 CDependencyDescription* pDescription = (CDependencyDescription*)(pData);
                 m_pAutoSetDependency = pDescription;
-                size_t uDependencyGuid = pDescription->GetDependencyGuid();
-                std::vector<size_t> derivedClassGuid;
+                uint32_t uDependencyGuid = pDescription->GetDependencyGuid();
+                std::set<uint32_t> derivedClassGuid;
                 CComponentProxyManager::GetInstance()->QueryDerivedClass(uDependencyGuid, derivedClassGuid, true);
                 derivedClassGuid.insert(derivedClassGuid.begin(), uDependencyGuid);
                 CComponentProxyManager::GetInstance()->QueryComponentName(uDependencyGuid);
-                for (size_t i = 0; i < derivedClassGuid.size(); ++i)
+                std::map<TString, uint32_t> componentNameMap;// Use the map to sort the menu item by name.
+
+                for (auto guid : derivedClassGuid)
                 {
-                    CComponentBase* pBase = CComponentProxyManager::GetInstance()->GetComponentTemplate(derivedClassGuid[i]);
+                    CComponentBase* pBase = CComponentProxyManager::GetInstance()->GetComponentTemplate(guid);
                     if (pBase != NULL)//If it is NULL, it must be an abstract class.
                     {
-                        TString strName = CComponentProxyManager::GetInstance()->QueryComponentName(derivedClassGuid[i]);
-                        wxMenuItem* pItem = m_pAddDependencyMenu->Append(i, strName);
-                        BEATS_ASSERT(m_menuItemAndGuidMap.find(pItem) == m_menuItemAndGuidMap.end());
-                        m_menuItemAndGuidMap[pItem] = derivedClassGuid[i];
+                        TString strName = CComponentProxyManager::GetInstance()->QueryComponentName(guid);
+                        BEATS_ASSERT(!strName.empty() && componentNameMap.find(strName) == componentNameMap.end());
+                        componentNameMap.insert(std::map<TString, uint32_t>::value_type(strName, guid));
                     }
                     BEATS_ASSERT(pBase != NULL ||
-                        CComponentProxyManager::GetInstance()->GetAbstractComponentNameMap().find(derivedClassGuid[i]) != CComponentProxyManager::GetInstance()->GetAbstractComponentNameMap().end(),
-                        _T("We can't get a template component with guid %d while it can't be found in abstract class map!"), derivedClassGuid[i]);
+                        CComponentProxyManager::GetInstance()->GetAbstractComponentNameMap().find(guid) != CComponentProxyManager::GetInstance()->GetAbstractComponentNameMap().end(),
+                        _T("We can't get a template component with guid %d while it can't be found in abstract class map!"), guid);
+                }
+                uint32_t uCounter = 0;
+                for (auto p = componentNameMap.begin(); p != componentNameMap.end(); ++p)
+                {
+                    wxMenuItem* pItem = m_pAddDependencyMenu->Append(uCounter++, p->first);
+                    BEATS_ASSERT(m_menuItemAndGuidMap.find(pItem) == m_menuItemAndGuidMap.end());
+                    m_menuItemAndGuidMap[pItem] = p->second;
                 }
                 pMenu = m_pAddDependencyMenu;
             }
@@ -383,8 +449,8 @@ void CBeyondEngineEditorComponentWindow::OnMouseRightDown(wxMouseEvent& event)
         CaptureMouse();
     }
     wxPoint pos = event.GetPosition();
-    m_startDragPos.x = pos.x;
-    m_startDragPos.y = pos.y;
+    m_startDragPos.X() = pos.x;
+    m_startDragPos.Y() = pos.y;
     m_bShowMenu = true;
     event.Skip(true);
 }
@@ -396,8 +462,8 @@ void CBeyondEngineEditorComponentWindow::OnMouseLeftDown(wxMouseEvent& event)
         CaptureMouse();
     }
     wxPoint pos = event.GetPosition();
-    m_startDragPos.x = pos.x;
-    m_startDragPos.y = pos.y;
+    m_startDragPos.X() = pos.x;
+    m_startDragPos.Y() = pos.y;
     EComponentAeraRectType aeraType = eCART_Invalid;
     void* pData = NULL;
     CComponentProxy* pClickedComponent = HitTestForComponent(pos, &aeraType, &pData);
@@ -467,7 +533,7 @@ void CBeyondEngineEditorComponentWindow::OnComponentMenuClicked(wxMenuEvent& eve
     case eCMT_Delete:
         {
             BEATS_ASSERT(pComponentProxy != NULL, _T("Impossible to delete component from menu when there is no components selected."));
-            DeleteSelectedComponent();
+            DeleteComponent(m_pMainFrame->GetSelectedComponent());
             pMFrame->UpdateComponentInstanceTreeCtrl();
         }
         break;
@@ -476,8 +542,12 @@ void CBeyondEngineEditorComponentWindow::OnComponentMenuClicked(wxMenuEvent& eve
             BEATS_ASSERT(pComponentProxy != NULL, _T("Impossible to copy component from menu when there is no components selected."));
             if (pComponentProxy != m_pCopyComponent)
             {
-                BEATS_SAFE_DELETE(m_pCopyComponent);
-                m_pCopyComponent = static_cast<CComponentProxy*>(pComponentProxy->Clone(true, NULL, 0xFFFFFFFF));
+                if (m_pCopyComponent != NULL)
+                {
+                    BEATS_ASSERT(!m_pCopyComponent->IsInitialized());
+                    BEATS_SAFE_DELETE(m_pCopyComponent);
+                }
+                m_pCopyComponent = static_cast<CComponentProxy*>(pComponentProxy->Clone(true, NULL, 0xFFFFFFFF, false));
             }
         }
         break;
@@ -487,8 +557,8 @@ void CBeyondEngineEditorComponentWindow::OnComponentMenuClicked(wxMenuEvent& eve
             CComponentProxy* pNewComponentEditorProxy = static_cast<CComponentProxy*>(CComponentProxyManager::GetInstance()->CreateComponentByRef(m_pCopyComponent, true));
             wxPoint mouseWindowPos = wxGetMousePosition();
             mouseWindowPos = ScreenToClient(mouseWindowPos);
-            kmVec2 mouseWorldPos;
-            ConvertWindowPosToWorldPos(mouseWindowPos, &mouseWorldPos.x, &mouseWorldPos.y);
+            CVec2 mouseWorldPos;
+            ConvertWindowPosToWorldPos(mouseWindowPos, &mouseWorldPos.X(), &mouseWorldPos.Y());
             int iGridPosX, iGridPosY;
             ConvertWorldPosToGridPos(&mouseWorldPos, &iGridPosX, &iGridPosY);
             pNewComponentEditorProxy->GetGraphics()->SetPosition(iGridPosX - 1, iGridPosY + 1);
@@ -498,76 +568,51 @@ void CBeyondEngineEditorComponentWindow::OnComponentMenuClicked(wxMenuEvent& eve
         break;
     case eCMT_Search:
         {
-            int iComponentId = wxGetNumberFromUser(_T("搜索组件"), _T("组件ID"), _T("搜索组件"), 0, 0xFFFFFFFF, 0x7FFFFFFE);
-            if (iComponentId != 0xFFFFFFFF)
-            {
-                CComponentProject* pProject = CComponentProxyManager::GetInstance()->GetProject();
-                size_t uFileId = pProject->QueryFileId(iComponentId, false);
-                if (uFileId != 0xFFFFFFFF)
-                {
-                    TString filePath = pProject->GetComponentFileName(uFileId);
-                    if (filePath.compare(CComponentProxyManager::GetInstance()->GetCurrentWorkingFilePath()) != 0)
-                    {
-                        TCHAR szInfo[1024];
-                        _stprintf(szInfo, _T("搜索到ID为%d的组件位于文件%s,是否跳转到该组件?"), iComponentId, filePath.c_str());
-                        int iAnswer = MessageBox(NULL, szInfo, _T("搜索结果"), MB_YESNO);
-                        if (iAnswer == IDYES)
-                        {
-                            m_pMainFrame->ActivateFile(filePath.c_str());
-                            CComponentBase* pComponent = CComponentProxyManager::GetInstance()->GetComponentInstance(iComponentId);
-                            m_pMainFrame->SelectComponent(static_cast<CComponentProxy*>(pComponent));
-                        }
-                    }
-                    else
-                    {
-                        CComponentBase* pComponent = CComponentProxyManager::GetInstance()->GetComponentInstance(iComponentId);
-                        m_pMainFrame->SelectComponent(static_cast<CComponentProxy*>(pComponent));
-                    }
-                }
-                else
-                {
-                    TCHAR szInfo[1024];
-                    _stprintf(szInfo, _T("未能找到ID为%d的组件."), iComponentId);
-                    MessageBox(NULL, szInfo, _T("搜索结果"), MB_OK);
-                }
-            }
-        }
-        break;
-    case eCMT_CreateRef:
-        {
-            long id = wxGetNumberFromUser(wxEmptyString, _T("请输入引用组件的ID:"), _T("输入"), 0, 0xFFFFFFFF, 0x7FFFFFFE);
-            if (id != 0xFFFFFFFF)
-            {
-                CComponentBase* pComponentBase = CComponentProxyManager::GetInstance()->GetComponentInstance(id);
-                if (pComponentBase != NULL)
-                {
-                    CComponentProxy* pProxy = down_cast<CComponentProxy*>(pComponentBase);
-                    CComponentReference* pNewReference = CComponentProxyManager::GetInstance()->CreateReference(pProxy->GetId(), pProxy->GetGuid());
-                    pNewReference->Initialize();
-                    CComponentGraphic_GL* pGraphics = down_cast<CComponentGraphic_GL*>(pNewReference->GetGraphics());
-                    pGraphics->SetReferenceFlag(true);
-                    wxPoint mouseWindowPos = wxGetMousePosition();
-                    mouseWindowPos = ScreenToClient(mouseWindowPos);
-                    kmVec2 mouseWorldPos;
-                    ConvertWindowPosToWorldPos(mouseWindowPos, &mouseWorldPos.x, &mouseWorldPos.y);
-                    int iGridPosX, iGridPosY;
-                    ConvertWorldPosToGridPos(&mouseWorldPos, &iGridPosX, &iGridPosY);
-                    pNewReference->GetGraphics()->SetPosition(iGridPosX - 1, iGridPosY + 1);
-                    CComponentProxyManager::GetInstance()->OnCreateComponentInScene(pNewReference);
-                }
-                else
-                {
-                    wxMessageBox(wxString::Format(_T("无法找到id为%d的组件！"), id), _T("创建引用失败"), wxOK);
-                }
-            }
+            wxPoint pos = m_pMainFrame->GetScreenPosition();
+            pos.x += m_pMainFrame->GetScreenRect().GetWidth() / 2 - 125;
+            pos.y += m_pMainFrame->GetScreenRect().GetHeight() / 2 - 225;
+            CSearchComponentDialog* pSearchComponentDialog = new CSearchComponentDialog(this, wxID_ANY, L10N_T(eLTT_Editor_Common_Search), pos, wxSize(250, 400), wxCLOSE_BOX | wxRESIZE_BORDER | wxCAPTION);
+            pSearchComponentDialog->ShowModal();
         }
         break;
     case eCMT_SetUserDefineName:
         {
-            BEATS_ASSERT(pComponentProxy != NULL);
-            wxString strName = wxGetTextFromUser(_T("请输入自定义名称:"), _T("输入"), pComponentProxy->GetUserDefineDisplayName());
-            pComponentProxy->SetUserDefineDisplayName(strName);
+            AskForDisplayName(pComponentProxy);
         }
+        break;
+    case eCMT_ClearPos:
+        {
+            dynamic_cast<CSprite*>(pComponentProxy->GetHostComponent())->ClearPos();
+        }
+        break;
+    case eCMT_ClearAnchor:
+    {
+            dynamic_cast<CSprite*>(pComponentProxy->GetHostComponent())->ClearAnchor();
+    }
+        break;
+    case eCMT_ClearScale:
+    {
+            dynamic_cast<CSprite*>(pComponentProxy->GetHostComponent())->ClearScale();
+    }
+        break;
+    case eCMT_CameraAim:
+    {
+                           CEditorSceneWindow* pSceneWnd = m_pMainFrame->GetSceneWindow();
+                           CCamera* pCurCamera = pSceneWnd->GetCamera();
+                           const CVec3& eye = pCurCamera->GetViewPos();
+                           const CVec3 center = dynamic_cast<CNode3D*>(pComponentProxy->GetHostComponent())->GetWorldPosition();
+                           CVec3 lookDir = center - eye;
+                           lookDir.Normalize();
+                           CVec3 rightDir = lookDir.Cross(CVec3(0, 1, 0));
+                           CVec3 up = rightDir.Cross(lookDir);
+                           CMat4 mat;
+                           mat.LookAt(eye, center, up);
+                           float fPitch, fYaw, fRoll;
+                           mat.Inverse();
+                           mat.ToQuaternion().ToPitchYawRoll(fPitch, fYaw, fRoll);
+                           CVec3 rotation(RadiansToDegrees(fPitch), RadiansToDegrees(fYaw), RadiansToDegrees(fRoll));
+                           pCurCamera->SetRotation(rotation);
+    }
         break;
     default:
         BEATS_ASSERT(false, _T("Never reach here!"));
@@ -577,7 +622,7 @@ void CBeyondEngineEditorComponentWindow::OnComponentMenuClicked(wxMenuEvent& eve
 
 void CBeyondEngineEditorComponentWindow::OnDependencyMenuClicked(wxMenuEvent& event)
 {
-    size_t uIndex = event.GetId();
+    uint32_t uIndex = event.GetId();
     wxMenuItem* pMenuItem = m_pAddDependencyMenu->FindChildItem(uIndex);
     auto iter = m_menuItemAndGuidMap.find(pMenuItem);
     CComponentProxy* pProxy = static_cast<CComponentProxy*>(CComponentProxyManager::GetInstance()->CreateComponent(iter->second, true));
@@ -606,11 +651,11 @@ CComponentProxy* CBeyondEngineEditorComponentWindow::HitTestForComponent( const 
     float fClickWorldPosX = 0;
     float fClickWorldPosY = 0;
     ConvertWindowPosToWorldPos(pos, &fClickWorldPosX, &fClickWorldPosY);
-    //BEATS_PRINT(_T("Left Click at window pos :%d, %d worldPos: %f, %f\n"), pos.x, pos.y, fClickWorldPosX, fClickWorldPosY);
+    //BEATS_PRINT(_T("Left Click at window pos :%d, %d worldPos: %f, %f\n"), pos.X(), pos.Y(), fClickWorldPosX, fClickWorldPosY);
     bool bFoundResult = false;
     CComponentProxy* pClickedComponent = NULL;
-    const std::map<size_t, CComponentProxy*>& componentsInCurScene = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
-    std::map<size_t, CComponentProxy*>::const_iterator iter = componentsInCurScene.begin();
+    const std::map<uint32_t, CComponentProxy*>& componentsInCurScene = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
+    std::map<uint32_t, CComponentProxy*>::const_iterator iter = componentsInCurScene.begin();
     for (; iter != componentsInCurScene.end() && !bFoundResult; ++iter)
     {
         CComponentProxy* pComponentProxy = down_cast<CComponentProxy*>(iter->second);
@@ -633,9 +678,9 @@ CComponentProxy* CBeyondEngineEditorComponentWindow::HitTestForComponent( const 
                 pClickedComponent = pComponentProxy;
                 if (pOutAreaType != NULL)
                 {
-                    kmVec2 worldPos;
-                    worldPos.x = fClickWorldPosX;
-                    worldPos.y = fClickWorldPosY;
+                    CVec2 worldPos;
+                    worldPos.X() = fClickWorldPosX;
+                    worldPos.Y() = fClickWorldPosY;
                     int iClickGridPosX = 0;
                     int iClickGridPosY = 0;
                     ConvertWorldPosToGridPos(&worldPos, &iClickGridPosX, &iClickGridPosY);
@@ -649,12 +694,12 @@ CComponentProxy* CBeyondEngineEditorComponentWindow::HitTestForComponent( const 
         const std::vector<CDependencyDescription*>* pDependencies = pComponentProxy->GetDependencies();
         if (pDependencies != NULL)
         {
-            for (size_t i = 0; i < pDependencies->size() && !bFoundResult; ++i)
+            for (uint32_t i = 0; i < pDependencies->size() && !bFoundResult; ++i)
             {
                 CDependencyDescription* pDependency = pDependencies->at(i);
                 int iDependencyX, iDependencyY;
                 pGraphics->GetDependencyPosition(i, &iDependencyX, &iDependencyY);
-                for (size_t j = 0; j < pDependency->GetDependencyLineCount(); ++j)
+                for (uint32_t j = 0; j < pDependency->GetDependencyLineCount(); ++j)
                 {
                     CDependencyDescriptionLine* pLine = pDependency->GetDependencyLine(j);
                     bool bInLine = pLine->HitTest(fClickWorldPosX, fClickWorldPosY);
@@ -675,16 +720,43 @@ CComponentProxy* CBeyondEngineEditorComponentWindow::HitTestForComponent( const 
     return pClickedComponent;
 }
 
+void CBeyondEngineEditorComponentWindow::CollectDependencyComponent(CComponentProxy* pProxy, std::set<CComponentProxy*>& proxySet)
+{
+    const std::vector<CDependencyDescription*>* pDependencies = pProxy->GetDependencies();
+    for (uint32_t i = 0; i < pDependencies->size(); ++i)
+    {
+        const CDependencyDescription* pDependency = pDependencies->at(i);
+        uint32_t uLineCount = pDependency->GetDependencyLineCount();
+        for (uint32_t j = 0; j < uLineCount; ++j)
+        {
+            CDependencyDescriptionLine* pDependencyLine = pDependency->GetDependencyLine(j);
+            CComponentProxy* pDependencyProxy = pDependencyLine->GetConnectedComponent();
+            if (proxySet.find(pDependencyProxy) == proxySet.end())
+            {
+                proxySet.insert(pDependencyProxy);
+                CollectDependencyComponent(pDependencyProxy, proxySet);
+            }
+        }
+    }
+}
+
+void CBeyondEngineEditorComponentWindow::AskForDisplayName(CComponentProxy* pComponentProxy)
+{
+    BEATS_ASSERT(pComponentProxy != NULL);
+    wxString strName = wxGetTextFromUser(_T("请输入自定义名称:"), _T("输入"), wxString::FromUTF8(pComponentProxy->GetUserDefineDisplayName().c_str()));
+    pComponentProxy->SetUserDefineDisplayName(strName.ToUTF8());
+}
+
 void CBeyondEngineEditorComponentWindow::ResetProjectionMode()
 {
     GetClientSize(&m_iWidth, &m_iHeight);
     if ( IsShownOnScreen() )
     {
-        GetRenderWindow()->SetSize(m_iWidth, m_iHeight);
+        GetRenderWindow()->SetDeviceSize(m_iWidth, m_iHeight, false, false);
         CRenderManager::GetInstance()->SetCurrentRenderTarget(GetRenderWindow());
     }
-    kmVec2 centerOffset;
-    kmVec2Fill(&centerOffset, m_iWidth * -0.5f, m_iHeight * -0.5f);
+    CVec2 centerOffset;
+    centerOffset.Fill(m_iWidth * -0.5f, m_iHeight * -0.5f);
     GetCamera()->SetCenterOffset(centerOffset);
 }
 
@@ -713,26 +785,35 @@ void CBeyondEngineEditorComponentWindow::OnKeyDown( wxKeyEvent& event )
     int nKeyCode = event.GetKeyCode();
     switch (nKeyCode)
     {
+    case WXK_F2:
+        {
+            CComponentProxy* pSelectedComponent = m_pMainFrame->GetSelectedComponent();
+            if (pSelectedComponent != NULL)
+            {
+                AskForDisplayName(pSelectedComponent);
+            }
+        }
+        break;
     case WXK_DELETE:
         {
-            DeleteSelectedComponent();
+            DeleteComponent(m_pMainFrame->GetSelectedComponent());
             DeleteSelectedDependencyLine();
             CEditorMainFrame* pMFrame = static_cast<CEngineEditor*>(wxApp::GetInstance())->GetMainFrame();
             pMFrame->UpdateComponentInstanceTreeCtrl();
         }
         break;
-    case 44:
-    case 46:
+    case 61:
+    case 45:
         {
-            if (m_pSelectedDependencyLine != NULL && wxGetKeyState(WXK_CONTROL))
+            if (m_pSelectedDependencyLine != NULL)
             {
                 CDependencyDescription* pDependency = m_pSelectedDependencyLine->GetOwnerDependency();
                 CDependencyDescriptionLine* pSwapLine = NULL;
-                if (nKeyCode == 44 && m_pSelectedDependencyLine->GetIndex() > 0)
+                if (nKeyCode == 45 && m_pSelectedDependencyLine->GetIndex() > 0)
                 {
                     pSwapLine = pDependency->GetDependencyLine(m_pSelectedDependencyLine->GetIndex() - 1);
                 }
-                else if (nKeyCode == 46 && (m_pSelectedDependencyLine->GetIndex() < pDependency->GetDependencyLineCount() - 1))
+                else if (nKeyCode == 61 && (m_pSelectedDependencyLine->GetIndex() < pDependency->GetDependencyLineCount() - 1))
                 {
                     pSwapLine = pDependency->GetDependencyLine(m_pSelectedDependencyLine->GetIndex() + 1);
                 }
@@ -759,17 +840,26 @@ void CBeyondEngineEditorComponentWindow::Update()
     if ( IsShownOnScreen())
     {
         BEYONDENGINE_PERFORMDETECT_START(ePNT_RenderComponentWindow)
+        bool bIsPaused = CPerformDetector::GetInstance()->IsPaused();
+        CPerformDetector::GetInstance()->SetPauseFlag(true); // so don't calculate the cost in CRenderManager::GetInstance()->Render()
+        CRenderTarget* pRestoreRenderTarget = CRenderManager::GetInstance()->GetCurrentRenderTarget();
         CRenderManager::GetInstance()->SetCurrentRenderTarget(m_pRenderWindow);
-        CRenderGroupManager::GetInstance()->SetDefault2DCamera(m_pCamera);
+        CRenderManager::GetInstance()->GetCamera(CCamera::eCT_2D)->SetCameraData(m_pCamera->GetCameraData());
         CViewport* pCurViewport = m_pRenderWindow->GetViewport();
         pCurViewport->Apply();
-        m_pNode->Render();
+        //Avoid rendering the deleted components in switch scene state.
+        if (!CSceneManager::GetInstance()->GetSwitchSceneState())
+        {
+            m_pNode->Render();
+        }
         CRenderManager::GetInstance()->Render();
         m_pRenderWindow->GetCanvas()->SwapBuffers();
-#ifdef _DEBUG
+#ifdef DEVELOP_VERSION
         CEngineCenter::GetInstance()->ResetDrawCall();
 #endif
+        CPerformDetector::GetInstance()->SetPauseFlag(bIsPaused);
         BEYONDENGINE_PERFORMDETECT_STOP(ePNT_RenderComponentWindow)
+        CRenderManager::GetInstance()->SetCurrentRenderTarget(pRestoreRenderTarget);
     }
     //HACK: Force disable alpha test
     CRenderer::GetInstance()->DisableGL((CBoolRenderStateParam::EBoolStateParam)GL_ALPHA_TEST);

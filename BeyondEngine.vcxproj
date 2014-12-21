@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -7,14 +7,6 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Export|Win32">
-      <Configuration>Export</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Export|x64">
-      <Configuration>Export</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
@@ -34,34 +26,24 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Export|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -76,13 +58,7 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Export|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -90,20 +66,15 @@
     <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)lib\</OutDir>
-    <IntDir>$(Configuration).win32\</IntDir>
-    <TargetName>$(ProjectName)_d</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'">
-    <OutDir>$(SolutionDir)lib\</OutDir>
-    <IntDir>$(Configuration).win32\</IntDir>
-    <TargetName>$(ProjectName)_e</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_Editor</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Export|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)lib\</OutDir>
-    <IntDir>$(Configuration).win32\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_Editor</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMB|Win32'">
@@ -127,36 +98,20 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;4740;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>Tool;Include;Include\math\kazmath;Include\png\include\win32\;Include\jpeg\include\win32\;Include\tiff\include\win32\;Include\webp\include\win32\;Include\platform\win32;Include\freetype2\include\win32;Include\glfw3\include\win32;Include/platform/win32/gles/include/OGLES;SourceCode;SourceCode/Platform;SourceCode/Platform/win32;SourceCode/Utility;SourceCode/Utility/BeatsUtility/Platform;SourceCode/Utility/BeatsUtility/Platform/win32;GameProject/StarRaiders/SourceCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4740;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>Tool;Include;Include\math\kazmath;Include\png\include\;Include\jpeg\include\win32\;Include\tiff\include\win32\;Include\webp\include\win32\;Include\platform\win32;Include\freetype2\include\win32;Include\glfw3\include\win32;Include/platform/win32/gles/include/OGLES;include/msgpack;include/rapidjson;SourceCode;SourceCode/Framework;SourceCode/Framework/win32;SourceCode/Utility;SourceCode/Utility/BeatsUtility/Platform;SourceCode/Utility/BeatsUtility/Platform/win32;GameProject/StarRaiders/SourceCode;Include\MP3Decoder\include;Include\OggDecoder\include;Include\OpenalSoft\include;Include\lua\Include;Include\toLua;Include\glm;Include\protobuf\include;Include\asio;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Lib>
       <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
       <ForceSymbolReferences>
       </ForceSymbolReferences>
     </Lib>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Export|Win32'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;EXPORT_TO_EDITOR;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;_SCL_SECURE_NO_WARNINGS;EDITOR_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;4740;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>Tool;Include;Include\math\kazmath;Include\png\include\win32\;Include\jpeg\include\win32\;Include\tiff\include\win32\;Include\webp\include\win32\;Include\platform\win32;Include\freetype2\include\win32;Include\glfw3\include\win32;Include/platform/win32/gles/include/OGLES;SourceCode;SourceCode/Platform;SourceCode/Platform/win32;SourceCode/Utility;SourceCode/Utility/BeatsUtility/Platform;SourceCode/Utility/BeatsUtility/Platform/win32;GameProject/StarRaiders/SourceCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <Lib>
-      <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
-      <ForceSymbolReferences>
-      </ForceSymbolReferences>
-    </Lib>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -168,21 +123,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\cocos2d-x-3.0beta2\cocos\2d\platform\;..\cocos2d-x-3.0beta2\cocos\2d\platform\win32\;..\cocos2d-x-3.0beta2\cocos\2d;..\cocos2d-x-3.0beta2\cocos\base;..\cocos2d-x-3.0beta2\external\glfw3\include\win32\;..\cocos2d-x-3.0beta2\external\win32-specific\gles\include\OGLES;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Export|x64'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>..\cocos2d-x-3.0beta2\cocos\2d\platform\;..\cocos2d-x-3.0beta2\cocos\2d\platform\win32\;..\cocos2d-x-3.0beta2\cocos\2d;..\cocos2d-x-3.0beta2\cocos\base;..\cocos2d-x-3.0beta2\external\glfw3\include\win32\;..\cocos2d-x-3.0beta2\external\win32-specific\gles\include\OGLES;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -197,9 +138,13 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;4740;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>Tool;Include;Include\math\kazmath;Include\png\include\win32\;Include\jpeg\include\win32\;Include\tiff\include\win32\;Include\webp\include\win32\;Include\platform\win32;Include\freetype2\include\win32;Include\glfw3\include\win32;Include\platform\win32\gles\include\OGLES;SourceCode;SourceCode/Utility;SourceCode/Utility/BeatsUtility/Platform;SourceCode/Utility/BeatsUtility/Platform/win32;SourceCode/Platform/win32;SourceCode/Platform;GameProject/StarRaiders/SourceCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4740;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>Tool;Include;Include\math\kazmath;Include\png\include;Include\jpeg\include\win32\;Include\tiff\include\win32\;Include\webp\include\win32\;Include\platform\win32;Include\freetype2\include\win32;Include\glfw3\include\win32;Include\platform\win32\gles\include\OGLES;include/msgpack;include/rapidjson;SourceCode;SourceCode/Utility;SourceCode/Utility/BeatsUtility/Platform;SourceCode/Utility/BeatsUtility/Platform/win32;SourceCode/Framework;SourceCode/Framework/win32;GameProject/StarRaiders/SourceCode;Include\MP3Decoder\include;Include\OggDecoder\include;Include\OpenalSoft\include;Include\lua\include;Include\toLua;Include\glm;Include\protobuf\include;Include\asio;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -212,27 +157,37 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>..\cocos2d-x-3.0beta2\cocos\2d\platform\;..\cocos2d-x-3.0beta2\cocos\2d\platform\win32\;..\cocos2d-x-3.0beta2\cocos\2d;..\cocos2d-x-3.0beta2\cocos\base;..\cocos2d-x-3.0beta2\external\glfw3\include\win32\;..\cocos2d-x-3.0beta2\external\win32-specific\gles\include\OGLES;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SourceCode\Action\ActionBase.cpp" />
-    <ClCompile Include="SourceCode\Action\ChangeAIState.cpp" />
     <ClCompile Include="SourceCode\Action\ConditionActionBase.cpp" />
     <ClCompile Include="SourceCode\Action\LaunchTask.cpp" />
-    <ClCompile Include="SourceCode\Action\PlayEffect.cpp" />
-    <ClCompile Include="SourceCode\Action\PlayMusic.cpp" />
-    <ClCompile Include="SourceCode\Action\StopEffect.cpp" />
-    <ClCompile Include="SourceCode\Action\StopMusic.cpp" />
-    <ClCompile Include="SourceCode\Action\SwitchScene.cpp" />
-    <ClCompile Include="SourceCode\AI\AIScheme.cpp" />
-    <ClCompile Include="SourceCode\AI\AIManager.cpp" />
-    <ClCompile Include="SourceCode\AI\AIState.cpp" />
-    <ClCompile Include="SourceCode\Audio\win32\MciPlayer.cpp" />
-    <ClCompile Include="SourceCode\Audio\win32\SimpleAudioEngine.cpp" />
+    <ClCompile Include="SourceCode\Action\SetNodeActive.cpp" />
+    <ClCompile Include="SourceCode\Action\SetNodeVisible.cpp" />
+    <ClCompile Include="SourceCode\Audio\AudioEngine.cpp" />
+    <ClCompile Include="SourceCode\Audio\win32\AudioCache.cpp" />
+    <ClCompile Include="SourceCode\Audio\win32\AudioEngine-win32.cpp" />
+    <ClCompile Include="SourceCode\Audio\win32\AudioPlayer.cpp" />
     <ClCompile Include="SourceCode\ComponentRegister.cpp" />
-    <ClCompile Include="SourceCode\EngineCenter.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentBase.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentGraphic.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentInstance.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentInstanceManager.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentManagerBase.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentProject.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentProjectDirectory.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentProxy.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\ComponentProxyManager.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\DependencyDescription.cpp" />
+    <ClCompile Include="SourceCode\Component\Component\DependencyDescriptionLine.cpp" />
+    <ClCompile Include="SourceCode\Component\Property\PropertyDescriptionBase.cpp" />
+    <ClCompile Include="SourceCode\EnginePublic\EngineCenter.cpp" />
+    <ClCompile Include="SourceCode\EnginePublic\PlayerPrefs.cpp" />
+    <ClCompile Include="SourceCode\EnginePublic\TestComponent.cpp" />
+    <ClCompile Include="SourceCode\EnginePublic\TimeMeter.cpp" />
     <ClCompile Include="SourceCode\Event\EventConnection.cpp" />
     <ClCompile Include="SourceCode\Event\EventDispatcher.cpp" />
     <ClCompile Include="SourceCode\Event\EventSlot.cpp" />
@@ -245,58 +200,56 @@
     <ClCompile Include="SourceCode\external\Configuration.cpp" />
     <ClCompile Include="SourceCode\external\etc1\etc1.cpp" />
     <ClCompile Include="SourceCode\external\Image.cpp" />
+    <ClCompile Include="SourceCode\external\pvr.cpp" />
     <ClCompile Include="SourceCode\external\S3tc.cpp" />
     <ClCompile Include="SourceCode\external\TgaLib.cpp" />
     <ClCompile Include="SourceCode\external\unzip\ioapi.cpp" />
     <ClCompile Include="SourceCode\external\unzip\unzip.cpp" />
+    <ClCompile Include="SourceCode\external\win32\ConfigurationInfoImpl.cpp" />
+    <ClCompile Include="SourceCode\external\win32\DeviceInfoGenerator.cpp" />
     <ClCompile Include="SourceCode\external\ZipUtils.cpp" />
     <ClCompile Include="SourceCode\Framework\Application.cpp" />
     <ClCompile Include="SourceCode\Framework\win32\ApplicationPlatformImpl.cpp" />
-    <ClCompile Include="SourceCode\GUI\Event\WindowEvent.cpp" />
     <ClCompile Include="SourceCode\GUI\Font\BitmapFontFace.cpp" />
     <ClCompile Include="SourceCode\GUI\Font\Font.cpp" />
     <ClCompile Include="SourceCode\GUI\Font\FontFace.cpp" />
     <ClCompile Include="SourceCode\GUI\Font\FontManager.cpp" />
     <ClCompile Include="SourceCode\GUI\Font\FreetypeFontFace.cpp" />
     <ClCompile Include="SourceCode\GUI\Font\StyledText.cpp" />
-    <ClCompile Include="SourceCode\GUI\IMEManager.cpp" />
-    <ClCompile Include="SourceCode\GUI\WindowManager.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\Button.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\Control.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\ImageView.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\Label.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\ProgressBar.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\ScrollItem.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\ScrollView.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\TabWindow.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\TextBox.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\TextureControl.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\TipWindow.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\TopWindow.cpp" />
-    <ClCompile Include="SourceCode\GUI\Window\Window.cpp" />
-    <ClCompile Include="SourceCode\LanguageManager.cpp" />
+    <ClCompile Include="SourceCode\GUI\KeyBoardDelegate.cpp" />
+    <ClCompile Include="SourceCode\Language\LanguageManager.cpp" />
+    <ClCompile Include="SourceCode\Language\LanguageText.cpp" />
+    <ClCompile Include="SourceCode\Log\LogManager.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\BasicModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\ColorModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\EmissionModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\ForceModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\Particle.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\ParticleEmitter.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\ParticleManager.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\RenderModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\RotationModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\ShapeModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\SizeModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\TextureSheetAnimationModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\VelocityLimitModule.cpp" />
+    <ClCompile Include="SourceCode\ParticleSystem\VelocityModule.cpp" />
     <ClCompile Include="SourceCode\NodeAnimation\NodeAnimation.cpp" />
     <ClCompile Include="SourceCode\NodeAnimation\NodeAnimationData.cpp" />
     <ClCompile Include="SourceCode\NodeAnimation\NodeAnimationElement.cpp" />
     <ClCompile Include="SourceCode\NodeAnimation\NodeAnimationManager.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\Billboard.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\BillBoardSet.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\ColorParticleAnimation.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\Emitter.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\Particle.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\ParticleAnimationBase.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\ParticleSystem.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\RotateParticleAnimation.cpp" />
-    <ClCompile Include="SourceCode\ParticlesSystem\ScaleParticleAnimation.cpp" />
-    <ClCompile Include="SourceCode\Render\Animation3D.cpp" />
+    <ClCompile Include="SourceCode\NoticeWatcher\NoticeWatcherDispatcher.cpp" />
+    <ClCompile Include="SourceCode\NoticeWatcher\WatchNode.cpp" />
+    <ClCompile Include="SourceCode\Render\2DBackGround.cpp" />
     <ClCompile Include="SourceCode\Render\AnimationController.cpp" />
-    <ClCompile Include="SourceCode\Render\AnimationManager3D.cpp" />
+    <ClCompile Include="SourceCode\Render\AtlasSprite.cpp" />
     <ClCompile Include="SourceCode\Render\Camera.cpp" />
-    <ClCompile Include="SourceCode\Render\CurveRenderer.cpp" />
-    <ClCompile Include="SourceCode\Render\FrameSprite.cpp" />
+    <ClCompile Include="SourceCode\Render\CircleProgressSprite.cpp" />
+    <ClCompile Include="SourceCode\Render\CoordinateRenderObject.cpp" />
     <ClCompile Include="SourceCode\Render\GridRenderObject.cpp" />
     <ClCompile Include="SourceCode\Render\Material.cpp" />
     <ClCompile Include="SourceCode\Render\Model.cpp" />
+    <ClCompile Include="SourceCode\Render\ModelData.cpp" />
     <ClCompile Include="SourceCode\Render\ReflectTextureInfo.cpp" />
     <ClCompile Include="SourceCode\Render\RenderBatch.cpp" />
     <ClCompile Include="SourceCode\Render\Renderer.cpp" />
@@ -317,13 +270,13 @@
     <ClCompile Include="SourceCode\Render\RenderStateParam\ShadeModeRenderStateParam.cpp" />
     <ClCompile Include="SourceCode\Render\RenderStateParam\StencilRenderStateParam.cpp" />
     <ClCompile Include="SourceCode\Render\RenderStateParam\UintRenderStateParam.cpp" />
-    <ClCompile Include="SourceCode\Render\RenderStateParam\RectRenderStateParam.cpp" />
     <ClCompile Include="SourceCode\Render\RenderTarget.cpp" />
-    <ClCompile Include="SourceCode\Render\RenderWindow.cpp" />
     <ClCompile Include="SourceCode\Render\Shader.cpp" />
     <ClCompile Include="SourceCode\Render\ShaderProgram.cpp" />
     <ClCompile Include="SourceCode\Render\ShaderUniform.cpp" />
+    <ClCompile Include="SourceCode\Render\ShapeRenderer.cpp" />
     <ClCompile Include="SourceCode\Render\Skeleton.cpp" />
+    <ClCompile Include="SourceCode\Render\SkeletonAnimation.cpp" />
     <ClCompile Include="SourceCode\Render\SkeletonBone.cpp" />
     <ClCompile Include="SourceCode\Render\Skin.cpp" />
     <ClCompile Include="SourceCode\Render\Sprite.cpp" />
@@ -334,77 +287,110 @@
     <ClCompile Include="SourceCode\Render\TextureAtlas.cpp" />
     <ClCompile Include="SourceCode\Render\TextureFormatConverter.cpp" />
     <ClCompile Include="SourceCode\Render\TextureFrag.cpp" />
-    <ClCompile Include="SourceCode\Render\TextureFragManager.cpp" />
+    <ClCompile Include="SourceCode\Render\VertexBufferContent.cpp" />
     <ClCompile Include="SourceCode\Render\VertexFormat.cpp" />
     <ClCompile Include="SourceCode\Render\Viewport.cpp" />
     <ClCompile Include="SourceCode\Render\win32\GlfwRenderWindow.cpp" />
     <ClCompile Include="SourceCode\Resource\Resource.cpp" />
     <ClCompile Include="SourceCode\Resource\ResourceManager.cpp" />
-    <ClCompile Include="SourceCode\Resource\ResourcePathManager.cpp" />
+    <ClCompile Include="SourceCode\Scene\EventManager.cpp" />
     <ClCompile Include="SourceCode\Scene\Node.cpp" />
     <ClCompile Include="SourceCode\Scene\Node2D.cpp" />
     <ClCompile Include="SourceCode\Scene\Node3D.cpp" />
     <ClCompile Include="SourceCode\Scene\Scene.cpp" />
     <ClCompile Include="SourceCode\Scene\SceneManager.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\AnimationData.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\AnimationImporter.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\AnimationModel.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\ArmatureData.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\BoneData.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\DisplayData.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\Json.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\MoveData.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\SkeletonAnimationController.cpp" />
-    <ClCompile Include="SourceCode\SkeletalAnimation\SkeletonAnimationManager.cpp" />
-    <ClCompile Include="SourceCode\Spline\Curve.cpp" />
-    <ClCompile Include="SourceCode\Spline\Spline.cpp" />
+    <ClCompile Include="SourceCode\Script\luabasicconversions.cpp" />
+    <ClCompile Include="SourceCode\Script\ScriptManager.cpp" />
+    <ClCompile Include="SourceCode\Script\tolua_event.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SourceCode\Script\tolua_is.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SourceCode\Script\tolua_map.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SourceCode\Script\tolua_push.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SourceCode\Script\tolua_to.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SourceCode\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Export|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SourceCode\Task\ChangeCameraFov.cpp" />
-    <ClCompile Include="SourceCode\Task\LoadComponentFiles.cpp" />
-    <ClCompile Include="SourceCode\Task\SwitchMusic.cpp" />
+    <ClCompile Include="SourceCode\Task\ExtractAndroidAssets.cpp" />
+    <ClCompile Include="SourceCode\Task\LamdaTask.cpp" />
+    <ClCompile Include="SourceCode\Task\SwitchSceneTask.cpp" />
     <ClCompile Include="SourceCode\Task\TaskBase.cpp" />
     <ClCompile Include="SourceCode\Task\TaskManager.cpp" />
-    <ClCompile Include="SourceCode\TestComponent.cpp" />
-    <ClCompile Include="SourceCode\TimeMeter.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\aabb.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\GL\mat4stack.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\GL\matrix.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\mat3.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\mat4.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\neon_matrix_impl.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\plane.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\quaternion.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\ray2.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\ray3.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\utility.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\vec2.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\vec3.cpp" />
-    <ClCompile Include="SourceCode\Utility\kazmath\vec4.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\EnumStrGenerator.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\FileFilter.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\FilePathTool.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\IdManager.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\md5.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\Platform\win32\FilePathTool_Win32.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\Serializer.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\SharePtr.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\StringHelper.cpp" />
+    <ClCompile Include="SourceCode\Utility\BeatsUtility\UtilityManager.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\AABBBox.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Location.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Mat3.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Mat4.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Plane.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Quaternion.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Ray3.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Vec2.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Vec3.cpp" />
+    <ClCompile Include="SourceCode\Utility\MathExt\Vec4.cpp" />
+    <ClCompile Include="SourceCode\Utility\Memory\MemoryAnalyzer.cpp" />
     <ClCompile Include="SourceCode\Utility\PerformDetector\PerformDetector.cpp" />
     <ClCompile Include="SourceCode\Render\RenderManager.cpp" />
-    <ClCompile Include="SourceCode\Utility\Utf8String.cpp" />
+    <ClCompile Include="SourceCode\Utility\RandomColor.cpp" />
+    <ClCompile Include="SourceCode\Utility\RandomValue.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Include\tolua\luabasicconversions.h" />
+    <ClInclude Include="Include\tolua\tolua++.h" />
+    <ClInclude Include="Include\tolua\tolua_event.h" />
     <ClInclude Include="SourceCode\Action\ActionBase.h" />
-    <ClInclude Include="SourceCode\Action\ChangeAIState.h" />
     <ClInclude Include="SourceCode\Action\ConditionActionBase.h" />
     <ClInclude Include="SourceCode\Action\LaunchTask.h" />
-    <ClInclude Include="SourceCode\Action\PlayEffect.h" />
-    <ClInclude Include="SourceCode\Action\PlayMusic.h" />
-    <ClInclude Include="SourceCode\Action\StopEffect.h" />
-    <ClInclude Include="SourceCode\Action\StopMusic.h" />
-    <ClInclude Include="SourceCode\Action\SwitchScene.h" />
-    <ClInclude Include="SourceCode\AI\AIScheme.h" />
-    <ClInclude Include="SourceCode\AI\AIManager.h" />
-    <ClInclude Include="SourceCode\AI\AIState.h" />
-    <ClInclude Include="SourceCode\Audio\SimpleAudioEngine.h" />
-    <ClInclude Include="SourceCode\Audio\win32\MciPlayer.h" />
-    <ClInclude Include="SourceCode\CompWrapper.h" />
-    <ClInclude Include="SourceCode\EngineCenter.h" />
+    <ClInclude Include="SourceCode\Action\SetNodeActive.h" />
+    <ClInclude Include="SourceCode\Action\SetNodeVisible.h" />
+    <ClInclude Include="SourceCode\Audio\include\AudioEngine.h" />
+    <ClInclude Include="SourceCode\Audio\win32\AudioCache.h" />
+    <ClInclude Include="SourceCode\Audio\win32\AudioEngine-win32.h" />
+    <ClInclude Include="SourceCode\Audio\win32\AudioPlayer.h" />
+    <ClInclude Include="SourceCode\Component\ComponentLauncher.h" />
+    <ClInclude Include="SourceCode\Component\ComponentPublic.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentBase.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentGraphic.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentInstance.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentInstanceManager.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentManagerBase.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentProject.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentProjectDirectory.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentProxy.h" />
+    <ClInclude Include="SourceCode\Component\Component\ComponentProxyManager.h" />
+    <ClInclude Include="SourceCode\Component\Component\DependencyDescription.h" />
+    <ClInclude Include="SourceCode\Component\Component\DependencyDescriptionLine.h" />
+    <ClInclude Include="SourceCode\Component\Property\PropertyDescriptionBase.h" />
+    <ClInclude Include="SourceCode\EnginePublic\BeyondEnginePublic.h" />
+    <ClInclude Include="SourceCode\EnginePublic\BeyondEngineVersion.h" />
+    <ClInclude Include="SourceCode\EnginePublic\CompWrapper.h" />
+    <ClInclude Include="SourceCode\EnginePublic\EngineCenter.h" />
+    <ClInclude Include="SourceCode\EnginePublic\PlayerPrefs.h" />
+    <ClInclude Include="SourceCode\EnginePublic\PublicDef.h" />
+    <ClInclude Include="SourceCode\EnginePublic\TestComponent.h" />
+    <ClInclude Include="SourceCode\EnginePublic\TimeMeter.h" />
     <ClInclude Include="SourceCode\Event\BaseEvent.h" />
     <ClInclude Include="SourceCode\Event\EventConnection.h" />
     <ClInclude Include="SourceCode\Event\EventDispatcher.h" />
@@ -422,70 +408,62 @@
     <ClInclude Include="SourceCode\external\Configuration.h" />
     <ClInclude Include="SourceCode\external\etc1\etc1.h" />
     <ClInclude Include="SourceCode\external\Image.h" />
+    <ClInclude Include="SourceCode\external\pvr.h" />
     <ClInclude Include="SourceCode\external\S3tc.h" />
     <ClInclude Include="SourceCode\external\TgaLib.h" />
     <ClInclude Include="SourceCode\external\unzip\ioapi.h" />
     <ClInclude Include="SourceCode\external\unzip\unzip.h" />
+    <ClInclude Include="SourceCode\external\win32\DeviceInfoGenerator.h" />
     <ClInclude Include="SourceCode\external\ZipUtils.h" />
-    <ClInclude Include="SourceCode\BeyondEnginePublic.h" />
     <ClInclude Include="SourceCode\Framework\Application.h" />
-    <ClInclude Include="SourceCode\GUI\Event\WindowEvent.h" />
     <ClInclude Include="SourceCode\GUI\Font\BitmapFontFace.h" />
     <ClInclude Include="SourceCode\GUI\Font\Font.h" />
     <ClInclude Include="SourceCode\GUI\Font\FontFace.h" />
     <ClInclude Include="SourceCode\GUI\Font\FontManager.h" />
     <ClInclude Include="SourceCode\GUI\Font\FreetypeFontFace.h" />
     <ClInclude Include="SourceCode\GUI\Font\StyledText.h" />
-    <ClInclude Include="SourceCode\GUI\GUIEventType.h" />
-    <ClInclude Include="SourceCode\GUI\IMEManager.h" />
-    <ClInclude Include="SourceCode\GUI\WindowManager.h" />
-    <ClInclude Include="SourceCode\GUI\Window\Button.h" />
-    <ClInclude Include="SourceCode\GUI\Window\Control.h" />
-    <ClInclude Include="SourceCode\GUI\Window\ImageView.h" />
-    <ClInclude Include="SourceCode\GUI\Window\Label.h" />
-    <ClInclude Include="SourceCode\GUI\Window\ProgressBar.h" />
-    <ClInclude Include="SourceCode\GUI\Window\ScrollItem.h" />
-    <ClInclude Include="SourceCode\GUI\Window\ScrollView.h" />
-    <ClInclude Include="SourceCode\GUI\Window\TabWindow.h" />
-    <ClInclude Include="SourceCode\GUI\Window\TextBox.h" />
-    <ClInclude Include="SourceCode\GUI\Window\TextureControl.h" />
-    <ClInclude Include="SourceCode\GUI\Window\TipWindow.h" />
-    <ClInclude Include="SourceCode\GUI\Window\TopWindow.h" />
-    <ClInclude Include="SourceCode\GUI\Window\Window.h" />
-    <ClInclude Include="SourceCode\Language.h" />
-    <ClInclude Include="SourceCode\LanguageManager.h" />
+    <ClInclude Include="SourceCode\GUI\KeyBoardDelegate.h" />
+    <ClInclude Include="SourceCode\Language\Language.h" />
+    <ClInclude Include="SourceCode\Language\LanguageManager.h" />
+    <ClInclude Include="SourceCode\Language\LanguageText.h" />
+    <ClInclude Include="SourceCode\Log\LogManager.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\BasicModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\ColorModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\EmissionModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\ForceModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\Particle.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\ParticleEmitter.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\ParticleManager.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\RenderModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\RotationModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\ShapeModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\SizeModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\TextureSheetAnimationModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\VelocityLimitModule.h" />
+    <ClInclude Include="SourceCode\ParticleSystem\VelocityModule.h" />
     <ClInclude Include="SourceCode\NodeAnimation\NodeAnimationElement.h" />
     <ClInclude Include="SourceCode\NodeAnimation\NodeAnimation.h" />
     <ClInclude Include="SourceCode\NodeAnimation\NodeAnimationData.h" />
     <ClInclude Include="SourceCode\NodeAnimation\NodeAnimationManager.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\Billboard.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\BillBoardSet.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\ColorParticleAnimation.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\Emitter.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\Particle.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\ParticleAnimationBase.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\ParticleSystem.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\RotateParticleAnimation.h" />
-    <ClInclude Include="SourceCode\ParticlesSystem\ScaleParticleAnimation.h" />
+    <ClInclude Include="SourceCode\NoticeWatcher\NoticeWatcherDispatcher.h" />
+    <ClInclude Include="SourceCode\NoticeWatcher\WatchNode.h" />
     <ClInclude Include="SourceCode\Platform\PlatformDefine.h" />
     <ClInclude Include="SourceCode\Platform\win32\PlatformConfig.h" />
-    <ClInclude Include="SourceCode\PublicDef.h" />
+    <ClInclude Include="SourceCode\Render\2DBackGround.h" />
     <ClInclude Include="SourceCode\Render\AnimatableSprite.h" />
-    <ClInclude Include="SourceCode\Render\Animation3D.h" />
     <ClInclude Include="SourceCode\Render\AnimationController.h" />
-    <ClInclude Include="SourceCode\Render\AnimationManager3D.h" />
-    <ClInclude Include="SourceCode\Render\BaseAnimationController.h" />
+    <ClInclude Include="SourceCode\Render\AtlasSprite.h" />
     <ClInclude Include="SourceCode\Render\Camera.h" />
+    <ClInclude Include="SourceCode\Render\CircleProgressSprite.h" />
     <ClInclude Include="SourceCode\Render\CommonTypes.h" />
-    <ClInclude Include="SourceCode\Render\CurveRenderer.h" />
-    <ClInclude Include="SourceCode\Render\FrameSprite.h" />
+    <ClInclude Include="SourceCode\Render\CoordinateRenderObject.h" />
     <ClInclude Include="SourceCode\Render\GridRenderObject.h" />
     <ClInclude Include="SourceCode\Render\Material.h" />
     <ClInclude Include="SourceCode\Render\Model.h" />
+    <ClInclude Include="SourceCode\Render\ModelData.h" />
     <ClInclude Include="SourceCode\Render\ReflectTextureInfo.h" />
     <ClInclude Include="SourceCode\Render\RenderBatch.h" />
     <ClInclude Include="SourceCode\Render\Renderer.h" />
-    <ClInclude Include="SourceCode\Render\RenderEventType.h" />
     <ClInclude Include="SourceCode\Render\RenderGroup.h" />
     <ClInclude Include="SourceCode\Render\RenderGroupManager.h" />
     <ClInclude Include="SourceCode\Render\RenderManager.h" />
@@ -501,17 +479,17 @@
     <ClInclude Include="SourceCode\Render\RenderStateParam\FunctionRenderStateParam.h" />
     <ClInclude Include="SourceCode\Render\RenderStateParam\IntRenderStateParam.h" />
     <ClInclude Include="SourceCode\Render\RenderStateParam\PolygonModeRenderStateParam.h" />
-    <ClInclude Include="SourceCode\Render\RenderStateParam\RectRenderStateParam.h" />
     <ClInclude Include="SourceCode\Render\RenderStateParam\RenderStateParamBase.h" />
     <ClInclude Include="SourceCode\Render\RenderStateParam\ShadeModeRenderStateParam.h" />
     <ClInclude Include="SourceCode\Render\RenderStateParam\StencilRenderStateParam.h" />
     <ClInclude Include="SourceCode\Render\RenderStateParam\UintRenderStateParam.h" />
     <ClInclude Include="SourceCode\Render\RenderTarget.h" />
-    <ClInclude Include="SourceCode\Render\RenderWindow.h" />
     <ClInclude Include="SourceCode\Render\Shader.h" />
     <ClInclude Include="SourceCode\Render\ShaderProgram.h" />
     <ClInclude Include="SourceCode\Render\ShaderUniform.h" />
+    <ClInclude Include="SourceCode\Render\ShapeRenderer.h" />
     <ClInclude Include="SourceCode\Render\Skeleton.h" />
+    <ClInclude Include="SourceCode\Render\SkeletonAnimation.h" />
     <ClInclude Include="SourceCode\Render\SkeletonBone.h" />
     <ClInclude Include="SourceCode\Render\Skin.h" />
     <ClInclude Include="SourceCode\Render\Sprite.h" />
@@ -521,93 +499,61 @@
     <ClInclude Include="SourceCode\Render\TextureAtlas.h" />
     <ClInclude Include="SourceCode\Render\TextureFormatConverter.h" />
     <ClInclude Include="SourceCode\Render\TextureFrag.h" />
-    <ClInclude Include="SourceCode\Render\TextureFragManager.h" />
+    <ClInclude Include="SourceCode\Render\VertexBufferContent.h" />
     <ClInclude Include="SourceCode\Render\VertexFormat.h" />
     <ClInclude Include="SourceCode\Render\Viewport.h" />
     <ClInclude Include="SourceCode\Render\win32\GlfwRenderWindow.h" />
     <ClInclude Include="SourceCode\Resource\Resource.h" />
     <ClInclude Include="SourceCode\Resource\ResourceManager.h" />
-    <ClInclude Include="SourceCode\Resource\ResourcePathManager.h" />
     <ClInclude Include="SourceCode\Resource\ResourcePublic.h" />
+    <ClInclude Include="SourceCode\Scene\EventManager.h" />
     <ClInclude Include="SourceCode\Scene\Node.h" />
     <ClInclude Include="SourceCode\Scene\Node2D.h" />
     <ClInclude Include="SourceCode\Scene\Node3D.h" />
     <ClInclude Include="SourceCode\Scene\NodeEvent.h" />
     <ClInclude Include="SourceCode\Scene\Scene.h" />
     <ClInclude Include="SourceCode\Scene\SceneManager.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\AnimationData.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\AnimationImporter.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\AnimationModel.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\ArmatureData.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\BoneData.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\DisplayData.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\Json.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\MoveData.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\SkeletonAnimationController.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\SkeletonAnimationManager.h" />
-    <ClInclude Include="SourceCode\SkeletalAnimation\TextureData.h" />
-    <ClInclude Include="SourceCode\Spline\Curve.h" />
-    <ClInclude Include="SourceCode\Spline\Spline.h" />
+    <ClInclude Include="SourceCode\Script\auto\BeyondEngineHead.h" />
+    <ClInclude Include="SourceCode\Script\auto\StarRaidersLuaHead.h" />
+    <ClInclude Include="SourceCode\Script\ScriptManager.h" />
     <ClInclude Include="SourceCode\stdafx.h" />
-    <ClInclude Include="SourceCode\Task\ChangeCameraFov.h" />
-    <ClInclude Include="SourceCode\Task\LoadComponentFiles.h" />
-    <ClInclude Include="SourceCode\Task\SwitchMusic.h" />
+    <ClInclude Include="SourceCode\Task\ExtractAndroidAssets.h" />
+    <ClInclude Include="SourceCode\Task\LamdaTask.h" />
+    <ClInclude Include="SourceCode\Task\SwitchSceneTask.h" />
     <ClInclude Include="SourceCode\Task\TaskBase.h" />
     <ClInclude Include="SourceCode\Task\TaskManager.h" />
-    <ClInclude Include="SourceCode\TestComponent.h" />
-    <ClInclude Include="SourceCode\TimeMeter.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\ComponentLauncher.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentInstance.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentInstanceManager.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentManagerBase.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentProjectDirectory.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentProxy.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentProxyManager.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentReference.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\FilePathTool.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\MathPublic.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\aabb.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\GL\mat4stack.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\GL\matrix.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\kazmath.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\mat3.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\mat4.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\neon_matrix_impl.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\plane.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\quaternion.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\ray2.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\ray3.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\utility.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\vec2.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\vec3.h" />
-    <ClInclude Include="SourceCode\Utility\kazmath\vec4.h" />
-    <ClInclude Include="SourceCode\Utility\MathExt\IVec4.h" />
-    <ClInclude Include="SourceCode\Utility\MathExt\Mat4.h" />
-    <ClInclude Include="SourceCode\Utility\MathExt\Vec2.h" />
-    <ClInclude Include="SourceCode\Utility\MathExt\Vec3.h" />
-    <ClInclude Include="SourceCode\Utility\MathExt\Vec4.h" />
-    <ClInclude Include="SourceCode\Utility\PerformDetector\PerformDetector.h" />
-    <ClInclude Include="SourceCode\Utility\PerformDetector\PerformResultTreeItemData.h" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\EnumStrGenerator.h" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\FileFilter.h" />
+    <ClInclude Include="SourceCode\Utility\BeatsUtility\FilePathTool.h" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\IdManager.h" />
+    <ClInclude Include="SourceCode\Utility\BeatsUtility\MathPublic.h" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\md5.h" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\Serializer.h" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\Serializer.hpp" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\SharePtr.h" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\StringHelper.h" />
     <ClInclude Include="SourceCode\Utility\BeatsUtility\UtilityManager.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\ComponentPublic.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentBase.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentGraphic.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Component\ComponentProject.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Dependency\DependencyDescription.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Dependency\DependencyDescriptionLine.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Property\PropertyDescriptionBase.h" />
-    <ClInclude Include="SourceCode\Utility\BeatsUtility\ComponentSystem\Property\PropertyPublic.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\AABBBox.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Location.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Mat3.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Mat4.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Plane.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Quaternion.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Ray3.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Vec2.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Vec3.h" />
+    <ClInclude Include="SourceCode\Utility\MathExt\Vec4.h" />
+    <ClInclude Include="SourceCode\Utility\Memory\Memory.h" />
+    <ClInclude Include="SourceCode\Utility\Memory\MemoryAnalyzer.h" />
+    <ClInclude Include="SourceCode\Utility\PerformDetector\PerformDetector.h" />
+    <ClInclude Include="SourceCode\Utility\RandomColor.h" />
+    <ClInclude Include="SourceCode\Utility\RandomValue.h" />
+    <ClInclude Include="SourceCode\Utility\RapidXML\rapidxml.hpp" />
+    <ClInclude Include="SourceCode\Utility\RapidXML\rapidxml_iterators.hpp" />
+    <ClInclude Include="SourceCode\Utility\RapidXML\rapidxml_print.hpp" />
+    <ClInclude Include="SourceCode\Utility\RapidXML\rapidxml_utils.hpp" />
     <ClInclude Include="SourceCode\Utility\TinyXML\tinystr.h" />
     <ClInclude Include="SourceCode\Utility\TinyXML\tinyxml.h" />
-    <ClInclude Include="SourceCode\Utility\Utf8String.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

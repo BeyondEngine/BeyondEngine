@@ -2,13 +2,14 @@
 #define BEYOND_ENGINE_EDITOR_WXUICONTROL_WXWIDGETSPROPERTY_PGEDITOR_WXPTRBUTTONEDITOR_H__INCLUDE
 
 #include <wx/propgrid/propgrid.h>
+#include "wxPGEditorBase.h"
 
 class CPtrPropertyDescription;
 
-class wxPtrButtonEditor : public wxPGTextCtrlEditor
+class wxPtrButtonEditor : public wxPGEditorBase
 {
     DECLARE_DYNAMIC_CLASS(wxPtrButtonEditor)
-    typedef wxPGTextCtrlEditor super;
+    typedef wxPGEditorBase super;
 public:
     wxPtrButtonEditor();
     virtual ~wxPtrButtonEditor();

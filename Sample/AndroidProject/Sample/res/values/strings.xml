@@ -1,5 +1,10 @@
 <resources>
 
-    <string name="app_name">星际奇兵</string>
-
+    <string name="app_name">三体星舰战争</string>
+	<string name="btn_ok">确定</string>
+	<string name="str_tip">提示</string>
+	<string name="btn_cancel">取消</string>
+	<string name="str_quitgame">确定要退出么？</string>
+	<string name="str_loading">加载中...</string>
+	<string name="str_tip_no_face">不支持输入表情符号</string>
 </resources>

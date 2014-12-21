@@ -10,7 +10,7 @@ class CComponentProjectDirectory;
 class wxTreeItemId;
 class wxTreeCtrl;
 
-class CEnginePropertyGirdManager : public wxPropertyGridManager
+class CEnginePropertyGridManager : public wxPropertyGridManager
 {
 public:
     enum ETreeCtrlIconType
@@ -25,25 +25,33 @@ public:
     };
 
 public:
-    CEnginePropertyGirdManager();
-    virtual ~CEnginePropertyGirdManager();
+    CEnginePropertyGridManager();
+    virtual ~CEnginePropertyGridManager();
     virtual wxPropertyGrid* CreatePropertyGrid() const;
     
     void OnComponentPropertyChanged(wxPropertyGridEvent& event);
+    void OnScrollChanged(int nNewPos);
     void OnPropertyGridSelect(wxPropertyGridEvent& event);
-
-    void InsertInPropertyGrid(const std::vector<CPropertyDescriptionBase*>& pProperties, wxPGProperty* pParent = NULL, bool bIsReference = false);
-    void InsertComponentsInPropertyGrid(CComponentProxy* pComponent, wxPGProperty* pParent = NULL);
+    void OnPropertyExpand(wxPropertyGridEvent& event);
+    void OnPropertyCollapsed(wxPropertyGridEvent& event);
+    void RefreshPropertyInGrid(CPropertyDescriptionBase* pPropertyDesc);
+    void InsertInPropertyGrid(const std::vector<CPropertyDescriptionBase*>& pProperties, wxPGProperty* pParent = NULL, bool bRefresh = true);
+    wxPGProperty* InsertInPropertyGrid(CPropertyDescriptionBase* pProperty, wxPGProperty* pParent = NULL, int nIndex = -1, bool bRefresh = true);
+    void RemovePropertyFromGrid(CPropertyDescriptionBase* pPropertyDesc, bool OnlyRemoveChild = false);
+    void InsertComponentsInPropertyGrid(CComponentProxy* pComponent);
     void UpdatePropertyVisiblity(CWxwidgetsPropertyBase* pPropertyBase);
     void OnComponentPropertyChangedImpl(wxPGProperty* pProperty);
     bool IsNeedUpdatePropertyGrid();
     void PreparePropertyDelete(wxPGProperty* pProperty);
     void ExecutePropertyDelete();
     wxPGProperty* GetPGPropertyByBase(CPropertyDescriptionBase* pBase);
-
+    void ClearGrid();
 private:
     bool m_bNeedUpdatePropertyGrid;
-    wxPGProperty* m_pProperty;
+    wxPGProperty* m_pPropertyToDelete;
+    CComponentProxy* m_pCurrentPropertyOwner = nullptr;
+    std::map<CComponentProxy*, int32_t> m_viewStartPosMap;
+    std::map<CPropertyDescriptionBase*, wxPGProperty*> m_propertyMap;
 DECLARE_EVENT_TABLE()
 };
 

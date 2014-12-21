@@ -1,54 +1,55 @@
 ﻿#ifndef BEYOND_ENGINE_RENDER_MATERIAL_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_MATERIAL_H__INCLUDE
 
-#include "resource/Resource.h"
-#include "Render/Texture.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentInstance.h"
-#include "ShaderUniform.h"
+#include "Component/Component/ComponentInstance.h"
 #include "Render/RenderStateParam/BlendRenderStateParam.h"
 #include "Render/RenderStateParam/BlendEquationRenderStateParam.h"
 #include "Render/RenderStateParam/ClockWiseRenderStateParam.h"
 #include "Render/RenderStateParam/CullModeRenderStateParam.h"
 #include "Render/RenderStateParam/FunctionRenderStateParam.h"
+#include "Render/RenderStateParam/StencilRenderStateParam.h"
 
 class CRenderState;
-
+class CShaderUniform;
+class CTexture;
 class CMaterial : public CComponentInstance
 {
     DECLARE_REFLECT_GUID(CMaterial, 0xD507AB1C, CComponentInstance)
-    DECLARE_RESOURCE_TYPE(eRT_Material)
 public:
     CMaterial( );
     virtual ~CMaterial();
 
     virtual void ReflectData(CSerializer& serializer) override;
     virtual void Initialize() override;
+#ifdef EDITOR_MODE
     virtual bool OnPropertyChange(void* pVariableAddr, CSerializer* pSerializer) override;
-
+#endif
     void Use();
-
-    CRenderState* GetRenderState( ) const;
-
-    void SetTexture( size_t stage, SharePtr<CTexture> texture);
-    void SetAmbientColor( const CColor& color );
-    void SetDiffuseColor( const CColor& color );
-    void SetSpecularColor( const CColor& color );
-    void SetShininess( float shininess );
-
-    bool operator==( const CMaterial& other ) const;
-    bool operator!=( const CMaterial& other ) const;
 
     void AddUniform( CShaderUniform* uniform );
     CShaderUniform* GetUniform(const TString& name);
     void ClearUniform();
+    const std::map< TString, CShaderUniform*>& GetUniformMap() const;
 
     void SetSharders( const TString& strVsName, const TString& strPsName );
+    uint32_t GetShaderProgram() const;
+    void SetShaderProgram(GLuint uProgram);
 
     //bool state
     void SetBlendEnable( bool bEnable );
-    void SetDepthTest( bool bDepthTest );
+    bool GetBlendEnable() const;
+    void SetDepthTestEnable( bool bDepthTest );
+    void SetDepthMask(bool bMask);
+    void SetDepthFunc(CFunctionRenderStateParam::EFunctionType depthFunc);
     void SetCullFaceEnable( bool bCullFace );
-    void SetScissorTest( bool bScissor );
+    void SetStencilEnable(bool bEnable);
+    void SetStencilFunc(CFunctionRenderStateParam::EFunctionType stencilFunc, int32_t nRefValue, int32_t nMask);
+    void SetStencilOp(CStencilRenderStateParam::EStencilType sfail, CStencilRenderStateParam::EStencilType zfail, CStencilRenderStateParam::EStencilType zpass);
+
+    // Some platform doesn't support alpha test, so you'd better not use it.
+    void SetAlphaTest(bool bAlphaTest);
+    void SetAlphaFunc(GLenum func);
+    void SetAlphaRef(float fRef);
 
     void SetBlendColor( const CColor& color );
     void SetBlendEquation( GLenum type );
@@ -58,24 +59,18 @@ public:
     void SetFrontFace( GLenum type );
     void SetCullFace( GLenum type );
 
-    void SetScssorRect( int x, int y, int w, int h );
+    void SetScissorRect( int x, int y, int w, int h );
 
     //didn't clone the texture and uniform
     SharePtr<CMaterial> Clone();
 
-private:
-    void SendUniform();
-
-    void SendLightInfo( CRenderState* pState );
-
-    bool CompareUniform( const std::map< TString, CShaderUniform*> & m1, const std::map< TString, CShaderUniform*> & m2 ) const;
-    bool CompareVector( const std::vector<SharePtr<CTexture>> & v1, const std::vector<SharePtr<CTexture>> & v2 ) const;
+    void SetLineWidth(float fLineWidth);
+    float GetLineWidth() const;
+    void SetPointSize(float fPointSize);
+    bool IsDepTest() const;
 
 private:
-    
-    std::vector<SharePtr<CTexture>> m_textures;
     std::map< TString, CShaderUniform*> m_uniformMap;
-
     TString m_strVSSharderName;
     TString m_strPSSharderName;
     bool m_bSetVsShader;
@@ -83,8 +78,6 @@ private:
     bool m_bBlendEnable;
     bool m_bCullFaceEnable;
     bool m_bDepthTest;
-    bool m_bScissorTest;
-    float m_fShininess;
 
     CBlendEquationRenderStateParam::EBlendEquationType m_eBlendType;
     CBlendRenderStateParam::EBlendParamType m_eBlendSource;
@@ -94,11 +87,11 @@ private:
     CFunctionRenderStateParam::EFunctionType m_eDepthFunc;
 
     CRenderState* m_pRenderState;
-
-    CColor m_ambientColor;
-    CColor m_diffuseColor;
-    CColor m_specularColor;
-    CColor m_colorBlend;
+#ifdef DEVELOP_VERSION
+public:
+    static uint32_t m_uMaterialCount;
+    static uint32_t m_uUseCountPerFrame;
+#endif
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ModelExporter.h"
+#include "FilePathTool.h"
 
 IGameTextureMap* GetTextureMap(IGameMaterial* pMat, int nSlot)
 {
@@ -18,21 +19,7 @@ IGameTextureMap* GetTextureMap(IGameMaterial* pMat, int nSlot)
     return NULL;
 }
 
-const TCHAR* GetFileFullNameFromPathName(const TCHAR* pszPathName, size_t uStrLen)
-{
-    assert(pszPathName != NULL);
-
-    const TCHAR* ret = &pszPathName[uStrLen - 1];
-    for(int x = uStrLen - 1; x >= 0; x--, ret--)
-    {
-        if(*ret == '\\')
-            return ret + 1;
-    }
-
-    return NULL;
-}
-
-inline static void GetMaterialCnt(IGameMaterial* pRootMat, size_t& uMatCnt)
+inline static void GetMaterialCnt(IGameMaterial* pRootMat, uint32_t& uMatCnt)
 {
     if(pRootMat == NULL)
     {
@@ -56,7 +43,7 @@ inline static void GetMaterialCnt(IGameMaterial* pRootMat, size_t& uMatCnt)
     }
 }
 
-inline static IGameMaterial*		GetMaterial(size_t& index, IGameMaterial* pRootMat, IGameMaterial* pParent, int nChildID, IGameMaterial** pParentRet, int* pChildIDRet)
+inline static IGameMaterial* GetMaterial(uint32_t& index, IGameMaterial* pRootMat, IGameMaterial* pParent, int nChildID, IGameMaterial** pParentRet, int* pChildIDRet)
 {
     BEATS_ASSERT(pRootMat != NULL);
     BEATS_ASSERT(pParentRet != NULL);
@@ -119,7 +106,7 @@ CModelExporter::~CModelExporter()
     m_pIGameScene->ReleaseIGame();
 }
 
-void CModelExporter::CollectMeshFaces( Tab<FaceEx*>& faceList, IGameMesh* pMesh, size_t uMatID, BOOL bMultiMat )
+void CModelExporter::CollectMeshFaces( Tab<FaceEx*>& faceList, IGameMesh* pMesh, uint32_t uMatID, BOOL bMultiMat )
 {
     if(!bMultiMat)
     {
@@ -130,49 +117,56 @@ void CModelExporter::CollectMeshFaces( Tab<FaceEx*>& faceList, IGameMesh* pMesh,
         }
     }
     else
+    {
         faceList = pMesh->GetFacesFromMatID(uMatID);
-}
-
-void CModelExporter::ExportTexture( IGameNode* /*pNode*/, IGameMaterial* /*pMat*/, IGameTextureMap* pTex )
-{
-    const TCHAR* pszTexFileName = pTex->GetBitmapFileName();
-    BEATS_ASSERT(pszTexFileName != NULL);
-    std::string textureName = GetFileFullNameFromPathName(pszTexFileName, (size_t)_tcslen(pszTexFileName));
-    if (textureName.empty())
-    {
-        MessageBox(NULL, _T("Export empty texture name!"), _T("Error"), MB_OK);
     }
-    m_serializer << textureName;
 }
 
-void CModelExporter::ExportMaterialTexture( IGameNode* pNode, IGameMaterial* pMat )
+bool CModelExporter::ExportMeshMaterial( IGameNode* pNode, IGameMesh* /*pMesh*/, IGameMaterial* pMat, uint32_t /*uMatID*/, BOOL /*bMultiMat*/ )
 {
+    BEATS_ASSERT(pMat->GetMaterialName());
     IGameTextureMap* pTex = GetTextureMap(pMat, ID_DI);
-    if(pTex != NULL)
+    if (pTex != NULL)
     {
-        this->ExportTexture(pNode, pMat, pTex);
+        const TCHAR* pszTexFileName = pTex->GetBitmapFileName();
+        BEATS_ASSERT(pszTexFileName != NULL);
+        std::string textureName = CFilePathTool::GetInstance()->FileName(pszTexFileName);
+        if (textureName.empty())
+        {
+            MessageBox(NULL, _T("Export empty texture name!"), _T("Error"), MB_OK);
+        }
+        m_serializer << textureName;
     }
+    IGameTextureMap* pLightMapTex = GetTextureMap(pMat, ID_AM);
+    bool bUseLightMap = pLightMapTex != NULL;
+    m_serializer << bUseLightMap;
+    if (pLightMapTex != NULL)
+    {
+        const TCHAR* pszTexFileName = pLightMapTex->GetBitmapFileName();
+        BEATS_ASSERT(pszTexFileName != NULL);
+        std::string textureName = CFilePathTool::GetInstance()->FileName(pszTexFileName);
+        if (textureName.empty())
+        {
+            MessageBox(NULL, _T("Export empty texture name!"), _T("Error"), MB_OK);
+        }
+        m_serializer << textureName;
+    }
+
+    // Just determine if we have enable the opacity channel.
     bool bSetOpacityTexture = GetTextureMap(pMat, ID_OP) != NULL;
     if (bSetOpacityTexture)
     {
         IGameTextureMap* pTex = GetTextureMap(pMat, ID_OP);
         const TCHAR* pszTexFileName = pTex->GetBitmapFileName();
         BEATS_ASSERT(pszTexFileName != NULL);
-        std::string textureName = GetFileFullNameFromPathName(pszTexFileName, (size_t)_tcslen(pszTexFileName));
+        std::string textureName = CFilePathTool::GetInstance()->FileName(pszTexFileName);
         bSetOpacityTexture = textureName.length() > 0;
     }
     m_serializer << bSetOpacityTexture;
-}
-
-bool CModelExporter::ExportMeshMaterial( IGameNode* pNode, IGameMesh* /*pMesh*/, IGameMaterial* pMat, size_t /*uMatID*/, BOOL /*bMultiMat*/ )
-{
-    BEATS_ASSERT(pMat->GetMaterialName());
-
-    ExportMaterialTexture(pNode, pMat);
     return true;
 }
 
-void CModelExporter::ExportMeshVertex(IGameNode* /*pNode*/, IGameMesh* pMesh, IGameMaterial* pMat, size_t uMatID, BOOL bMultiMat)
+void CModelExporter::ExportMeshVertex(IGameNode* pNode, IGameMesh* pMesh, IGameMaterial* pMat, uint32_t uMatID, BOOL bMultiMat)
 {
     pMesh->SetUseWeightedNormals();
     pMesh->InitializeData();
@@ -180,82 +174,113 @@ void CModelExporter::ExportMeshVertex(IGameNode* /*pNode*/, IGameMesh* pMesh, IG
     Tab<FaceEx*> faceTab;
 
     CollectMeshFaces(faceTab, pMesh, uMatID, bMultiMat);
-    size_t uFaceCount = faceTab.Count();
-    size_t uVertexCount = uFaceCount * 3;
+    uint32_t uFaceCount = faceTab.Count();
+    uint32_t uVertexCount = uFaceCount * 3;
     m_serializer << uVertexCount;
 
-    BOOL bDiffusemap = GetTextureMap(pMat, ID_DI) == NULL ? FALSE : TRUE;
-    BOOL bNormalmap = GetTextureMap(pMat, ID_BU) == NULL ? FALSE : TRUE;
-    BOOL bSpecularmap = GetTextureMap(pMat, ID_SS) == NULL ? FALSE : TRUE;
-    BOOL bLightmap = GetTextureMap(pMat, ID_AM) == NULL ? FALSE : TRUE;
-    float centerX = 0;
-    float centerY = 0;
-    float centerZ = 0;
-    for(size_t i = 0; i < uFaceCount; ++i)
+    bool bDiffusemap = pMat != nullptr && GetTextureMap(pMat, ID_DI) != nullptr;
+    bool bLightmap = pMat != nullptr && GetTextureMap(pMat, ID_AM) != nullptr;
+    bool bUseRepeatMode = false;
+    GMatrix localTm = pNode->GetLocalTM();
+    Point3 localPos = localTm.Translation();
+    m_serializer << localPos.x << localPos.y << localPos.z;
+    if (uVertexCount > 0)
     {
-        FaceEx* pFace = faceTab[i];
-        for(int  j = 0; j < 3; ++j)
+        GMatrix worldTm = pNode->GetWorldTM();
+        for (uint32_t i = 0; i < uFaceCount; ++i)
         {
-            DWORD mapIndex[3];
-            Point3 ptUV;
-            int indexUV = pFace->texCoord[j];
-            int nChannel = 0;
-            if(bDiffusemap || bNormalmap || bSpecularmap)
+            FaceEx* pFace = faceTab[i];
+            for (int j = 0; j < 3; ++j)
             {
-                IGameTextureMap* pMap = GetTextureMap(pMat, ID_DI);
-                nChannel = pMap->GetMapChannel();
+                int indexPos = pFace->vert[j];
+                Point3 pos = pMesh->GetVertex(indexPos, false);
+                // HACK: we want to the the relative pos of the vertex
+                // If we set the second param ObjectSpace to true, it returns a position which is from the center of all mesh faces.
+                // But what we want is a position from the relative origin pos.
+                // So we get it by calculate pos from vertex world pos and the node's world pos.
+                //Point3 pos2 = pMesh->GetVertex(indexPos, true); // Don't use this.
+                Point3 parentNodeWorldPos = worldTm.Translation();
+                pos.x -= parentNodeWorldPos.x;
+                pos.y -= parentNodeWorldPos.y;
+                pos.z -= parentNodeWorldPos.z;
+                m_serializer << pos.x << pos.y << pos.z;
+                Point3 ptUV;
+                int indexUV = pFace->texCoord[j];
+                int nChannel = 0;
+                DWORD mapIndex[3];
+                if (bDiffusemap)
+                {
+                    IGameTextureMap* pMap = GetTextureMap(pMat, ID_DI);
+                    nChannel = pMap->GetMapChannel();
+                    if (pMesh->GetMapFaceIndex(nChannel, pFace->meshFaceIndex, mapIndex))
+                        ptUV = pMesh->GetMapVertex(nChannel, mapIndex[j]);
+                    else
+                        ptUV = pMesh->GetMapVertex(nChannel, indexUV);
+                    m_serializer << ptUV.x << ptUV.y;
+                    if (ptUV.x > 1 || ptUV.y > 1)
+                    {
+                        bUseRepeatMode = true;
+                    }
+                }
+                else
+                {
+                    m_serializer << 0.f << 0.f;
+                }
+                if (bLightmap)
+                {
+                    IGameTextureMap* pMap = GetTextureMap(pMat, ID_AM);
+                    nChannel = pMap->GetMapChannel();
+                    if (pMesh->GetMapFaceIndex(nChannel, pFace->meshFaceIndex, mapIndex))
+                        ptUV = pMesh->GetMapVertex(nChannel, mapIndex[j]);
+                    else
+                        ptUV = pMesh->GetMapVertex(nChannel, indexUV);
+                    m_serializer << ptUV.x << ptUV.y;
+                    if (ptUV.x > 1 || ptUV.y > 1)
+                    {
+                        bUseRepeatMode = true;
+                    }
+                }
             }
-            else if(bLightmap)
-            {
-                IGameTextureMap* pMap = GetTextureMap(pMat, ID_AM);
-                nChannel = pMap->GetMapChannel();
-            }
-            if(pMesh->GetMapFaceIndex(nChannel, pFace->meshFaceIndex, mapIndex))
-                ptUV = pMesh->GetMapVertex(nChannel, mapIndex[j]);
-            else
-                ptUV = pMesh->GetMapVertex(nChannel, indexUV);
-            int indexPos = pFace->vert[j];
-            Point3 pos = pMesh->GetVertex(indexPos);
-
-            m_serializer << pos.x << pos.y << pos.z;
-            m_serializer << ptUV.x << ptUV.y;
-            centerX += pos.x;
-            centerY += pos.y;
-            centerZ += pos.z;
         }
-    }
-    if (uFaceCount > 0)
-    {
-        centerX /= (uFaceCount * 3);
-        centerY /= (uFaceCount * 3);
-        centerZ /= (uFaceCount * 3);
-        m_serializer << centerX << centerY << centerZ;
+        m_serializer << bUseRepeatMode;
+        Box3 boundingBox;
+        pMesh->GetBoundingBox(boundingBox);
+        GMatrix mtxWorldTM = pNode->GetWorldTM();
+        boundingBox.pmin.x -= mtxWorldTM[3][0];
+        boundingBox.pmin.y -= mtxWorldTM[3][1];
+        boundingBox.pmin.z -= mtxWorldTM[3][2];
+        boundingBox.pmax.x -= mtxWorldTM[3][0];
+        boundingBox.pmax.y -= mtxWorldTM[3][1];
+        boundingBox.pmax.z -= mtxWorldTM[3][2];
+        RefreshRootBoundingBox(boundingBox);
+        m_serializer << boundingBox.pmin.x << boundingBox.pmin.y << boundingBox.pmin.z;
+        m_serializer << boundingBox.pmax.x << boundingBox.pmax.y << boundingBox.pmax.z;
     }
 }
 
 void CModelExporter::ExportMesh( IGameNode* pNode )
 {
     IGameMesh* pMesh = (IGameMesh*)pNode->GetIGameObject();
-
     pMesh->SetUseWeightedNormals();
     pMesh->InitializeData();
     pMesh->InitializeBinormalData();
 
     IGameMaterial* pRootMat = pNode->GetNodeMaterial();
+    IGameMaterial* pMat = nullptr;
+    int nMatID = 0;
     if(pRootMat != NULL)
     {
-        size_t uMatCnt = 0;
+        uint32_t uMatCnt = 0;
         GetMaterialCnt(pRootMat, uMatCnt);
-
+        BEATS_ASSERT(uMatCnt < 2, "Material count in %s should always less than 2, current count: %d", pRootMat->GetMaterialName(), uMatCnt);
         m_serializer << uMatCnt;
-        for(size_t x = 0; x < uMatCnt; x++)
+        for(uint32_t x = 0; x < uMatCnt; x++)
         {
-            size_t index = x;
+            uint32_t index = x;
             int nChildID;
             IGameMaterial* pParentMat;
-            IGameMaterial* pMat = GetMaterial(index, pRootMat, NULL, -1, &pParentMat, &nChildID);
+            pMat = GetMaterial(index, pRootMat, NULL, -1, &pParentMat, &nChildID);
 
-            int nMatID = 0;
             if(pParentMat != NULL)
             {
                 nMatID = pParentMat->GetMaterialID(nChildID);
@@ -265,51 +290,72 @@ void CModelExporter::ExportMesh( IGameNode* pNode )
             if(pMat != NULL)
             {
                 ExportMeshMaterial(pNode, pMesh, pMat, nMatID, pRootMat->IsMultiType());
-                ExportMeshVertex(pNode, pMesh,pMat,nMatID,pRootMat->IsMultiType());
             }
         }
     }
-
-}
-
-bool CModelExporter::ExportNode( IGameNode* pNode )
-{
-    IGameMesh* pMesh = (IGameMesh*)pNode->GetIGameObject();
-    IGameMaterial* pRootMat = pNode->GetNodeMaterial();
-
-    pMesh->SetUseWeightedNormals();
-    pMesh->InitializeData();
-    int uFaceCount = pMesh->GetNumberOfFaces();
-
-    for(int i = 0; i < uFaceCount; ++i)
+    else
     {
-        FaceEx* pFace = pMesh->GetFace(i);
-        for(int  j = 0; j < 3; ++j)
-        {
-            DWORD mapIndex[3];
-            Point3 ptUV;
-            int indexUV = pFace->texCoord[j];
-            IGameTextureMap* pMap = GetTextureMap(pRootMat, ID_DI);
-            int nChannel = pMap->GetMapChannel();
-            if(pMesh->GetMapFaceIndex(nChannel, pFace->meshFaceIndex, mapIndex))
-                ptUV = pMesh->GetMapVertex(nChannel, mapIndex[j]);
-            else
-                ptUV = pMesh->GetMapVertex(nChannel, indexUV);
-
-            int indexPos = pFace->vert[j];
-            Point3 pos = pMesh->GetVertex(indexPos);
-        }
+        m_serializer << 0;
     }
 
-    return true;
+    ExportMeshVertex(pNode, pMesh, pMat, nMatID, pRootMat != nullptr && pRootMat->IsMultiType());
+}
+
+void CModelExporter::ExportMeshAnimation(IGameNode* pNode, IGameControlType animationType)
+{
+    auto pControl = pNode->GetIGameControl();
+    IGameKeyTab quickList;
+    pControl->GetQuickSampledKeys(quickList, animationType);
+    // if the key frame is 1, it won't make sense.
+    BEATS_ASSERT(quickList.Count() == 0 || quickList.Count() >= 2);
+    bool bHasAnimation = quickList.Count() >= 2;
+    m_serializer << bHasAnimation;
+    if (bHasAnimation)
+    {
+        int nTickPerFrame = m_pIGameScene->GetSceneTicks();
+        int nStartFrame = quickList[0].t / nTickPerFrame;
+        int nEndFrame = quickList[quickList.Count() - 1].t / nTickPerFrame;
+        m_serializer << nStartFrame << nEndFrame;
+        BEATS_ASSERT(nStartFrame >= 0 && nEndFrame >= 0);
+        IGameKeyTab dataList;
+        pControl->GetFullSampledKeys(dataList, 1, animationType);
+        for (int n = nStartFrame; n <= nEndFrame; ++n)
+        {
+            switch (animationType)
+            {
+            case IGAME_POS:
+                m_serializer << dataList[n].sampleKey.pval.x << dataList[n].sampleKey.pval.y << dataList[n].sampleKey.pval.z;
+                break;
+            case IGAME_SCALE:
+                m_serializer << dataList[n].sampleKey.sval.s.x << dataList[n].sampleKey.sval.s.y << dataList[n].sampleKey.sval.s.z;
+                break;
+            case IGAME_ROT:
+            {
+                float x, y, z;
+                dataList[n].sampleKey.qval.GetEuler(&x, &y, &z);
+                static const float PIUnder180 = 57.295779f; // 180 / PI
+                x *= PIUnder180;
+                y *= PIUnder180;
+                z *= PIUnder180;
+                m_serializer << x << y << z;
+            }
+            break;
+            default:
+                BEATS_ASSERT(false, "never reach here!");
+                break;
+            }
+        }
+    }
 }
 
 void CModelExporter::Export(const char* pszFileName)
 {
+    m_rootBoundingBox.pmin.Set(FLT_MAX, FLT_MAX, FLT_MAX);
+    m_rootBoundingBox.pmax.Set(FLT_MIN, FLT_MIN, FLT_MIN);
     m_serializer.Reset();
-    size_t uTotalRootNodeCnt = m_pIGameScene->GetTopLevelNodeCount();
+    uint32_t uTotalRootNodeCnt = m_pIGameScene->GetTopLevelNodeCount();
     std::vector<IGameNode*> meshNodeVector;
-    for(size_t x = 0; x < uTotalRootNodeCnt; x++)
+    for(uint32_t x = 0; x < uTotalRootNodeCnt; x++)
     {
         IGameNode* pNode = m_pIGameScene->GetTopLevelNode(x);
         IGameObject* pObject = pNode->GetIGameObject();
@@ -322,14 +368,45 @@ void CModelExporter::Export(const char* pszFileName)
         }
     }
 
-    int uMeshNodeCount = meshNodeVector.size();
-    m_serializer << uMeshNodeCount;
+    int nMeshNodeCount = meshNodeVector.size();
+    m_serializer << nMeshNodeCount;
+    TimeValue end_time = m_pIGameScene->GetSceneEndTime();
+    int nEndFrame = end_time / m_pIGameScene->GetSceneTicks();
+    nEndFrame += 1;// we also need to export the 0 frame, so the count should be add 1.
+    m_serializer << nEndFrame;
 
     for(auto pNode : meshNodeVector)
     {
         ExportMesh(pNode);
+        ExportMeshAnimation(pNode, IGAME_POS);
+        ExportMeshAnimation(pNode, IGAME_ROT);
+        ExportMeshAnimation(pNode, IGAME_SCALE);
     }
-
-    m_serializer.Deserialize(pszFileName);
+    m_serializer << m_rootBoundingBox.pmin.x << m_rootBoundingBox.pmin.y << m_rootBoundingBox.pmin.z;
+    m_serializer << m_rootBoundingBox.pmax.x << m_rootBoundingBox.pmax.y << m_rootBoundingBox.pmax.z;
+    if (m_serializer.GetWritePos() > 0)
+    {
+        m_serializer.Deserialize(pszFileName);
+    }
 }
 
+void CModelExporter::RefreshRootBoundingBox(const Box3& newBox)
+{
+    if (m_rootBoundingBox.pmin.x > newBox.pmin.x)
+        m_rootBoundingBox.pmin.x = newBox.pmin.x;
+
+    if (m_rootBoundingBox.pmin.y > newBox.pmin.y)
+        m_rootBoundingBox.pmin.y = newBox.pmin.y;
+
+    if (m_rootBoundingBox.pmin.z > newBox.pmin.z)
+        m_rootBoundingBox.pmin.z = newBox.pmin.z;
+
+    if (m_rootBoundingBox.pmax.x < newBox.pmax.x)
+        m_rootBoundingBox.pmax.x = newBox.pmax.x;
+
+    if (m_rootBoundingBox.pmax.y < newBox.pmax.y)
+        m_rootBoundingBox.pmax.y = newBox.pmax.y;
+
+    if (m_rootBoundingBox.pmax.z < newBox.pmax.z)
+        m_rootBoundingBox.pmax.z = newBox.pmax.z;
+}

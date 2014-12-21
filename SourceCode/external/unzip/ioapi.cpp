@@ -76,7 +76,7 @@ static long    ZCALLBACK fseek64_file_func OF((voidpf opaque, voidpf stream, ZPO
 static int     ZCALLBACK fclose_file_func OF((voidpf opaque, voidpf stream));
 static int     ZCALLBACK ferror_file_func OF((voidpf opaque, voidpf stream));
 
-static voidpf ZCALLBACK fopen_file_func (voidpf opaque, const char* filename, int mode)
+static voidpf ZCALLBACK fopen_file_func (voidpf /*opaque*/, const char* filename, int mode)
 {
     FILE* file = NULL;
     const char* mode_fopen = NULL;
@@ -94,7 +94,7 @@ static voidpf ZCALLBACK fopen_file_func (voidpf opaque, const char* filename, in
     return file;
 }
 
-static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const void* filename, int mode)
+static voidpf ZCALLBACK fopen64_file_func (voidpf /*opaque*/, const void* filename, int mode)
 {
     FILE* file = NULL;
     const char* mode_fopen = NULL;
@@ -109,32 +109,28 @@ static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const void* filename, 
 
     if ((filename!=NULL) && (mode_fopen != NULL))
     {
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE || CC_TARGET_PLATFORM == CC_PLATFORM_BADA || CC_TARGET_PLATFORM == CC_PLATFORM_BLACKBERRY || CC_TARGET_PLATFORM == CC_PLATFORM_NACL || CC_TARGET_PLATFORM == CC_PLATFORM_EMSCRIPTEN)
-        file = NULL;
-#else
         file = fopen64((const char*)filename, mode_fopen);    
-#endif
     }
 
     return file;
 }
 
 
-static uLong ZCALLBACK fread_file_func (voidpf opaque, voidpf stream, void* buf, uLong size)
+static uLong ZCALLBACK fread_file_func (voidpf /*opaque*/, voidpf stream, void* buf, uLong size)
 {
     uLong ret;
     ret = (uLong)fread(buf, 1, (size_t)size, (FILE *)stream);
     return ret;
 }
 
-static uLong ZCALLBACK fwrite_file_func (voidpf opaque, voidpf stream, const void* buf, uLong size)
+static uLong ZCALLBACK fwrite_file_func (voidpf /*opaque*/, voidpf stream, const void* buf, uLong size)
 {
     uLong ret;
     ret = (uLong)fwrite(buf, 1, (size_t)size, (FILE *)stream);
     return ret;
 }
 
-static long ZCALLBACK ftell_file_func (voidpf opaque, voidpf stream)
+static long ZCALLBACK ftell_file_func (voidpf /*opaque*/, voidpf stream)
 {
     long ret;
     ret = ftell((FILE *)stream);
@@ -142,18 +138,14 @@ static long ZCALLBACK ftell_file_func (voidpf opaque, voidpf stream)
 }
 
 
-static ZPOS64_T ZCALLBACK ftell64_file_func (voidpf opaque, voidpf stream)
+static ZPOS64_T ZCALLBACK ftell64_file_func (voidpf /*opaque*/, voidpf stream)
 {
     ZPOS64_T ret;
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE || CC_TARGET_PLATFORM == CC_PLATFORM_BADA || CC_TARGET_PLATFORM == CC_PLATFORM_BLACKBERRY || CC_TARGET_PLATFORM == CC_PLATFORM_NACL || CC_TARGET_PLATFORM == CC_PLATFORM_EMSCRIPTEN)
-    ret = 0;
-#else
     ret = ftello64((FILE *)stream);
-#endif
     return ret;
 }
 
-static long ZCALLBACK fseek_file_func (voidpf  opaque, voidpf stream, uLong offset, int origin)
+static long ZCALLBACK fseek_file_func (voidpf  /*opaque*/, voidpf stream, uLong offset, int origin)
 {
     int fseek_origin=0;
     long ret;
@@ -176,11 +168,8 @@ static long ZCALLBACK fseek_file_func (voidpf  opaque, voidpf stream, uLong offs
     return ret;
 }
 
-static long ZCALLBACK fseek64_file_func (voidpf  opaque, voidpf stream, ZPOS64_T offset, int origin)
+static long ZCALLBACK fseek64_file_func (voidpf  /*opaque*/, voidpf stream, ZPOS64_T offset, int origin)
 {
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_MARMALADE || CC_TARGET_PLATFORM == CC_PLATFORM_BADA || CC_TARGET_PLATFORM == CC_PLATFORM_BLACKBERRY || CC_TARGET_PLATFORM == CC_PLATFORM_NACL || CC_TARGET_PLATFORM == CC_PLATFORM_EMSCRIPTEN)
-    return -1;
-#else
     int fseek_origin=0;
     switch (origin)
     {
@@ -195,21 +184,20 @@ static long ZCALLBACK fseek64_file_func (voidpf  opaque, voidpf stream, ZPOS64_T
         break;
     default: return -1;
     }
-    if(fseeko64((FILE *)stream, offset, fseek_origin) != 0)
+    if(fseeko64((FILE *)stream, (long)offset, fseek_origin) != 0)
         return -1;
     return 0;
-#endif
 }
 
 
-static int ZCALLBACK fclose_file_func (voidpf opaque, voidpf stream)
+static int ZCALLBACK fclose_file_func (voidpf /*opaque*/, voidpf stream)
 {
     int ret;
     ret = fclose((FILE *)stream);
     return ret;
 }
 
-static int ZCALLBACK ferror_file_func (voidpf opaque, voidpf stream)
+static int ZCALLBACK ferror_file_func (voidpf /*opaque*/, voidpf stream)
 {
     int ret;
     ret = ferror((FILE *)stream);

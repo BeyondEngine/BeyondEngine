@@ -1,18 +1,18 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "GlfwRenderWindow.h"
 #include "Render/RenderManager.h"
 #include "Event/TouchDelegate.h"
-#include "Event/KeyboardEvent.h"
-#include "Scene/SceneManager.h"
-#include "TimeMeter.h"
-#include "Scene/Scene.h"
-
+#include "Log/LogManager.h"
+#include "Utility/Memory/Memory.h"
+#ifdef MEMORY_CAPTURE
+#include "Memory/MemoryAnalyzer.h"
+#endif
 //#define ENABLE_DEFAULT_CAMERA_MOUSE_CONTROL
 
 std::map<GLFWwindow *, CGlfwRenderWindow *> CGlfwRenderWindow::m_sInstanceMap;
 
-CGlfwRenderWindow::CGlfwRenderWindow(int nWidth, int nHeight, bool bAutoCreateViewport)
-    : CRenderWindow(nWidth, nHeight, bAutoCreateViewport)
+CGlfwRenderWindow::CGlfwRenderWindow(int nWidth, int nHeight)
+    : super(nWidth, nHeight)
     , m_pMainWindow(nullptr)
     , m_bGlewInited(false)
     , m_bLeftMouseDown(false)
@@ -20,20 +20,13 @@ CGlfwRenderWindow::CGlfwRenderWindow(int nWidth, int nHeight, bool bAutoCreateVi
     , m_uLastMousePosY(0)
     , m_uCurMousePosX(0)
     , m_uCurMousePosY(0)
-    , m_uPressedMousePosX(0)
-    , m_uPressedMousePosY(0)
-    , m_fPressStartYaw(0.f)
-    , m_fPressStartPitch(0.f)
-    , m_uLastTapTime(0)
-    , m_uTapCount(0)
 {
     glfwSetErrorCallback(CGlfwRenderWindow::onGLFWError);
     glfwInit();
 
     glfwWindowHint(GLFW_RESIZABLE,GL_FALSE);
 
-    m_pMainWindow = glfwCreateWindow(GetDeviceWidth(), GetDeviceHeight(),
-        "Unknown window", NULL, NULL);
+    m_pMainWindow = glfwCreateWindow(nWidth, nHeight, "StarRaiders", NULL, NULL);
     m_sInstanceMap[m_pMainWindow] = this;
 
     glfwSetMouseButtonCallback(m_pMainWindow,CGlfwRenderWindow::onGLFWMouseCallBack);
@@ -41,8 +34,7 @@ CGlfwRenderWindow::CGlfwRenderWindow(int nWidth, int nHeight, bool bAutoCreateVi
     glfwSetScrollCallback(m_pMainWindow, CGlfwRenderWindow::onGLFWMouseScrollCallback);
     glfwSetCharCallback(m_pMainWindow, CGlfwRenderWindow::onGLFWCharCallback);
     glfwSetKeyCallback(m_pMainWindow, CGlfwRenderWindow::onGLFWKeyCallback);
-    glfwSetWindowPosCallback(m_pMainWindow, CGlfwRenderWindow::onGLFWWindowPosCallback);
-    glfwSetFramebufferSizeCallback(m_pMainWindow, CGlfwRenderWindow::onGLFWframebuffersize);
+    glfwSetWindowSizeCallback(m_pMainWindow, CGlfwRenderWindow::onGLFWSizeChangeCallback);
 }
 CGlfwRenderWindow::~CGlfwRenderWindow()
 {
@@ -147,12 +139,12 @@ bool CGlfwRenderWindow::BindingFBO()
 
 void CGlfwRenderWindow::onGLFWError( int errorID, const char* errorDesc )
 {
-    TCHAR szBuffer[MAX_PATH];
-    CStringHelper::GetInstance()->ConvertToTCHAR(errorDesc, szBuffer, MAX_PATH);
-    BEATS_ASSERT(false, _T("An error was detected! ID : %d\ndesc : %s"), errorID, szBuffer);
+    BEYONDENGINE_UNUSED_PARAM(errorID);
+    BEYONDENGINE_UNUSED_PARAM(errorDesc);
+    BEATS_ASSERT(false, _T("An error was detected! ID : %d\ndesc : %s"), errorID, errorDesc);
 }
 
-void CGlfwRenderWindow::onGLFWMouseCallBack(GLFWwindow* window, int button, int action, int modify)
+void CGlfwRenderWindow::onGLFWMouseCallBack(GLFWwindow* window, int button, int action, int /*modify*/)
 {
     CGlfwRenderWindow *pObject = m_sInstanceMap[window];
     BEATS_ASSERT(pObject);
@@ -162,46 +154,18 @@ void CGlfwRenderWindow::onGLFWMouseCallBack(GLFWwindow* window, int button, int 
         if (action == GLFW_PRESS)
         {
             pObject->m_bLeftMouseDown = true;
-            intptr_t id = 0;
-            size_t uCurrMSec = (size_t)(CTimeMeter::GetCurrUSec() / 1000);
-            if( uCurrMSec - pObject->m_uLastTapTime <= TAP_INTERVAL &&
-                labs(pObject->m_uCurMousePosX - pObject->m_uPressedMousePosX) <= TAP_DEVIATION &&
-                labs(pObject->m_uCurMousePosY - pObject->m_uPressedMousePosY) <= TAP_DEVIATION )
-            {
-                ++pObject->m_uTapCount;
-            }
-            else
-            {
-                pObject->m_uTapCount = 1;
-                pObject->m_uPressedMousePosX = pObject->m_uCurMousePosX;
-                pObject->m_uPressedMousePosY = pObject->m_uCurMousePosY;
-            }
-            pObject->m_uLastTapTime = uCurrMSec;
             float x = (float)pObject->m_uCurMousePosX;
             float y = (float)pObject->m_uCurMousePosY;
-            CTouchDelegate::GetInstance()->OnTouchBegan( 1, &id, &x, &y, &pObject->m_uTapCount);
+            size_t id[1] = { 0 };
+            CTouchDelegate::GetInstance()->OnTouchBegan( 1, id, &x, &y);
         }
         else if(action == GLFW_RELEASE)
         {
             pObject->m_bLeftMouseDown = false;
-            intptr_t id = 0;
             float x = (float)pObject->m_uCurMousePosX;
             float y = (float)pObject->m_uCurMousePosY;
-            size_t uCurrMSec = (size_t)(CTimeMeter::GetCurrUSec() / 1000);
-            if( uCurrMSec - pObject->m_uLastTapTime <= TAP_INTERVAL &&
-                labs(pObject->m_uCurMousePosX - pObject->m_uPressedMousePosX) <= TAP_DEVIATION &&
-                labs(pObject->m_uCurMousePosY - pObject->m_uPressedMousePosY) <= TAP_DEVIATION )
-            {
-                BEATS_ASSERT(pObject->m_uTapCount > 0);
-                if(pObject->m_uTapCount == 1 || pObject->m_uTapCount == 2)
-                    CTouchDelegate::GetInstance()->OnTapped( id, x, y, pObject->m_uTapCount);
-            }
-            else
-            {
-                pObject->m_uTapCount = 0;
-            }
-            pObject->m_uLastTapTime = uCurrMSec;
-            CTouchDelegate::GetInstance()->OnTouchEnded( 1, &id, &x,&y, &pObject->m_uTapCount);
+            size_t id[1] = {0};
+            CTouchDelegate::GetInstance()->OnTouchEnded( 1, id, &x,&y);
         }
     }
 }
@@ -212,12 +176,12 @@ void CGlfwRenderWindow::onGLFWMouseMoveCallBack(GLFWwindow* window, double x, do
     BEATS_ASSERT(pObject);
     x /= pObject->GetScaleFactor();
     y /= pObject->GetScaleFactor();
-    pObject->m_uCurMousePosX = (size_t)x;
-    pObject->m_uCurMousePosY = (size_t)y;
+    pObject->m_uCurMousePosX = (uint32_t)x;
+    pObject->m_uCurMousePosY = (uint32_t)y;
 
     int width = 0, height = 0;
-    glfwGetFramebufferSize(window,&width, &height);
-
+    width = pObject->GetLogicWidth();
+    height = pObject->GetLogicHeight();
     if(x < width  && x > 0 && y < height && y > 0)
     {
         if (pObject->m_bLeftMouseDown)
@@ -233,27 +197,26 @@ void CGlfwRenderWindow::onGLFWMouseMoveCallBack(GLFWwindow* window, double x, do
                 CCamera* pCamera = pCurrScene->GetCamera(CCamera::eCT_3D);
                 if(pCamera)
                 {
-                    float fYawValue = (float)iDeltaX / pObject->GetWidth();
+                    float fYawValue = (float)iDeltaX / pObject->GetLogicWidth();
                     pCamera->Yaw(fYawValue);
 
-                    float fPitchValue = (float)iDeltaY / pObject->GetHeight();
+                    float fPitchValue = (float)iDeltaY / pObject->GetLogicHeight();
                     pCamera->Pitch( fPitchValue);
                 }
             }
 #endif
-
-            intptr_t id = 0;
+            size_t id[1] = {0};
             float rx = (float)x;
             float ry = (float)y;
-            CTouchDelegate::GetInstance()->OnTouchMoved( 1, &id, &rx, &ry );
+            CTouchDelegate::GetInstance()->OnTouchMoved( 1, id, &rx, &ry );
         }
     }
 
-    pObject->m_uLastMousePosX = (size_t)x;
-    pObject->m_uLastMousePosY = (size_t)y;
+    pObject->m_uLastMousePosX = (uint32_t)x;
+    pObject->m_uLastMousePosY = (uint32_t)y;
 }
 
-void CGlfwRenderWindow::onGLFWMouseScrollCallback(GLFWwindow* window, double x, double y)
+void CGlfwRenderWindow::onGLFWMouseScrollCallback(GLFWwindow* /*window*/, double /*x*/, double y)
 {
 #ifdef ENABLE_DEFAULT_CAMERA_MOUSE_CONTROL
     CScene *pCurrScene = CSceneManager::GetInstance()->GetCurrentScene();
@@ -267,118 +230,139 @@ void CGlfwRenderWindow::onGLFWMouseScrollCallback(GLFWwindow* window, double x, 
         }
     }
 #endif
+    CTouchDelegate::GetInstance()->OnPinched(eGS_BEGAN, (float)y);
+    CTouchDelegate::GetInstance()->OnPinched(eGS_ENDED, (float)y * 2);
 }
 
-void CGlfwRenderWindow::onGLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void CGlfwRenderWindow::onGLFWKeyCallback(GLFWwindow* /*window*/, int key, int /*scancode*/, int action, int /*mods*/)
 {
-    CGlfwRenderWindow *pObject = m_sInstanceMap[window];
-    BEATS_ASSERT(pObject);
-
-    if (action == GLFW_PRESS || action == GLFW_REPEAT)
+    switch (key)
     {
-        pObject->UpdateCamera();
+    case GLFW_KEY_F1:
         if (action == GLFW_PRESS)
         {
-            switch (key)
-            {
-            case GLFW_KEY_F3:
-                {
-                    CRenderManager::GetInstance()->SwitchPolygonMode();
-                }
-                break;
-            default:
-                break;
-            }
+#ifdef DEVELOP_VERSION
+            CLogManager::GetInstance()->Show(!CLogManager::GetInstance()->IsShown());
+#endif
         }
-    }
-
-    EEventType eventType;
-    switch(action)
-    {
-    case GLFW_PRESS:
-        eventType = eET_EVENT_KEY_PRESSED;
         break;
-    case GLFW_RELEASE:
-        eventType = eET_EVENT_KEY_RELEASED;
-        break;
-    case GLFW_REPEAT:
-        eventType = eET_EVENT_KEY_REPEATED;
-        break;
-    }
-}
-
-void CGlfwRenderWindow::onGLFWCharCallback(GLFWwindow* window, unsigned int character)
-{
-}
-
-void CGlfwRenderWindow::onGLFWWindowPosCallback(GLFWwindow* windows, int x, int y)
-{
-
-}
-
-void CGlfwRenderWindow::onGLFWframebuffersize(GLFWwindow* window, int w, int h)
-{
-
-}
-
-void CGlfwRenderWindow::UpdateCamera()
-{
-    CScene *pCurrScene = CSceneManager::GetInstance()->GetCurrentScene();
-    if(pCurrScene)
-    {
-        CCamera* pCamera = pCurrScene->GetCamera(CCamera::eCT_3D);
-        if(pCamera)
+    case GLFW_KEY_F3:
+        if (action == GLFW_PRESS)
         {
-            kmVec3 vec3Speed;
-            kmVec3Fill(&vec3Speed, 1.0f, 1.0f, 1.0f);
-            if (glfwGetKey(m_pMainWindow,GLFW_KEY_LEFT_SHIFT) ||
-                glfwGetKey(m_pMainWindow,GLFW_KEY_RIGHT_SHIFT) )
-            {
-                kmVec3Scale(&vec3Speed, &vec3Speed, 100.0F * 0.016F);
-            }
-            else
-            {
-                kmVec3Scale(&vec3Speed, &vec3Speed, 1.0F * 0.016F);
-            }
-            int type = CCamera::eCMT_NOMOVE;
-
-            bool bPressA = glfwGetKey(m_pMainWindow,GLFW_KEY_A) != 0;
-            bool bPressD = glfwGetKey(m_pMainWindow,GLFW_KEY_D) != 0;
-            if ( bPressA || bPressD )
-            {
-                type |= CCamera::eCMT_TRANVERSE;
-                if (bPressA)
-                {
-                    vec3Speed.x *= -1;
-                }
-            }
-            bool bPressW = glfwGetKey(m_pMainWindow,GLFW_KEY_W) != 0;
-            bool bPressS = glfwGetKey(m_pMainWindow,GLFW_KEY_S) != 0;
-
-            if ( bPressW || bPressS )
-            {
-                type |= CCamera::eCMT_STRAIGHT;
-                if (bPressW)
-                {
-                    vec3Speed.z *= -1;
-                }
-            }
-            bool bPressUp = glfwGetKey(m_pMainWindow,GLFW_KEY_UP) != 0;
-            bool bPressDown = glfwGetKey(m_pMainWindow,GLFW_KEY_DOWN) != 0;
-
-            if ( bPressUp || bPressDown )
-            {
-                type |= CCamera::eCMT_UPDOWN;
-                if (bPressDown)
-                {
-                    vec3Speed.y *= -1;
-                }
-            }
-
-            if (type != CCamera::eCMT_NOMOVE)
-            {
-                pCamera->ExecuteMovement(vec3Speed, type);
-            }
+            CRenderManager::GetInstance()->SwitchPolygonMode();
         }
+        break;
+    case GLFW_KEY_F4:
+        if (action == GLFW_PRESS)
+        {
+#ifdef MEMORY_CAPTURE
+            CMemoryAnalyzer::GetInstance()->DumpToFile("mem.log");
+#endif
+        }
+        break;
+    case GLFW_KEY_F5:
+        if (action == GLFW_PRESS)
+        {
+        }
+        break;
+    case GLFW_KEY_F6:
+        if (action == GLFW_PRESS)
+        {
+            _CrtDumpMemoryLeaks();
+        }
+        break;
+    case GLFW_KEY_BACKSPACE:
+        if (action == GLFW_PRESS)
+        {
+        }
+        break;
+    case GLFW_KEY_UP:
+        if (action == GLFW_PRESS || action == GLFW_REPEAT)
+        {
+#ifdef DEVELOP_VERSION
+            if (CLogManager::GetInstance()->IsShown())
+            {
+                CLogManager::GetInstance()->DecreaseRenderPos();
+            }
+#endif
+        }
+        break;
+    case GLFW_KEY_DOWN:
+        if (action == GLFW_PRESS || action == GLFW_REPEAT)
+        {
+#ifdef DEVELOP_VERSION
+            if (CLogManager::GetInstance()->IsShown())
+            {
+                CLogManager::GetInstance()->IncreaseRenderPos();
+            }
+#endif
+        }
+        break;
+    case GLFW_KEY_HOME:
+        if (action == GLFW_PRESS)
+        {
+#ifdef DEVELOP_VERSION
+            if (CLogManager::GetInstance()->IsShown())
+            {
+                CLogManager::GetInstance()->SetRenderPosToTop();
+            }
+#endif
+        }
+        break;
+    case GLFW_KEY_END:
+        if (action == GLFW_PRESS)
+        {
+#ifdef DEVELOP_VERSION
+            if (CLogManager::GetInstance()->IsShown())
+            {
+                CLogManager::GetInstance()->ClearRenderPos();
+            }
+#endif
+        }
+        break;
+    case GLFW_KEY_ESCAPE:
+        if (action == GLFW_PRESS)
+        {
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void CGlfwRenderWindow::onGLFWCharCallback(GLFWwindow* /*window*/, unsigned int character)
+{
+    WPARAM wParam = character;
+    if (wParam < 0x20 )
+    {
+        if (VK_BACK == wParam)
+        {
+        }
+        else if (VK_TAB == wParam)
+        {
+            // tab input
+        }
+        else if (VK_ESCAPE == wParam)
+        {
+            // ESC input
+        }
+    }
+    else if (wParam < 128)
+    {
+    }
+    else
+    {
+    }
+}
+
+void CGlfwRenderWindow::onGLFWSizeChangeCallback(GLFWwindow* /*window*/, int nWidth, int nHeight)
+{
+    if (nWidth == 0 && nHeight == 0)
+    {
+        CApplication::GetInstance()->Pause();
+    }
+    else if (!CApplication::GetInstance()->IsRunning())
+    {
+        CApplication::GetInstance()->Resume();
     }
 }

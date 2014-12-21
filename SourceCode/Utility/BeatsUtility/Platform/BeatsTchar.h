@@ -1,9 +1,10 @@
 ﻿#ifndef BEATS_TCHAR_H__INCLUDE
 #define BEATS_TCHAR_H__INCLUDE
 
-#if (BEATS_PLATFORM != BEATS_PLATFORM_WIN32)
+#if (BEYONDENGINE_PLATFORM != PLATFORM_WIN32)
 #ifdef _UNICODE
 #define TCHAR wchar_t
+#define TString std::wstring
 #define __T(x)      L ## x
 #define _T(x)       __T(x)
 
@@ -11,8 +12,7 @@
 //formatting functions
 #define _sntprintf swprintf //* make a formatted a string
 #define _tprintf wprintf //* print a formatted string
-#define _stprintf(buffer, size, format, ...) swprintf(buffer, size, format,##__VA_ARGS__)
-#define _vstprintf vswprintf //receive a va_list
+#define _stprintf(buffer, format, ...) swprintf(buffer, sizeof(buffer), format, __VA_ARGS__)
 
 //this one has no replacement functions yet, but it is only used in the tests
 #define _vsntprintf vsnwprintf //* print a formatted string using variable arguments
@@ -27,7 +27,6 @@
 #define _totlower towlower //* convert char to lower case
 #define _totupper towupper //* convert char to lower case
 #define _tcslwr wcslwr //* convert string to lower case
-#define _ttof _wtof
 
 //these are the string handling functions
 //we may need to create wide-character/multi-byte replacements for these
@@ -54,23 +53,31 @@
 #define _ttoi _wtoi
 #define _tcstoul wcstoul
 
-#else //if !defined(_UNICODE)
+#else //if defined(_ASCII)
 
 #define TCHAR char
+#define TString std::string
 #define __T(x)      x
 #define _T(x)       __T(x)
-
+#if (BEYONDENGINE_PLATFORM == PLATFORM_ANDROID)
+extern "C"
+{
+    int ANDROID_SPRINTF(char *buf, const char *fmt, ...);
+}
+#define _stprintf ANDROID_SPRINTF
+#else
+#define _stprintf sprintf
+#endif
 //formatting functions
-#define _sntprintf snprintf    
+#define _sntprintf snprintf
 #define _tprintf printf
 #define _vsntprintf vsnprintf 
-#define _stprintf sprintf
-#define _stprintf_s sprintf
+#define _stprintf_s sprintf_s
 #define _vstprintf vsnprintf //receive a va_list
 #define _stscanf_s sscanf
 
 //we are using the internal functions of the compiler here
-//if LUCENE_USE_INTERNAL_CHAR_FUNCTIONS is defined, thesse
+//if LUCENE_USE_INTERNAL_CHAR_FUNCTIONS is defined, these
 //will be replaced by internal functions
 #define _istalnum isalnum
 #define _istalpha isalpha
@@ -100,10 +107,14 @@
 #define _ttoi atoi
 #define _tcstoul strtoul
 
-#endif //defined(_UNICODE)
+//file operation
+#define _ftelli64 ftello
+#define _fseeki64 fseeko
 
-#else //PLATFORM_WIN32
+#define _stricmp strcasecmp //* case insensitive compare two string
+#endif
 
+#else //HAVE_TCHAR_H
 #include <tchar.h>
 
 //some tchar headers miss these
@@ -119,9 +130,12 @@
 
 #ifdef _UNICODE
 #define TString std::wstring
+#define TIfstream std::wifstream
 #define TStringstream std::wstringstream
 #else
 #define TString std::string
+#define TOfstream std::ofstream
+#define TIfstream std::ifstream
 #define TStringstream std::stringstream
 #endif
 

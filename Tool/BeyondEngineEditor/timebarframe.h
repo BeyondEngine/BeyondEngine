@@ -6,16 +6,17 @@
 #include "timebaritemcontainer.h"
 #include "timebarscale.h"
 #include "wx/button.h"
-#include "DataViewCtrl.h"
 #include <wx/spinctrl.h>
+#include "ScrollableTreeCtrl.h"
 
 #define FREQUENCYREDUCTIONFACTOR 4
 #define DIFFERENTDRAWLENGTH 5
-    
-class CDataViewCtrl;
+#define CURSORWIDTH 2
+
 class CTimeBarItemContainer;
-class CNodeAnimationData;
-class CNodeAnimation;
+class CTimeBarFrameData;
+class CScrollableTreeCtrl;
+
 class CTimeBarFrame : public wxSplitterWindow
 {
 public:
@@ -24,62 +25,92 @@ public:
 
     void            Clear();
     void            ResetLeft();
-    CTimeBarItem*   AddItem(wxString name, wxUIntPtr userData, int nStartPos = 0, int nLength = 0, bool bVisible = true, bool bEditable = true);
-    void            DeleteItem(int index);
-    void            SetItemDataRange(int nDataIndex, int nStart, int nEnd);
-    void            ClickOnScaleBar();
-    void            SetCursorPositionX(int pos);
-    int             GetCursorPositionX();
+    CTimeBarFrameData* AddItem(wxString strName, std::vector<int>& frameList, CTimeBarFrameData* pParent = NULL);
+    void            DeleteItem(CTimeBarFrameData* pData);
+    void            RefreshControl();
+    void            SetCursorPos(int pos, bool bRefresh = true, bool bSendEvent = true);
+    int             GetCursorPos();
     int             GetCursorIndex(int pos);
     void            SetCurrentCursor(int pos);
-    void            SetSelectedRow(int nRowIndex);
-    int             GetSelectedRow() const;
     void            SetClickOnScalebar(bool bIsClicked);
     bool            IsClickOnScalebar() const;
-    bool            IsNameValid(wxString name);
     void            SetFrameWindow(wxWindow* pWindow);
-    int             GetItemCount();
     int             GetCellWidth();
-    void            SetCtrlsId(int nIdButtonAdd, int nIdButtonDelete);
-    wxString        GetItemLabel(wxDataViewItem& item);
-    wxUIntPtr       GetItemDataByRow(int nRow);
-    wxUIntPtr       GetItemData(wxDataViewItem& item);
+    void            EnableDrag(bool bEnable = true);
+    void            ShowChoice(bool bShow = true);
+    void            SetFps(int nFps);
+    wxString        GetChoiceString();
+    void            AddChoiceString(const wxString& strName);
+    wxChoice*       GetChoice();
+    CTimeBarFrameData*       GetSelectedItem();
+    CTimeBarFrameData*       GetBeginDragItem();
+    CTimeBarFrameData*       GetEndDragItem();
+    void            RClickOnFrame(int nFrameIndex);
+    void            SelectItem(CTimeBarFrameData* pItem);
     wxWindow*       GetFrameWindow();
-    CDataViewCtrl*  GetElementList();
     CTimeBarScale*  GetScalebar();
     CTimeBarItemContainer*   GetItemContainer();
-    size_t          GetFrameCount() const;
-    void SetAnimationData(CNodeAnimationData* pData);
-    CNodeAnimationData* GetAnimationData() const;
-    CNodeAnimation* GetAnimation() const;
-
+    CScrollableTreeCtrl*     GetItemTreeCtrl();
+    uint32_t          GetFrameCountForDraw() const;
+    void UpdateFrameContainer();
+    void Focuse() const;
+    void Play();
+    void EnableFramePanel(bool bEnable);
+    bool IsEnableFramePanel() const;
 protected:
-    void OnSize(wxSizeEvent& event);
-    void OnPositionChanged(wxSplitterEvent& event);
-    void OnPositionChanging(wxSplitterEvent& event);
-    void OnSelect(wxDataViewEvent& event);
+    bool IsParentOfItem(wxTreeItemId& parentItemId, wxTreeItemId& itemId);
+    void OnTreeItemRClick(wxTreeEvent& event);
+    void OnIdle(wxIdleEvent& event);
+    void OnChoice(wxCommandEvent& event);
+    void OnSelect(wxTreeEvent& event);
+    void OnExpanded(wxTreeEvent& event);
+    void OnCollapsed(wxTreeEvent& event);
+    void OnTreeItemStartDrag(wxTreeEvent& event);
+    void OnTreeItemEndDrag(wxTreeEvent& event);
 
+    void OnAddBtnClicked(wxCommandEvent& event);
+    void OnMinusBtnClicked(wxCommandEvent& event);
     void OnFpsSettingBtnClicked(wxCommandEvent& event);
     void OnPlayBtnClicked(wxCommandEvent& event);
     void OnPlayTypeBtnClicked(wxCommandEvent& event);
+    void Update();
 private:
+    uint32_t                m_uMaxFrameIndex;
+    wxLongLong              m_nBeginTime;
+    long                    m_nPlayType;
+    int                     m_nIntervalMS;
+    int                     m_nFps;
     int                     m_iCellWidth;
+    int                     m_iCellHeight;
     int                     m_iItemId;
-    int                     m_iCursorPositionX;
+    int                     m_nCursorPos;
+    bool                    m_bQuit;
+    bool                    m_bPlaying;
+    bool                    m_bEnableFramePanel;
     bool                    m_bclickonscalebar;
-    CDataViewCtrl*          m_pElementList;
+    bool                    m_bEnableDrag;
+    CTimeBarFrameData*      m_pBeginDragData;
+    CTimeBarFrameData*      m_pEndDragData;
+    CScrollableTreeCtrl*    m_pItemTreeCtrl;
     CTimeBarItemContainer*  m_pFrameContainer;
     CTimeBarScale*          m_pScalebar;
+    wxChoice*               m_pChoice;
     wxButton*               m_pButtonAdd;
     wxButton*               m_pButtonDelete;
     wxButton*               m_pFPSSettingBtn;
     wxButton*               m_pPlayBtn;
     wxButton*               m_pPlayTypeBtn;
     wxWindow*               m_pFrame;
-    CNodeAnimationData*     m_pAnimationData;
-    CNodeAnimation* m_pAnimation;
     DECLARE_EVENT_TABLE()
-    wxDECLARE_NO_COPY_CLASS(CTimeBarFrame);
 };
-
+wxDECLARE_EVENT(TIMTBAR_SELECTITEM_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_DRAGITEMBEGIN_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_DRAGITEMEND_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_CHOICE_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_ITEMCONTAINERRCLICK_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_ADDBUTTONCLICK_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_MINUSBUTTONCLICK_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_CURSORCHANGE_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_SELECTFRAMECHANGE_EVENT, wxCommandEvent);
+wxDECLARE_EVENT(TIMTBAR_DRAGGINGFRAME_EVENT, wxCommandEvent);
 #endif

@@ -1,11 +1,12 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "NodeAnimationElement.h"
-#include "Scene\Node.h"
-#include "GUI\Window\Control.h"
-#include "Render\Sprite.h"
+#include "Scene/Node.h"
+#include "Render/Sprite.h"
+#include "Render/RenderTarget.h"
+#include "Render/RenderManager.h"
 
 CNodeAnimationElement::CNodeAnimationElement()
-    : m_type(eNAET_Count)
+: m_type(eNAET_Count)
 {
 }
 
@@ -17,8 +18,8 @@ CNodeAnimationElement::~CNodeAnimationElement()
 void CNodeAnimationElement::ReflectData(CSerializer& serializer)
 {
     super::ReflectData(serializer);
-    DECLARE_PROPERTY(serializer, m_type, true, 0xffffffff, _T("ÀàÐÍ"), NULL, NULL, NULL);
-    DECLARE_PROPERTY(serializer, m_keyFrames, true, 0xFFFFFFFF, _T("¹Ø¼üÖ¡"), NULL, NULL, NULL);
+    DECLARE_PROPERTY(serializer, m_type, true, 0xffffffff, _T("ç±»åž‹"), NULL, NULL, NULL);
+    DECLARE_PROPERTY(serializer, m_keyFrames, true, 0xFFFFFFFF, _T("å…³é”®å¸§"), NULL, NULL, NULL);
 }
 
 ENodeAnimationElementType CNodeAnimationElement::GetType() const
@@ -26,7 +27,12 @@ ENodeAnimationElementType CNodeAnimationElement::GetType() const
     return m_type;
 }
 
-bool CNodeAnimationElement::GetValue(size_t uFrame, CVec3& outValue)
+void CNodeAnimationElement::SetType(ENodeAnimationElementType type)
+{
+    m_type = type;
+}
+
+bool CNodeAnimationElement::GetValue(uint32_t uFrame, CVec3& outValue)
 {
     bool bRet = false;
     BEATS_ASSERT(m_keyFrames.size() > 0);
@@ -48,9 +54,9 @@ bool CNodeAnimationElement::GetValue(size_t uFrame, CVec3& outValue)
                     if (preIter != m_keyFrames.end())
                     {
                         BEATS_ASSERT(preIter->first < iter->first && uFrame > preIter->first);
-                        size_t uDelta = iter->first - preIter->first;
+                        uint32_t uDelta = iter->first - preIter->first;
                         CVec3 deltaValue = iter->second - preIter->second;
-                        kmVec3Scale(&outValue, &deltaValue, (float)(uFrame - preIter->first) / uDelta);
+                        outValue = deltaValue * ((float)(uFrame - preIter->first) / uDelta);
                         outValue = preIter->second + outValue;
                         bRet = true;
                         break;
@@ -60,110 +66,64 @@ bool CNodeAnimationElement::GetValue(size_t uFrame, CVec3& outValue)
             }
         }
     }
+    else if (uFrame < m_keyFrames.begin()->first)
+    {
+        outValue = m_keyFrames.begin()->second;
+        bRet = true;
+    }
+    else
+    {
+        BEATS_ASSERT(uFrame > m_keyFrames.rbegin()->first);
+        outValue = m_keyFrames.rbegin()->second;
+        bRet = true;
+    }
     return bRet;
 }
 
-void CNodeAnimationElement::Apply(CNode* pNode, size_t uCurrFrame)
+void CNodeAnimationElement::Apply(CNode* pNode, uint32_t uCurrFrame)
 {
     BEATS_ASSERT(pNode != NULL);
     CVec3 currValue;
-    if(GetValue(uCurrFrame, currValue))
-    {
-        SAnimationProperty* pProperty = pNode->GetAnimationProperty();
-        if (pProperty == NULL)
-        {
-            pProperty = new SAnimationProperty;
-            pNode->SetAnimationProperty(pProperty);
-        }
-        switch (m_type)
-        {
-        case eNAET_Scale:
-            pProperty->m_scaleForAnimation = currValue;
-            break;
-        case eNAET_Pos:
-            pProperty->m_posForAnimation = currValue;
-            break;
-        case eNAET_Rotation:
-            pProperty->m_rotationForAnimation = currValue;
-            break;
-        case eNAET_UIColor:
-            {
-#ifdef EDITOR_MODE
-                CControl* pControl = dynamic_cast<CControl*>(pNode);
-                BEATS_ASSERT( pControl , _T("the CControl can't be null"));
-                if (pControl == NULL)
-                {
-                    break;
-                }
-#else
-                BEATS_ASSERT(dynamic_cast<CControl*>(pNode) != NULL);
-                CControl* pControl = static_cast<CControl*>(pNode);
-#endif
-                CColor color = pControl->GetColor();
-                color.r = (unsigned char)currValue.x;
-                color.g = (unsigned char)currValue.y;
-                color.b = (unsigned char)currValue.z;
-                pControl->SetColor(color);
-            }
-            break;
-        case eNAET_UIAlpha:
-            {
-                BEATS_ASSERT(dynamic_cast<CControl*>(pNode) != NULL);
-#ifdef EDITOR_MODE
-                CControl* pControl = dynamic_cast<CControl*>(pNode);
-                BEATS_ASSERT( pControl , _T("the CControl can't be null"));
-                if (pControl == NULL)
-                {
-                    break;
-                }
-#else
-                CControl* pControl = static_cast<CControl*>(pNode);
-#endif
-                CColor color = pControl->GetColor();
-                color.a = (unsigned char)currValue.x;
-                pControl->SetColor(color);
-            }
-            break;
-        case eNAET_ColorScale:
-            {
-                CColor color;
-                color.r = (unsigned char)currValue.x;
-                color.g = (unsigned char)currValue.y;
-                color.b = (unsigned char)currValue.z;
-                color.a = 100;//means no scale in alpha for now.
-                pNode->SetColorScale(color);
-            }
-            break;
-        default:
-            BEATS_ASSERT(false);
-            break;
-        }
-    }
+    GetValue(uCurrFrame, currValue);
+    pNode->NodeAnimationUpdate(m_type, uCurrFrame, currValue);
 #ifdef EDITOR_MODE
     if (pNode->GetProxyComponent())
     {
         const std::vector<CComponentInstance*>& syncNodes = pNode->GetProxyComponent()->GetSyncComponents();
-        for (size_t i = 0; i < syncNodes.size(); ++i)
+        for (uint32_t i = 0; i < syncNodes.size(); ++i)
         {
-            Apply((CNode*)syncNodes[i], uCurrFrame);
+            Apply(down_cast<CNode*>(syncNodes[i]), uCurrFrame);
         }
     }
 #endif
 }
 
-void CNodeAnimationElement::AddKeyFrame(size_t uFramePos, const CVec3& data)
+void CNodeAnimationElement::AddKeyFrame(uint32_t uFramePos, const CVec3& data)
 {
     BEATS_ASSERT(m_keyFrames.find(uFramePos) == m_keyFrames.end(), _T("Can't add key frame twice at pos %d"), uFramePos);
     m_keyFrames[uFramePos] = data;
 }
 
-void CNodeAnimationElement::RemoveKeyFrame(size_t uFramePos)
+void CNodeAnimationElement::RemoveKeyFrame(uint32_t uFramePos)
 {
     BEATS_ASSERT(m_keyFrames.find(uFramePos) != m_keyFrames.end(), _T("Can't remove key frame at pos %d"), uFramePos);
     m_keyFrames.erase(uFramePos);
 }
 
-const std::map<size_t, CVec3>& CNodeAnimationElement::GetKeyFrames() const
+const std::map<uint32_t, CVec3>& CNodeAnimationElement::GetKeyFrames() const
 {
     return m_keyFrames;
+}
+
+bool CNodeAnimationElement::SetValue(uint32_t uFrame, CVec3& value)
+{
+    bool bRet = false;
+    BEATS_ASSERT(m_keyFrames.size() > 0);
+    BEATS_ASSERT(m_keyFrames.find(uFrame) != m_keyFrames.end());
+    if (m_keyFrames.find(uFrame) != m_keyFrames.end())
+    {
+        m_keyFrames[uFrame] = value;
+        bRet = true;
+    }
+    return bRet;
 }

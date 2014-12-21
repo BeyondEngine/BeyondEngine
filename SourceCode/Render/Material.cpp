@@ -2,12 +2,17 @@
 #include "Material.h"
 #include "RenderManager.h"
 #include "RenderState.h"
-#include "Utility/BeatsUtility/Serializer.h"
 #include "Renderer.h"
 #include "Resource/ResourceManager.h"
 #include "Shader.h"
 #include "ShaderProgram.h"
+#include "ShaderUniform.h"
+#include "Render/Texture.h"
 
+#ifdef DEVELOP_VERSION
+uint32_t CMaterial::m_uMaterialCount = 0;
+uint32_t CMaterial::m_uUseCountPerFrame = 0;
+#endif
 
 CMaterial::CMaterial()
     : m_bSetVsShader(false)
@@ -15,212 +20,84 @@ CMaterial::CMaterial()
     , m_bBlendEnable(true)
     , m_bCullFaceEnable(true)
     , m_bDepthTest(true)
-    , m_bScissorTest(false)
-    , m_fShininess(0.0f)
     , m_eBlendType(CBlendEquationRenderStateParam::eBET_ADD)
     , m_eBlendSource(CBlendRenderStateParam::eBPT_SRC_ALPHA)
-    , m_eBlendDest(CBlendRenderStateParam::eBPT_INV_SRC_ALPHA)
+    , m_eBlendDest(CBlendRenderStateParam::eBPT_ONE_MINUS_SRC_ALPHA)
     , m_eClockType(CClockWiseRenderStateParam::eCWT_CCW)
     , m_eCullType(CCullModeRenderStateParam::eCMT_BACK)
-    , m_eDepthFunc(CFunctionRenderStateParam::eFT_ALWAYS)
+    , m_eDepthFunc(CFunctionRenderStateParam::eFT_LESS_EQUAL)
     , m_pRenderState(nullptr)
-    , m_ambientColor(CColor( 0.2f, 0.2f, 0.2f, 1.0f ))
-    , m_diffuseColor(CColor( 0.8f, 0.8f, 0.8f, 1.0f ))
-    , m_specularColor(CColor( 0.0f, 0.0f, 0.0f, 1.0f ))
-    , m_colorBlend(0x00000000)
 {
      m_pRenderState = new CRenderState();
 #ifndef GL_ES_VERSION_2_0
     //there is a win32 use
-    m_pRenderState->SetPolygonMode( GL_FRONT, GL_FILL );
+    m_pRenderState->SetPolygonMode(GL_FILL, GL_FILL);
 #endif
-    //default set
-    m_pRenderState->SetBoolState( CBoolRenderStateParam::eBSP_ScissorTest, false );
+#ifdef DEVELOP_VERSION
+    ++m_uMaterialCount;
+#endif
 }
 
 CMaterial::~CMaterial()
 {
     BEATS_SAFE_DELETE( m_pRenderState );
     ClearUniform();
+    if (IsInitialized())
+    {
+        Uninitialize();
+    }
+#ifdef DEVELOP_VERSION
+    --m_uMaterialCount;
+#endif
 }
 
 void CMaterial::ReflectData(CSerializer& serializer)
 {
     super::ReflectData(serializer);
-    DECLARE_PROPERTY(serializer, m_ambientColor, true, 0xFFFFFFFF, _T("环境反射"), NULL, NULL, NULL);
-    DECLARE_PROPERTY(serializer, m_diffuseColor, true, 0xFFFFFFFF, _T("漫反射"), NULL, NULL, NULL);
-    DECLARE_PROPERTY(serializer, m_specularColor, true, 0xFFFFFFFF, _T("镜面反射"), NULL, NULL, NULL);
-    DECLARE_PROPERTY(serializer, m_fShininess, true, 0xFFFFFFFF, _T("耀光度"), NULL, NULL, NULL);
     DECLARE_PROPERTY(serializer, m_strVSSharderName, true, 0xFFFFFFFF, _T("顶点程序"), NULL, NULL, NULL);
     DECLARE_PROPERTY(serializer, m_strPSSharderName, true, 0xFFFFFFFF, _T("片段程序"), NULL, NULL, NULL);
-    DECLARE_PROPERTY(serializer, m_uniformMap, true, 0xFFFFFFFF, _T("shader自定义参数"), NULL, NULL, NULL);
-
     DECLARE_PROPERTY(serializer, m_eClockType, true, 0xFFFFFFFF, _T("多边形正面"), NULL, NULL, NULL );
 
     DECLARE_PROPERTY(serializer, m_bDepthTest, true, 0xFFFFFFFF, _T("深度测试"), NULL, NULL, NULL );
-    DECLARE_PROPERTY(serializer, m_bScissorTest, true, 0xFFFFFFFF, _T("裁剪测试"), NULL, NULL, NULL );
-
     DECLARE_PROPERTY(serializer, m_bCullFaceEnable, true, 0xFFFFFFFF,_T("剔除开启"), NULL, NULL, NULL );
     DECLARE_PROPERTY(serializer, m_eCullType, true, 0xFFFFFFFF, _T("模式"), _T("剔除模式"), NULL, _T("VisibleWhen:m_bCullFaceEnable == true") );
 
     DECLARE_PROPERTY(serializer, m_bBlendEnable, true, 0xFFFFFFFF, _T("开启混合"), NULL, NULL, NULL );
-    DECLARE_PROPERTY(serializer, m_colorBlend, true, 0xFFFFFFFF, _T("混合颜色"), _T("混合选项"), NULL, _T("VisibleWhen:m_bBlendEnable == true") );
     DECLARE_PROPERTY(serializer, m_eBlendType, true, 0xFFFFFFFF, _T("混合种类"), _T("混合选项"), NULL, _T("VisibleWhen:m_bBlendEnable == true") );
     DECLARE_PROPERTY(serializer, m_eBlendSource, true, 0xFFFFFFFF, _T("混合源"), _T("混合选项"), NULL, _T("VisibleWhen:m_bBlendEnable == true") );
     DECLARE_PROPERTY(serializer, m_eBlendDest, true, 0xFFFFFFFF, _T("混合目标"), _T("混合选项"), NULL, _T("VisibleWhen:m_bBlendEnable == true") );
 }
 
-
 void CMaterial::Use()
 {
     BEYONDENGINE_PERFORMDETECT_START(ePNT_MaterialUse);
-    CRenderer* pRenderer = CRenderer::GetInstance();
-    if ( m_pRenderState )
-    {
-        BEYONDENGINE_PERFORMDETECT_START(ePNT_MaterialUse_SetRenderState);
-        m_pRenderState->Restore();
-        BEYONDENGINE_PERFORMDETECT_STOP(ePNT_MaterialUse_SetRenderState);
-        BEYONDENGINE_PERFORMDETECT_START(ePNT_MaterialUse_ApplyGPU);
-        if ( m_bSetPsShader && m_bSetVsShader )
+    BEYONDENGINE_PERFORMDETECT_START(ePNT_MaterialUse_SetRenderState);
+        if (m_bSetPsShader && m_bSetVsShader)
         {
             SharePtr<CShader> pVS = CResourceManager::GetInstance()->GetResource<CShader>(m_strVSSharderName);
             SharePtr<CShader> pPS = CResourceManager::GetInstance()->GetResource<CShader>(m_strPSSharderName);
             CShaderProgram* program = CRenderManager::GetInstance()->GetShaderProgram(pVS->ID(), pPS->ID());
-            if ( program->ID() != m_pRenderState->GetShaderProgram() )
+            if (program->ID() != m_pRenderState->GetShaderProgram())
             {
-                m_pRenderState->SetShaderProgram( program->ID() );
+                m_pRenderState->SetShaderProgram(program->ID());
             }
             m_bSetPsShader = m_bSetVsShader = false;
         }
+        m_pRenderState->Restore();
+    BEYONDENGINE_PERFORMDETECT_STOP(ePNT_MaterialUse_SetRenderState);
+    BEYONDENGINE_PERFORMDETECT_START(ePNT_MaterialUse_ApplyGPU);
         if ( m_pRenderState->GetShaderProgram() != 0 )
         {
-            pRenderer->BindTexture( GL_TEXTURE_2D, 0 );
-            pRenderer->UseProgram( m_pRenderState->GetShaderProgram() );
-            for ( size_t i = 0; i < m_textures.size(); ++i )
+            for (auto iter : m_uniformMap)
             {
-                pRenderer->ActiveTexture( GL_TEXTURE0 + i );
-                pRenderer->BindTexture( GL_TEXTURE_2D, m_textures[i] ? m_textures[ i ]->ID() : 0 );
-                pRenderer->TexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-                pRenderer->TexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-                pRenderer->TexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-                pRenderer->TexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-                GLuint currProgram = pRenderer->GetCurrentState()->GetShaderProgram();
-                if ( 0 != currProgram )
-                {
-                    GLint textureLocation = pRenderer->GetUniformLocation(currProgram, COMMON_UNIFORM_NAMES[UNIFORM_TEX0 + i]);
-                    pRenderer->SetUniform1i( textureLocation, i);
-                }
+                iter.second->SendUniform();
             }
-            SendLightInfo( m_pRenderState );
-            SendUniform();
         }
         BEYONDENGINE_PERFORMDETECT_STOP(ePNT_MaterialUse_ApplyGPU);
-    }
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_MaterialUse);
-}
-
-void CMaterial::SendUniform()
-{
-    for ( auto iter : m_uniformMap )
-    {
-        iter.second->SendUniform( );
-    }
-}
-
-void CMaterial::SendLightInfo(CRenderState* pState)
-{
-    float ambientColor[4] = {(float)m_ambientColor.r / 0xFF, (float)m_ambientColor.g / 0xFF, (float)m_ambientColor.b / 0xFF, (float)m_ambientColor.a / 0xFF};
-    float diffuseColor[4] = {(float)m_diffuseColor.r / 0xFF, (float)m_diffuseColor.g / 0xFF, (float)m_diffuseColor.b / 0xFF, (float)m_diffuseColor.a / 0xFF};
-    float specularColor[4] = {(float)m_specularColor.r / 0xFF, (float)m_specularColor.g / 0xFF, (float)m_specularColor.b / 0xFF, (float)m_specularColor.a / 0xFF};
-
-    GLuint currProgram = pState->GetShaderProgram();
-    if ( currProgram != 0 )
-    {
-        GLint ambientLocation = CRenderer::GetInstance()->GetUniformLocation( currProgram, COMMON_UNIFORM_NAMES[UNIFORM_AMBIENT_COLOR]);
-        if ( -1 != ambientLocation )
-        {
-            CRenderer::GetInstance()->SetUniform1fv( ambientLocation, ambientColor, 4 );
-        }
-        GLint diffuseLocation = CRenderer::GetInstance()->GetUniformLocation( currProgram, COMMON_UNIFORM_NAMES[UNIFORM_DIFFUSE_COLOR]);
-        if ( -1 != diffuseLocation )
-        {
-            CRenderer::GetInstance()->SetUniform1fv( diffuseLocation, diffuseColor, 4 );
-        }
-        GLint specularLocation = CRenderer::GetInstance()->GetUniformLocation( currProgram, COMMON_UNIFORM_NAMES[UNIFORM_SPECULAR_COLOR]);
-        if ( -1 != specularLocation )
-        {
-            CRenderer::GetInstance()->SetUniform1fv( specularLocation, specularColor, 4 );
-        }
-        GLint shininessLocation = CRenderer::GetInstance()->GetUniformLocation( currProgram, COMMON_UNIFORM_NAMES[UNIFORM_SHININESS]);
-        if ( -1 != shininessLocation )
-        {
-            CRenderer::GetInstance()->SetUniform1fv( shininessLocation, &m_fShininess, 1 );
-        }
-    }
-}
-
-CRenderState* CMaterial::GetRenderState() const
-{
-    return m_pRenderState;
-}
-
-void CMaterial::SetTexture(size_t stage, SharePtr<CTexture> texture)
-{
-    if ( stage >= m_textures.size() )
-    {
-        m_textures.resize(stage + 1);
-    }
-    m_textures[stage] = texture;
-}
-
-
-void CMaterial::SetAmbientColor( const CColor& color )
-{
-    m_ambientColor = color;
-}
-
-void CMaterial::SetDiffuseColor( const CColor& color )
-{
-    m_diffuseColor = color;
-}
-
-void CMaterial::SetSpecularColor( const CColor& color )
-{
-    m_specularColor = color;
-}
-
-void CMaterial::SetShininess( float shininess )
-{
-    m_fShininess = shininess;
-}
-
-bool CMaterial::operator==( const CMaterial& other ) const
-{
-    BEYONDENGINE_PERFORMDETECT_START(ePNT_MaterialCompare);
-    bool bEqual = false;
-    if ( this == &other )
-    {
-        bEqual = true;
-    }
-    else
-    {
-        if ( m_strPSSharderName == other.m_strPSSharderName 
-            && m_strVSSharderName == other.m_strVSSharderName )
-        {
-            if ( CompareVector( m_textures, other.m_textures ) &&
-                CompareUniform( m_uniformMap, other.m_uniformMap ) )
-            {
-                bEqual = *m_pRenderState == *other.m_pRenderState;
-            }
-        }
-    }
-    BEYONDENGINE_PERFORMDETECT_STOP(ePNT_MaterialCompare);
-    return bEqual;
-}
-
-bool CMaterial::operator!=( const CMaterial& other) const
-{
-    return !((*this) == other);
+#ifdef DEVELOP_VERSION
+    ++m_uUseCountPerFrame;
+#endif
 }
 
 void CMaterial::AddUniform( CShaderUniform* uniform )
@@ -242,7 +119,17 @@ CShaderUniform* CMaterial::GetUniform(const TString& name)
 
 void CMaterial::ClearUniform()
 {
+    for( auto iter : m_uniformMap )
+    {
+        CShaderUniform* pUniform = iter.second;
+        BEATS_SAFE_DELETE(pUniform);
+    }
     m_uniformMap.clear();
+}
+
+const std::map< TString, CShaderUniform*>& CMaterial::GetUniformMap() const
+{
+    return m_uniformMap;
 }
 
 void CMaterial::Initialize()
@@ -252,28 +139,41 @@ void CMaterial::Initialize()
     {
         m_bSetPsShader = m_bSetVsShader = true;
     }
-
-    SetDepthTest( m_bDepthTest );
+    SetDepthTestEnable( m_bDepthTest );
     SetCullFaceEnable( m_bCullFaceEnable );
     SetCullFace( m_eCullType );
     SetFrontFace( m_eClockType );
     SetBlendEnable( m_bBlendEnable );
-    SetBlendColor( m_colorBlend );
     SetBlendEquation( m_eBlendType );
     SetBlendSource(m_eBlendSource);
     SetBlendDest(m_eBlendDest);
+    SetDepthFunc(m_eDepthFunc);
+    SetStencilEnable(false);
 }
 
 void CMaterial::SetSharders( const TString& strVsName, const TString& strPsName )
 {
-    m_strVSSharderName = strVsName;
-    m_strPSSharderName = strPsName;
-    if ( !m_strVSSharderName.empty() && !m_strPSSharderName.empty() )
+    if (m_strVSSharderName != strVsName || m_strPSSharderName != strPsName)
     {
-        m_bSetPsShader = m_bSetVsShader = true;
+        m_strVSSharderName = strVsName;
+        m_strPSSharderName = strPsName;
+        if (!m_strVSSharderName.empty() && !m_strPSSharderName.empty())
+        {
+            m_bSetPsShader = m_bSetVsShader = true;
+        }
     }
 }
 
+uint32_t CMaterial::GetShaderProgram() const
+{
+    return m_pRenderState->GetShaderProgram();
+}
+
+void CMaterial::SetShaderProgram(GLuint uProgram)
+{
+    m_pRenderState->SetShaderProgram(uProgram);
+}
+#ifdef EDITOR_MODE
 bool CMaterial::OnPropertyChange( void* pVariableAddr, CSerializer* pSerializer )
 {
     bool bRet = super::OnPropertyChange( pVariableAddr, pSerializer );
@@ -282,7 +182,7 @@ bool CMaterial::OnPropertyChange( void* pVariableAddr, CSerializer* pSerializer 
         if ( &m_strVSSharderName == pVariableAddr )
         {
             TString tempStr = m_strVSSharderName;
-            DeserializeVariable( m_strVSSharderName, pSerializer );
+            DeserializeVariable(m_strVSSharderName, pSerializer, this);
             if ( tempStr != m_strVSSharderName && !m_strVSSharderName.empty() )
             {
                 m_bSetVsShader = true;
@@ -292,7 +192,7 @@ bool CMaterial::OnPropertyChange( void* pVariableAddr, CSerializer* pSerializer 
         else if ( &m_strPSSharderName == pVariableAddr )
         {
             TString tempStr = m_strPSSharderName;
-            DeserializeVariable( m_strPSSharderName, pSerializer );
+            DeserializeVariable(m_strPSSharderName, pSerializer, this);
             if ( tempStr != m_strPSSharderName && !m_strPSSharderName.empty() )
             {
                 m_bSetPsShader = true;
@@ -301,72 +201,77 @@ bool CMaterial::OnPropertyChange( void* pVariableAddr, CSerializer* pSerializer 
         }
         else if( &m_bDepthTest == pVariableAddr )
         {
-            DeserializeVariable( m_bDepthTest, pSerializer );
-            SetDepthTest( m_bDepthTest );
+            DeserializeVariable(m_bDepthTest, pSerializer, this);
+            SetDepthTestEnable( m_bDepthTest );
             bRet = true;
         }
         else if( &m_bCullFaceEnable == pVariableAddr )
         {
-            DeserializeVariable( m_bCullFaceEnable, pSerializer );
+            DeserializeVariable(m_bCullFaceEnable, pSerializer, this);
             SetCullFaceEnable( m_bCullFaceEnable );
             bRet = true;
         }
         else if( &m_eCullType == pVariableAddr )
         {
-            DeserializeVariable( m_eCullType, pSerializer );
+            DeserializeVariable(m_eCullType, pSerializer, this);
             SetCullFace( m_eCullType );
             bRet = true;
         }
         else if( &m_eClockType == pVariableAddr )
         {
-            DeserializeVariable( m_eClockType, pSerializer );
+            DeserializeVariable(m_eClockType, pSerializer, this);
             SetFrontFace( m_eClockType );
             bRet = true;
         }
         else if( &m_bBlendEnable == pVariableAddr )
         {
-            DeserializeVariable( m_bBlendEnable, pSerializer );
+            DeserializeVariable(m_bBlendEnable, pSerializer, this);
             SetBlendEnable( m_bBlendEnable );
-            bRet = true;
-        }
-        else if( &m_colorBlend == pVariableAddr )
-        {
-            DeserializeVariable( m_colorBlend, pSerializer );
-            SetBlendColor( m_colorBlend );
             bRet = true;
         }
         else if( &m_eBlendType == pVariableAddr )
         {
-            DeserializeVariable( m_eBlendType, pSerializer );
+            DeserializeVariable(m_eBlendType, pSerializer, this);
             SetBlendEquation( m_eBlendType );
             bRet = true;
         }
         else if( &m_eBlendSource == pVariableAddr )
         {
-            DeserializeVariable( m_eBlendSource, pSerializer );
+            DeserializeVariable(m_eBlendSource, pSerializer, this);
             SetBlendSource(m_eBlendSource);
             bRet = true;
         }
         else if( &m_eBlendDest == pVariableAddr )
         {
-            DeserializeVariable( m_eBlendDest, pSerializer );
+            DeserializeVariable(m_eBlendDest, pSerializer, this);
             SetBlendDest(m_eBlendDest);
             bRet = true;
         }
     }
     return bRet;
 }
-
+#endif
 void CMaterial::SetBlendEnable( bool bEnable )
 {
     m_bBlendEnable = bEnable;
     m_pRenderState->SetBoolState( CBoolRenderStateParam::eBSP_Blend, bEnable );
 }
 
-void CMaterial::SetDepthTest( bool bDepthTest )
+bool CMaterial::GetBlendEnable() const
+{
+    return m_bBlendEnable;
+}
+
+void CMaterial::SetDepthTestEnable( bool bDepthTest )
 {
     m_bDepthTest = bDepthTest;
     m_pRenderState->SetBoolState( CBoolRenderStateParam::eBSP_DepthTest, bDepthTest );
+}
+
+void CMaterial::SetDepthFunc(CFunctionRenderStateParam::EFunctionType depthFunc)
+{
+    m_eDepthFunc = depthFunc;
+    m_pRenderState->SetDepthFunc(depthFunc);
 }
 
 void CMaterial::SetCullFaceEnable( bool bCullFace )
@@ -375,9 +280,8 @@ void CMaterial::SetCullFaceEnable( bool bCullFace )
     m_pRenderState->SetBoolState( CBoolRenderStateParam::eBSP_CullFace, bCullFace );
 }
 
-void CMaterial::SetBlendColor( const CColor& color )
+void CMaterial::SetBlendColor( const CColor& /*color*/ )
 {
-
 }
 
 void CMaterial::SetBlendEquation( GLenum type )
@@ -389,13 +293,13 @@ void CMaterial::SetBlendEquation( GLenum type )
 void CMaterial::SetBlendSource( GLenum source )
 {
     m_eBlendSource = (CBlendRenderStateParam::EBlendParamType)source;
-    m_pRenderState->SetBlendFuncSrcFactor( source );
+    m_pRenderState->SetBlendSrcFactor( source );
 }
 
 void CMaterial::SetBlendDest( GLenum dest )
 {
     m_eBlendDest = (CBlendRenderStateParam::EBlendParamType)dest;
-    m_pRenderState->SetBlendFuncTargetFactor( dest );
+    m_pRenderState->SetBlendTargetFactor( dest );
 }
 
 void CMaterial::SetFrontFace( GLenum type )
@@ -409,71 +313,12 @@ void CMaterial::SetCullFace( GLenum type )
     m_pRenderState->SetCullFace( type );
 }
 
-bool CMaterial::CompareVector( const std::vector<SharePtr<CTexture>> & v1, const std::vector<SharePtr<CTexture>> & v2 ) const
-{
-    bool bReturn = true;
-    if ( v1.size() == v2.size() )
-    {
-        for ( size_t i = 0; i < v1.size(); ++i )
-        {
-            if ( v1[ i ] != v2[ i ] )
-            {
-                if( !(v1[i] && v2[i])|| *v1[ i ].Get() != *v2[ i ].Get() )
-                {
-                    bReturn = false;
-                    break;
-                }
-            }
-        }
-    }
-    else
-    {
-        bReturn = false;
-    }
-    return bReturn;
-}
-
-bool CMaterial::CompareUniform( const std::map< TString, CShaderUniform*> & m1, const std::map< TString, CShaderUniform*> & m2 ) const
-{
-    bool bReturn = true;
-
-    if ( m1.size() == m2.size() )
-    {
-        auto m1iter = m1.begin();
-        for ( ; m1iter != m1.end(); ++m1iter )
-        {
-            auto m2iter = m2.find( m1iter->first );
-            if ( m2iter == m2.end() )
-            {
-                bReturn = false;
-                break;
-            }
-            else
-            {
-                bReturn = *m1iter->second == *m2iter->second;
-                if ( !bReturn )
-                {
-                    break;
-                }
-            }
-        }
-    }
-    else
-    {
-        bReturn = false;
-    }
-
-    return bReturn;
-}
-
 SharePtr<CMaterial> CMaterial::Clone()
 {
     SharePtr<CMaterial> material = new CMaterial();
     material->m_bBlendEnable = m_bBlendEnable;
     material->m_bCullFaceEnable = m_bCullFaceEnable;
     material->m_bDepthTest = m_bDepthTest;
-    material->m_fShininess = m_fShininess;
-    material->m_bScissorTest = m_bScissorTest;
 
     material->m_bSetVsShader = m_bSetVsShader;
     material->m_bSetPsShader = m_bSetPsShader;
@@ -485,30 +330,82 @@ SharePtr<CMaterial> CMaterial::Clone()
     material->m_eBlendDest = m_eBlendDest;
     material->m_eClockType = m_eClockType;
     material->m_eCullType = m_eCullType;
-    material->m_eDepthFunc = m_eDepthFunc;
-
-    material->m_ambientColor = m_ambientColor;
-    material->m_diffuseColor = m_diffuseColor;
-    material->m_specularColor = m_specularColor;
-
-    material->m_colorBlend = m_colorBlend;
-
     for ( auto uniform : m_uniformMap )
     {
         CShaderUniform* u = uniform.second->Clone();
         material->m_uniformMap.insert( std::make_pair( uniform.first, u ));
     }
+    BEATS_SAFE_DELETE(material->m_pRenderState);
     material->m_pRenderState = m_pRenderState->Clone();
     return material;
 }
 
-void CMaterial::SetScissorTest( bool bScissor )
+void CMaterial::SetLineWidth(float fLineWidth)
 {
-    m_bScissorTest = bScissor;
-    m_pRenderState->SetBoolState( CBoolRenderStateParam::eBSP_ScissorTest, bScissor );
+    m_pRenderState->SetLineWidth(fLineWidth);
 }
 
-void CMaterial::SetScssorRect( int x, int y, int w, int h )
+float CMaterial::GetLineWidth() const
 {
-    m_pRenderState->SetScissorRect( (kmScalar)x, (kmScalar)y, (kmScalar)w, (kmScalar)h );
+    return m_pRenderState->GetLineWidth();
+}
+
+void CMaterial::SetPointSize(float fPointSize)
+{
+#if BEYONDENGINE_PLATFORM == PLATFORM_WIN32
+    m_pRenderState->SetPointSize(fPointSize);
+#endif
+}
+
+void CMaterial::SetStencilEnable(bool bEnable)
+{
+    m_pRenderState->SetBoolState(CBoolRenderStateParam::eBSP_StencilTest, bEnable);
+}
+
+void CMaterial::SetStencilFunc(CFunctionRenderStateParam::EFunctionType stencilFunc, int32_t nRefValue, int32_t nMask)
+{
+    m_pRenderState->SetStencilReference(nRefValue);
+    m_pRenderState->SetStencilValueMask(nMask);
+    m_pRenderState->SetStencilFunc(stencilFunc);
+}
+
+void CMaterial::SetStencilOp(CStencilRenderStateParam::EStencilType sfail, CStencilRenderStateParam::EStencilType zfail, CStencilRenderStateParam::EStencilType zpass)
+{
+    m_pRenderState->SetStencilOp(sfail, zfail, zpass);
+}
+
+void CMaterial::SetAlphaTest(bool bAlphaTest)
+{
+#if BEYONDENGINE_PLATFORM == PLATFORM_WIN32
+    m_pRenderState->SetBoolState((CBoolRenderStateParam::EBoolStateParam)GL_ALPHA_TEST, bAlphaTest);
+#endif
+}
+
+void CMaterial::SetAlphaFunc(GLenum func)
+{
+#if BEYONDENGINE_PLATFORM == PLATFORM_WIN32
+    m_pRenderState->SetAlphaFunc(func);
+#endif
+}
+
+void CMaterial::SetAlphaRef(float fRef)
+{
+#if BEYONDENGINE_PLATFORM == PLATFORM_WIN32
+    m_pRenderState->SetAlphaRef(fRef);
+#endif
+}
+
+void CMaterial::SetScissorRect( int x, int y, int w, int h )
+{
+    m_pRenderState->SetScissorRect( (float)x, (float)y, (float)w, (float)h );
+}
+
+void CMaterial::SetDepthMask(bool bMask)
+{
+    m_pRenderState->SetDepthMask(bMask);
+}
+
+bool CMaterial::IsDepTest() const
+{
+    return m_bDepthTest;
 }

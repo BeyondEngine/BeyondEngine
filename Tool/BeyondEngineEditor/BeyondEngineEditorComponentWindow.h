@@ -27,7 +27,7 @@ public:
     virtual ~CBeyondEngineEditorComponentWindow();
 
     void UpdateAllDependencyLine();
-    void DeleteSelectedComponent();
+    void DeleteComponent(CComponentProxy* pComponent, bool bReminder = true);
     void DeleteSelectedDependencyLine();
     virtual void Update() override;
     void SetDraggingComponent(CComponentProxy* pDraggingComponent);
@@ -53,16 +53,18 @@ protected:
     void OnKeyDown(wxKeyEvent& aEvent);
 
 private:
-    void ConvertWorldPosToGridPos(const kmVec2* pVectorPos, int* pOutGridX, int* pOutGridY);
+    void ConvertWorldPosToGridPos(const CVec2* pVectorPos, int* pOutGridX, int* pOutGridY);
     void ConvertWindowPosToWorldPos(const wxPoint& windowPos, float* pOutWorldPosX, float* pOutWorldPosY);
     CComponentProxy* HitTestForComponent(const wxPoint& pos, enum EComponentAeraRectType* pOutAreaType = NULL, void** pReturnData = NULL);
+    void CollectDependencyComponent(CComponentProxy* pProxy, std::set<CComponentProxy*>& out);
+    void AskForDisplayName(CComponentProxy* pProxy);
 
 private:
     int             m_iWidth;
     int             m_iHeight;
     int             m_pOutX;
     int             m_pOutY;
-    kmVec2          m_startDragPos;
+    CVec2          m_startDragPos;
     float           m_fCellSize;
     bool            m_bShowMenu;
 
@@ -81,7 +83,7 @@ private:
     CCamera* m_pCamera;
     CComponentRenderObject *m_pNode;
 
-    std::map<wxMenuItem*, size_t> m_menuItemAndGuidMap;
+    std::map<wxMenuItem*, uint32_t> m_menuItemAndGuidMap;
     wxDECLARE_NO_COPY_CLASS(CBeyondEngineEditorComponentWindow);
     DECLARE_EVENT_TABLE()
 };

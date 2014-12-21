@@ -6,7 +6,7 @@
 #include "Render/Renderer.h"
 
 wxGLRenderWindow::wxGLRenderWindow(wxGLCanvas *pCanvas)
-    : CRenderWindow(pCanvas->GetSize().GetWidth(), pCanvas->GetSize().GetHeight(), true)
+    : super(pCanvas->GetSize().GetWidth(), pCanvas->GetSize().GetHeight())
     , m_bUseFBO(false)
     , m_bGlewInited(false)
     , m_uFBOViewPortWidth(0)
@@ -14,7 +14,7 @@ wxGLRenderWindow::wxGLRenderWindow(wxGLCanvas *pCanvas)
     , m_pCanvas(pCanvas)
     , m_pRC(nullptr)
 {
-
+    m_bUsePostProcessOriginValue = IsUsePostProcess();
 }
 
 wxGLRenderWindow::~wxGLRenderWindow()
@@ -40,6 +40,7 @@ wxGLContext *wxGLRenderWindow::GetContext() const
 void wxGLRenderWindow::UseFBO(bool bUse)
 {
     m_bUseFBO = bUse;
+    SetUsePostProcess(bUse || m_bUsePostProcessOriginValue);
 }
 
 bool wxGLRenderWindow::IsFBOInUse() const
@@ -47,18 +48,18 @@ bool wxGLRenderWindow::IsFBOInUse() const
     return m_bUseFBO;
 }
 
-void wxGLRenderWindow::SetFBOViewPort(size_t uWidth, size_t uHeight)
+void wxGLRenderWindow::SetFBOViewPort(uint32_t uWidth, uint32_t uHeight)
 {
     m_uFBOViewPortWidth = uWidth;
     m_uFBOViewPortHeight = uHeight;
 }
 
-size_t wxGLRenderWindow::GetFBOViewPortWidth() const
+uint32_t wxGLRenderWindow::GetFBOViewPortWidth() const
 {
     return m_uFBOViewPortWidth;
 }
 
-size_t wxGLRenderWindow::GetFBOViewPortHeight() const
+uint32_t wxGLRenderWindow::GetFBOViewPortHeight() const
 {
     return m_uFBOViewPortHeight;
 }
@@ -68,18 +69,20 @@ wxGLCanvas* wxGLRenderWindow::GetCanvas() const
     return m_pCanvas;
 }
 
+CVec2 wxGLRenderWindow::ScreenToClient(const CVec2& screenPos) const
+{
+    wxPoint pt(screenPos.X(), screenPos.Y());
+    pt = m_pCanvas->ScreenToClient(pt);
+    return CVec2(pt.x, pt.y);
+}
+
 void wxGLRenderWindow::Render()
 {
-    if (IsFBOInUse())
-    {
-        CRenderer::GetInstance()->BindFramebuffer(GL_FRAMEBUFFER, CRenderManager::GetInstance()->GetMainFBOTexture());
-    }
     super::Render();
     if (IsFBOInUse())
     {
-        CRenderer::GetInstance()->BindFramebuffer(GL_FRAMEBUFFER, 0);
-        CRenderer::GetInstance()->Viewport(0, 0, m_uFBOViewPortWidth, m_uFBOViewPortHeight);
-        CRenderManager::GetInstance()->RenderTextureToFullScreen(CRenderManager::GetInstance()->GetMainFBOTexture());
+        CRenderer::GetInstance()->Viewport(0, m_pCanvas->GetSize().y - m_uFBOViewPortHeight, m_uFBOViewPortWidth, m_uFBOViewPortHeight);
+        CRenderManager::GetInstance()->RenderTextureToFullScreen(GetFBOTexture());
     }
     m_pCanvas->SwapBuffers();
 }

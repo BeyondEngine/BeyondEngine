@@ -47,6 +47,10 @@ public:
 
     static void SetPvrEncryptionKey(unsigned int keyPart1, unsigned int keyPart2, unsigned int keyPart3, unsigned int keyPart4);
 
+    static void Compress(const unsigned char* SourceBuffer, unsigned long sourceLength, unsigned char* DestBuffer, unsigned long* DestLength);
+
+    static unsigned long CompressBound(unsigned long uLength);
+
 private:
     static int InflateMemoryWithHint(unsigned char *in, ssize_t inLength, unsigned char **out, ssize_t *outLength, ssize_t outLenghtHint);
     static inline void DecodeEncodedPvr (unsigned int *data, ssize_t len);

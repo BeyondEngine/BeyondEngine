@@ -45,7 +45,7 @@ inline CSerializer& CSerializer::operator<<( const std::string& str )
 {
     const char* data = str.c_str();
     size_t size = ((str.length() + 1) * sizeof(char));
-    ValidateBuffer(size);
+    ValidateBuffer((uint32_t)size);
     memcpy(m_pWritePtr, data, size);
     m_pWritePtr = static_cast<unsigned char*>(m_pWritePtr) + size;
     return (*this);
@@ -67,7 +67,7 @@ inline CSerializer& CSerializer::operator<<( const std::wstring& str )
 {
     const wchar_t* data = str.c_str();
     size_t size = ((str.length() + 1) * sizeof(wchar_t));
-    ValidateBuffer(size);
+    ValidateBuffer((uint32_t)size);
     memcpy(m_pWritePtr, data, size);
     m_pWritePtr = static_cast<unsigned char*>(m_pWritePtr) + size;
     return (*this);

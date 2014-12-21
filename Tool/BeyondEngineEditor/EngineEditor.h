@@ -5,6 +5,12 @@ class wxGLContext;
 class wxGLCanvas;
 class wxPGEditor;
 class CEditorMainFrame;
+class CGradientDialog;
+class CApplication;
+class CWaitingForProcessDialog;
+class CTexturePreviewDialog;
+class wxPGEditorBase;
+
 class CEngineEditor : public wxApp
 {
 public:
@@ -12,16 +18,25 @@ public:
     virtual ~CEngineEditor();
 
     virtual bool OnInit();
-    virtual int OnExit();
+    int OnExitImpl();
 
     wxPGEditor* GetPtrEditor();
     wxPGEditor* GetTextureEditor();
     wxPGEditor* GetGradientColorEditor();
     wxPGEditor* GetGridEditor();
+    wxPGEditor* GetSoundFileEditor();
+    wxPGEditor* GetRandomValueEditor();
+    wxPGEditor* GetMenuEditor();
     CEditorMainFrame* GetMainFrame() const;
     wxGLContext* CreateGLContext(wxGLCanvas* pCanvas);
     wxGLContext* GetGLContext() const;
     const TString& GetWorkingPath();
+    CGradientDialog* GetGradientDialog();
+    CTexturePreviewDialog* GetTexturePreviewDialog();
+    CWaitingForProcessDialog* GetWaitingDialog();
+    void RegisterPGEditor(wxPGEditorBase* pPGEditor);
+    void UnRegisterPGEditor(wxPGEditorBase* pPGEditor);
+    const std::set<const wxPGEditor*>& GetEditorRegisterSet();
 
 private:
     wxGLContext*        m_glRC;
@@ -30,7 +45,15 @@ private:
     wxPGEditor*         m_pTextureEditor;
     wxPGEditor*         m_pGradientColorEditor;
     wxPGEditor*         m_pGridEditor;
+    wxPGEditor*         m_pSoundFileEditor;
+    wxPGEditor*         m_pRandomValueEditor;
+    wxPGEditor*         m_pMenuEditor = nullptr;
+    CGradientDialog*    m_pGradientDialog;
+    CTexturePreviewDialog*    m_pTexturePreviewDialog;
+    CApplication*       m_pApplication;
+    CWaitingForProcessDialog* m_pWaitingDialog;
     TString             m_strWorkingPath;
+    std::set<const wxPGEditor*> m_editorRegisterSet;
 };
 
 

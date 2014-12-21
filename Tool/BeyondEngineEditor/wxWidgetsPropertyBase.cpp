@@ -1,13 +1,15 @@
 #include "stdafx.h"
 #include "wxWidgetsPropertyBase.h"
 #include "PtrPropertyDescription.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxy.h"
+#include "Component/Component/ComponentProxy.h"
 #include "Utility/BeatsUtility/Serializer.h"
 #include "Utility/BeatsUtility/StringHelper.h"
-#include "Utility/TinyXML/tinyxml.h"
+#include "Component/ComponentPublic.h"
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
 #include <wx/propgrid/manager.h>
+#include "EditorMainFrame.h"
+#include "EngineEditor.h"
 
 CWxwidgetsPropertyBase::CWxwidgetsPropertyBase(EReflectPropertyType type)
 : super(type)
@@ -32,6 +34,7 @@ CWxwidgetsPropertyBase::CWxwidgetsPropertyBase(const CWxwidgetsPropertyBase& rRe
 CWxwidgetsPropertyBase::~CWxwidgetsPropertyBase()
 {
     BEATS_SAFE_DELETE(m_pComboProperty);
+    BEATS_SAFE_DELETE(m_pValueImage);
 }
 
 void CWxwidgetsPropertyBase::Initialize()
@@ -41,12 +44,12 @@ void CWxwidgetsPropertyBase::Initialize()
     {
         m_pVisibleWhenTrigger->Initialize();
         const std::vector<STriggerContent*>& triggerContent = m_pVisibleWhenTrigger->GetContent();
-        for (size_t i = 0; i < triggerContent.size(); ++i)
+        for (uint32_t i = 0; i < triggerContent.size(); ++i)
         {
             // 0 means or 1 means and.
             if(triggerContent[i] != NULL && (int)triggerContent[i] != 1)
             {
-                CWxwidgetsPropertyBase* pProperty = static_cast<CWxwidgetsPropertyBase*>(m_pOwner->GetPropertyDescription(triggerContent[i]->GetPropertyName().c_str()));
+                CWxwidgetsPropertyBase* pProperty = static_cast<CWxwidgetsPropertyBase*>(m_pOwner->GetProperty(triggerContent[i]->GetPropertyName().c_str()));
                 BEATS_ASSERT(pProperty != NULL);
                 pProperty->AddEffectProperties(this);
             }
@@ -90,7 +93,7 @@ wxEnumProperty* CWxwidgetsPropertyBase::CreateComboProperty() const
         bool bMatched = false;
         char szBuffer[1024];
         this->GetValueAsChar(eVT_DefaultValue, szBuffer);
-        for (size_t i = 0; i < labels.size(); ++i)
+        for (uint32_t i = 0; i < labels.size(); ++i)
         {
             if (labels[i].CompareTo(wxString(szBuffer)) == 0)
             {
@@ -110,7 +113,7 @@ wxEnumProperty* CWxwidgetsPropertyBase::CreateComboProperty() const
         }
 
         this->GetValueAsChar(eVT_CurrentValue, szBuffer);
-        for (size_t i = 0; i < labels.size(); ++i)
+        for (uint32_t i = 0; i < labels.size(); ++i)
         {
             if (labels[i].CompareTo(wxString(szBuffer)) == 0)
             {
@@ -144,60 +147,120 @@ void CWxwidgetsPropertyBase::SetShowChildrenInGrid(bool bShow)
     m_bShowChildrenInGrid = bShow;
 }
 
+const wxImage& CWxwidgetsPropertyBase::GetValueImage()
+{
+    if (m_pValueImage == nullptr)
+    {
+        m_pValueImage = new wxImage;
+    }
+    return *m_pValueImage;
+}
+
+void CWxwidgetsPropertyBase::SetValueImage(const wxImage& image)
+{
+    if (m_pValueImage == nullptr)
+    {
+        m_pValueImage = new wxImage;
+    }
+    if (m_pValueImage->IsOk())
+    {
+        m_pValueImage->Clear();
+    }
+    if (image.IsOk())
+    {
+        *m_pValueImage = image.Copy();
+    }
+}
+
+bool CWxwidgetsPropertyBase::IsExpanded() const
+{
+    return m_bExpand;
+}
+
+void CWxwidgetsPropertyBase::SetExpandFlag(bool bExpand)
+{
+    m_bExpand = bExpand;
+}
+
 void CWxwidgetsPropertyBase::SetValueList(const std::vector<TString>& valueList)
 {
     wxArrayString labels;
-    for (size_t i = 0; i < valueList.size(); ++i)
+    for (uint32_t i = 0; i < valueList.size(); ++i)
     {
         labels.push_back(valueList[i].c_str());
     }
 
     if (m_pComboProperty == NULL)
     {
-        m_pComboProperty = new wxEnumProperty(wxPG_LABEL, wxPG_LABEL, labels);
-        m_pComboProperty->SetClientData(this);
-        wxVariant var(labels[0]);
-        m_pComboProperty->SetDefaultValue(var);
-        wxVariant curVar(labels[0]);
-        m_pComboProperty->SetValue(curVar);
-        m_pComboProperty->SetModifiedStatus(!IsDataSame(true));
+        if (labels.size() > 0)
+        {
+            m_pComboProperty = new wxEnumProperty(wxPG_LABEL, wxPG_LABEL, labels);
+            m_pComboProperty->SetClientData(this);
+            wxVariant var(labels[0]);
+            m_pComboProperty->SetDefaultValue(var);
+            wxVariant curVar(labels[0]);
+            m_pComboProperty->SetValue(curVar);
+            m_pComboProperty->SetModifiedStatus(!IsDataSame(true));
+        }
     }
     else
     {
-        wxPGChoices choices;
-        for (size_t i = 0; i < valueList.size(); ++i)
+        if (valueList.size() > 0)
         {
-            choices.Add(valueList[i].c_str());
+            wxPGChoices choices;
+            for (uint32_t i = 0; i < valueList.size(); ++i)
+            {
+                choices.Add(valueList[i].c_str());
+            }
+            m_pComboProperty->SetChoices(choices);
         }
-        m_pComboProperty->SetChoices(choices);
+        else
+        {
+            BEATS_SAFE_DELETE(m_pComboProperty);
+        }
     }
-}
+    CEditorMainFrame* pMainFrame = static_cast<CEngineEditor*>(wxApp::GetInstance())->GetMainFrame();
 
-void CWxwidgetsPropertyBase::SaveToXML( TiXmlElement* pParentNode )
-{
-    TiXmlElement* pVariableElement = new TiXmlElement("VariableNode");
-    pVariableElement->SetAttribute("Type", m_type);
-    char variableName[MAX_PATH] = {0};
-    CStringHelper::GetInstance()->ConvertToCHAR(GetBasicInfo()->m_variableName.c_str(), variableName, MAX_PATH);
-    pVariableElement->SetAttribute("Variable", variableName);
-    char szValue[102400];
-    GetValueAsChar(eVT_CurrentValue, szValue);
-    pVariableElement->SetAttribute("SavedValue", szValue);
-    pParentNode->LinkEndChild(pVariableElement);
-    for (size_t i = 0; i < m_pChildren->size(); ++i)
+    if (m_pOwner != nullptr && m_pOwner == pMainFrame->GetSelectedComponent())
     {
-        (*m_pChildren)[i]->SaveToXML(pVariableElement);
+        pMainFrame->GetPropGridManager()->RefreshPropertyInGrid(this);
     }
 }
 
-void CWxwidgetsPropertyBase::LoadFromXML( TiXmlElement* pNode )
+void CWxwidgetsPropertyBase::SaveToXML(rapidxml::xml_node<>* pParentNode)
+{
+    bool bHide = IsHide();
+    bool bShouldBeVisible = CheckVisibleTrigger();
+    if (!bHide && bShouldBeVisible)
+    {
+        rapidxml::xml_document<>* pDoc = pParentNode->document();
+        rapidxml::xml_node<>* pVariableElement = pDoc->allocate_node(rapidxml::node_element, "VariableNode");
+        pVariableElement->append_attribute(pDoc->allocate_attribute("Type", pDoc->allocate_string(std::to_string(m_type).c_str())));
+        pVariableElement->append_attribute(pDoc->allocate_attribute("Variable", pDoc->allocate_string(GetBasicInfo()->m_variableName.c_str())));
+        if (m_pComboProperty == NULL)
+        {
+            TCHAR szBuffer[BEATS_PRINT_BUFFER_SIZE];
+            GetValueAsChar(eVT_CurrentValue, szBuffer);
+            pVariableElement->append_attribute(pDoc->allocate_attribute("SavedValue", pDoc->allocate_string(szBuffer)));
+        }
+        else
+        {
+            pVariableElement->append_attribute(pDoc->allocate_attribute("SavedValue", pDoc->allocate_string(m_pComboProperty->GetValueAsString())));
+        }
+        pParentNode->append_node(pVariableElement);
+        for (uint32_t i = 0; i < m_pChildren->size(); ++i)
+        {
+            (*m_pChildren)[i]->SaveToXML(pVariableElement);
+        }
+    }
+}
+
+void CWxwidgetsPropertyBase::LoadFromXML(rapidxml::xml_node<>* pNode)
 {
     BEATS_ASSERT(pNode != NULL);
-    const char* pValue = pNode->Attribute("SavedValue");
-    TCHAR pTCHARValue[10240];
-    CStringHelper::GetInstance()->ConvertToTCHAR(pValue, pTCHARValue, 10240);
-    GetValueByTChar(pTCHARValue, m_valueArray[eVT_CurrentValue]);
-    GetValueByTChar(pTCHARValue, m_valueArray[eVT_SavedValue]);
+    const char* pValue = pNode->first_attribute("SavedValue")->value();
+    GetValueByTChar(pValue, m_valueArray[eVT_CurrentValue]);
+    GetValueByTChar(pValue, m_valueArray[eVT_SavedValue]);
 }
 
 void CWxwidgetsPropertyBase::AnalyseUIParameter( const TCHAR* parameter )

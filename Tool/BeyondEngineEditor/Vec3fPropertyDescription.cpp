@@ -2,9 +2,10 @@
 #include "Vec3fPropertyDescription.h"
 #include "Utility/BeatsUtility/StringHelper.h"
 #include "Utility/BeatsUtility/Serializer.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxyManager.h"
-#include "Utility/TinyXML/tinyxml.h"
+#include "Component/Component/ComponentProxyManager.h"
+#include "Component/ComponentPublic.h"
 #include "Vec2fPropertyDescription.h"
+#include "FloatPropertyDescription.h"
 
 #define VEC_COUNT 3
 
@@ -15,14 +16,14 @@ CVec3PropertyDescription::CVec3PropertyDescription(CSerializer* pSerializer)
 {
     SetType(eRPT_Vec3F);
     SetMaxCount(VEC_COUNT);
-    SetFixed(true);
-    CPropertyDescriptionBase* pFloatProperty = CComponentProxyManager::GetInstance()->CreateProperty(eRPT_Float, NULL);
+    CFloatPropertyDescription* pFloatProperty = down_cast<CFloatPropertyDescription*>(CComponentProxyManager::GetInstance()->CreateProperty(eRPT_Float, NULL));
+    pFloatProperty->SetSpinStep(0.1f);
     SetTemplateProperty(pFloatProperty);
     TString InitValue = _T("0,0,0");
     if (pSerializer != NULL)
     {
         InitValue.clear();
-        for (size_t i = 0; i < VEC_COUNT; ++i)
+        for (uint32_t i = 0; i < VEC_COUNT; ++i)
         {
             float fValue = 0;
             (*pSerializer) >> fValue;
@@ -31,7 +32,7 @@ CVec3PropertyDescription::CVec3PropertyDescription(CSerializer* pSerializer)
             {
                 InitValue.append(_T(","));
             }
-            CPropertyDescriptionBase* pChild = AddChild(NULL);
+            CPropertyDescriptionBase* pChild = InsertChild(NULL);
             pChild->InitializeValue(fValue);
         }
         ResetChildName();
@@ -54,7 +55,7 @@ void CVec3PropertyDescription::Initialize()
     super::Initialize();
     CComponentProxy* pOwnerProxy = GetOwner();
     BEATS_ASSERT(pOwnerProxy != NULL);
-    for (size_t i = 0; i < VEC_COUNT; ++i)
+    for (uint32_t i = 0; i < VEC_COUNT; ++i)
     {
         (*m_pChildren)[i]->SetOwner(pOwnerProxy);
     }
@@ -63,7 +64,7 @@ void CVec3PropertyDescription::Initialize()
 bool CVec3PropertyDescription::AnalyseUIParameterImpl( const std::vector<TString>& result)
 {
     std::vector<TString> cache;
-    for (size_t i = 0; i < result.size(); ++i)
+    for (uint32_t i = 0; i < result.size(); ++i)
     {
         cache.clear();
         CStringHelper::GetInstance()->SplitString(result[i].c_str(), PROPERTY_KEYWORD_SPLIT_STR, cache);
@@ -73,7 +74,7 @@ bool CVec3PropertyDescription::AnalyseUIParameterImpl( const std::vector<TString
             std::vector<TString> values;
             CStringHelper::GetInstance()->SplitString(cache[1].c_str(), _T("@"), values);
             BEATS_ASSERT(values.size() == VEC_COUNT);
-            for (size_t j = 0; j < VEC_COUNT; ++j)
+            for (uint32_t j = 0; j < VEC_COUNT; ++j)
             {
                 m_pChildren->at(j)->InitializeValue((float)_tstof(values[j].c_str()));
             }
@@ -84,7 +85,7 @@ bool CVec3PropertyDescription::AnalyseUIParameterImpl( const std::vector<TString
             std::vector<TString> spinStepParamVec;
             spinStepParamVec.push_back(result[i]);
 
-            for (size_t j = 0; j < VEC_COUNT; ++j)
+            for (uint32_t j = 0; j < VEC_COUNT; ++j)
             {
                 ((CWxwidgetsPropertyBase*)m_pChildren->at(j))->AnalyseUIParameterImpl(spinStepParamVec);
             }
@@ -98,11 +99,14 @@ bool CVec3PropertyDescription::IsDataSame( bool bWithDefaultOrXML )
     bool bRet = true;
     if (m_pChildren->size() == VEC_COUNT)
     {
-        for (size_t i = 0; i < VEC_COUNT; ++i)
+        for (uint32_t i = 0; i < VEC_COUNT; ++i)
         {
-            bRet = bRet && m_pChildren->at(i)->IsDataSame(bWithDefaultOrXML);
+            if (!m_pChildren->at(i)->IsDataSame(bWithDefaultOrXML))
+            {
+                bRet = false;
+                break;
+            }
         }
-        ResetName();
     }
     return bRet;
 }
@@ -117,7 +121,7 @@ void CVec3PropertyDescription::ResetChildName()
 {
     if (m_pChildren->size() == VEC_COUNT)
     {
-        for (size_t i = 0; i < VEC_COUNT; ++i)
+        for (uint32_t i = 0; i < VEC_COUNT; ++i)
         {
             if (i == 0)
             {
@@ -154,13 +158,13 @@ TString CVec3PropertyDescription::GetCurrentName()
     if (m_pChildren->size() == VEC_COUNT)
     {
         char szBuffer[16];
-        for (size_t i = 0; i < VEC_COUNT; ++i)
+        for (uint32_t i = 0; i < VEC_COUNT; ++i)
         {
             m_pChildren->at(i)->GetValueAsChar(eVT_CurrentValue, szBuffer);
             strName.Append(szBuffer);
             if (i != VEC_COUNT - 1)
             {
-                strName.Append(_T(", "));
+                strName.Append(_T(","));
             }
         }
     }
@@ -178,21 +182,21 @@ bool CVec3PropertyDescription::IsContainerProperty()
     return false;
 }
 
-void CVec3PropertyDescription::LoadFromXML( TiXmlElement* pNode )
+void CVec3PropertyDescription::LoadFromXML( rapidxml::xml_node<>* pNode )
 {
     CWxwidgetsPropertyBase::LoadFromXML(pNode);
-    TiXmlElement* pVarElement = pNode->FirstChildElement("VariableNode");
+    rapidxml::xml_node<>* pVarElement = pNode->first_node("VariableNode");
     while (pVarElement != NULL)
     {
         int iVarType = 0;
-        pVarElement->Attribute("Type", &iVarType);
+        iVarType = atoi(pVarElement->first_attribute("Type")->value());
         if (iVarType == GetTemplateProperty()->GetType())
         {
             BEATS_ASSERT(m_pChildren->size() == VEC_COUNT);
-            for (size_t i = 0; i < m_pChildren->size(); ++i)
+            for (uint32_t i = 0; i < m_pChildren->size(); ++i)
             {
                 (*m_pChildren)[i]->LoadFromXML(pVarElement);
-                pVarElement = pVarElement->NextSiblingElement("VariableNode");
+                pVarElement = pVarElement->next_sibling("VariableNode");
             }
         }
         else
@@ -201,11 +205,12 @@ void CVec3PropertyDescription::LoadFromXML( TiXmlElement* pNode )
         }
         BEATS_ASSERT(pVarElement == NULL, _T("No more parameter for vec3!"));
     }
+    ResetName();
 }
 
 void CVec3PropertyDescription::Serialize( CSerializer& serializer, EValueType eValueType/* = eVT_SavedValue*/ )
 {
-    for (size_t i = 0; i < m_pChildren->size(); ++i)
+    for (uint32_t i = 0; i < m_pChildren->size(); ++i)
     {
         (*m_pChildren)[i]->Serialize(serializer, eValueType);
     }
@@ -213,8 +218,25 @@ void CVec3PropertyDescription::Serialize( CSerializer& serializer, EValueType eV
 
 void CVec3PropertyDescription::Deserialize(CSerializer& serializer, EValueType eValueType/* = eVT_CurrentValue*/)
 {
-    for (size_t i = 0; i < m_pChildren->size(); ++i)
+    for (uint32_t i = 0; i < m_pChildren->size(); ++i)
     {
         (*m_pChildren)[i]->Deserialize(serializer, eValueType);
     }
+    ResetName();
+}
+
+bool CVec3PropertyDescription::GetValueByTChar(const TCHAR* pIn, void* pOutValue)
+{
+    if (strlen(pIn) != 0)
+    {
+        std::vector<TString> cache;
+        CStringHelper::GetInstance()->SplitString(pIn, _T(","), cache);
+        BEATS_ASSERT(cache.size() == 3);
+        ((TString*)pOutValue)->assign(pIn);
+        for (uint32_t i = 0; i < m_pChildren->size(); ++i)
+        {
+            (*m_pChildren)[i]->SetValueByString(cache[i].c_str());
+        }
+    }
+    return true;
 }

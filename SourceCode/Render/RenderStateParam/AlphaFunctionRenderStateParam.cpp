@@ -1,12 +1,12 @@
 ﻿#include "stdafx.h"
 #include "AlphaFunctionRenderStateParam.h"
-#include "render/Renderer.h"
+#include "Render/Renderer.h"
 
 CAlphaFunctionRenderParam::CAlphaFunctionRenderParam()
     : m_func(eFT_ALWAYS)
     , m_ref(0.0f)
 {
-    SetType(eFSP_AlphaFunction); 
+    SetType(eFSP_AlphaFunction);
 }
 
 CAlphaFunctionRenderParam::~CAlphaFunctionRenderParam()

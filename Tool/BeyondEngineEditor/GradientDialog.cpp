@@ -4,28 +4,32 @@
 #include "EngineEditor.h"
 #include "EditorMainFrame.h"
 
-BEGIN_EVENT_TABLE(CGradientDialog, CEditDialogBase)
-
-END_EVENT_TABLE()
-
-    CGradientDialog::CGradientDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos, const wxSize &size, long style, const wxString &name)
-    : CEditDialogBase(parent, id, title, pos, size, style, name)
+CGradientDialog::CGradientDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos, const wxSize &size, long style, const wxString &name)
+: CEditDialogBase(parent, id, title, pos, size, style, name)
+, m_pGradientCtrl(NULL)
 {
     wxBoxSizer* pSizer = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* pCtrlSizer = new wxBoxSizer(wxVERTICAL);
     m_pGradientCtrl = new CGradientCtrl(this, wxID_ANY);
-    pSizer->Add(m_pGradientCtrl, 1, wxGROW|wxALL, 0);
+    pCtrlSizer->Add(m_pGradientCtrl, 1, wxGROW | wxALL, 0);
+    pSizer->Add(pCtrlSizer, 0, wxGROW | wxALL, 0);
+
+    wxBoxSizer* pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxButton* pYesBtn = new wxButton(this, wxID_ANY, _T("确定"));
+    wxButton* pCancelBtn = new wxButton(this, wxID_ANY, _T("取消"));
+    pButtonSizer->AddStretchSpacer(1);
+    pButtonSizer->Add(pYesBtn, 0, wxALL, 5);
+    pButtonSizer->Add(pCancelBtn, 0, wxALL, 5);
+    pSizer->Add(pButtonSizer, 0, wxGROW | wxRIGHT, 0);
+
     SetSizer(pSizer);
-    InitCtrls();
+    Fit();
+    pYesBtn->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CGradientDialog::OnYesBtnClicked), NULL, this);
+    pCancelBtn->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(CGradientDialog::OnCancelBtnClicked), NULL, this);
 }
 
 CGradientDialog::~CGradientDialog()
 {
-}
-
-
-void CGradientDialog::InitCtrls()
-{
-
 }
 
 int CGradientDialog::ShowModal()
@@ -33,30 +37,33 @@ int CGradientDialog::ShowModal()
     m_allCursorPosList.clear();
     int nRet = INVALID_DATA;
     nRet= wxDialog::ShowModal();
-
-    m_allCursorPosList.push_back(0.0f);
-    m_allCursorPosList.push_back(1.0f);
-
-    auto colorList = m_pGradientCtrl->GetColorList();
-    for (auto itr : colorList)
+    if (nRet == wxYES)
     {
-        float fPos = itr->GetPosPercent();
-        if (CheckPosIsOnly(fPos))
+        m_allCursorPosList.push_back(0.0f);
+        m_allCursorPosList.push_back(1.0f);
+
+        auto colorList = m_pGradientCtrl->GetColorList();
+        for (auto itr : colorList)
         {
-            m_allCursorPosList.push_back(fPos);
+            float fPos = itr->GetPosPercent();
+            if (CheckPosIsOnly(fPos))
+            {
+                m_allCursorPosList.push_back(fPos);
+            }
+        }
+
+        auto alphaList = m_pGradientCtrl->GetAlphaList();
+        for (auto itr : alphaList)
+        {
+            float fPos = itr->GetPosPercent();
+            if (CheckPosIsOnly(fPos))
+            {
+                m_allCursorPosList.push_back(fPos);
+            }
         }
     }
 
-    auto maskList = m_pGradientCtrl->GetMaskList();
-    for (auto itr : maskList)
-    {
-        float fPos = itr->GetPosPercent();
-        if (CheckPosIsOnly(fPos))
-        {
-            m_allCursorPosList.push_back(fPos);
-        }
-    }
-    return wxID_OK;
+    return nRet;
 }
 
 bool CGradientDialog::CheckPosIsOnly(float fPos)
@@ -88,4 +95,28 @@ wxColor CGradientDialog::GetColorByIndex(int nIndex)
 {
     BEATS_ASSERT(nIndex < (int)m_allCursorPosList.size());
     return m_pGradientCtrl->GetColorByPos(m_allCursorPosList[nIndex]);
+}
+
+CGradientCtrl* CGradientDialog::GetGradientCtrl() const
+{
+    return m_pGradientCtrl;
+}
+
+void CGradientDialog::Reset()
+{
+    m_allCursorPosList.clear();
+    if (m_pGradientCtrl != NULL)
+    {
+        m_pGradientCtrl->Reset();
+    }
+}
+
+void CGradientDialog::OnYesBtnClicked(wxCommandEvent& /*event*/)
+{
+    EndModal(wxYES);
+}
+
+void CGradientDialog::OnCancelBtnClicked(wxCommandEvent& /*event*/)
+{
+    EndModal(wxCANCEL);
 }

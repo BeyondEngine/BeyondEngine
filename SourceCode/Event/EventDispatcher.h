@@ -12,11 +12,15 @@ class CEventDispatcher
 public:
     enum EHandlerPriority
     {
-        eHP_HIGHEST = 0,
-        eHP_HIGHER = 1 << 24,
-        eHP_DEFAULT = 2 << 24,
-        eHP_LOWER = 3 << 24,
-        eHP_LOWEST = 4 << 24,
+        eHP_GUID = 0,
+        eHP_UI_OLD = 1 << 24,
+        eHP_UI = 2 << 24,
+        eHP_UI_IN_SCENE = 3 << 24,
+        eHP_HIGHEST = 4 << 24,
+        eHP_HIGHER = 5<< 24,
+        eHP_DEFAULT = 6 << 24,
+        eHP_LOWER = 7 << 24,
+        eHP_LOWEST = 8 << 24,
     };
     typedef std::map<int, std::shared_ptr<CEventSubscription>> EventSubscriptionMap;
     typedef std::map<int, EventSubscriptionMap> EventSubscriptionTypeMap;

@@ -187,7 +187,6 @@ PixelFormat CTextureFormatConverter::convertRGB888ToFormat(const unsigned char* 
 
 PixelFormat CTextureFormatConverter::convertRGBA8888ToFormat(const unsigned char* data, ssize_t dataLen, PixelFormat format, unsigned char** outData, ssize_t* outDataLen)
 {
-
     switch (format)
     {
     case PixelFormat::RGB888:
@@ -229,9 +228,8 @@ PixelFormat CTextureFormatConverter::convertRGBA8888ToFormat(const unsigned char
         // unsupport convertion or don't need to convert
         if (format != PixelFormat::AUTO && format != PixelFormat::RGBA8888)
         {
-            BEATS_PRINT(_T("Can not convert image format PixelFormat::RGBA8888 to format ID:%d, we will use it's origin format PixelFormat::RGBA8888"), format);
+            BEATS_ASSERT(false, _T("Can not convert image format PixelFormat::RGBA8888 to format ID:%d, we will use it's origin format PixelFormat::RGBA8888"), format);
         }
-
         *outData = (unsigned char*)data;
         *outDataLen = dataLen;
         return PixelFormat::RGBA8888;

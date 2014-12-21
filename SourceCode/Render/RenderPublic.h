@@ -1,83 +1,79 @@
 ﻿#ifndef BEYOND_ENGINE_RENDER_RENDERPUBLIC_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_RENDERPUBLIC_H__INCLUDE
 
-#include <set>
-#include <map>
-#include <vector>
-
-#include "Utility/BeatsUtility/mathpublic.h"
+#include "Utility/BeatsUtility/MathPublic.h"
 #include "CommonTypes.h"
+#include "Framework/Application.h"
+#include "external/etc1/etc1.h"
 
-
-#if BEYONDENGINE_PLATFORM == PLATFORM_WIN32
+#if (BEYONDENGINE_PLATFORM == PLATFORM_WIN32)
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>    //added here to avoid:  warning C4005: 'DEVICE_TYPE' : macro redefinition
 #endif //WIN32
 
-#ifndef _DEBUG
+#if !defined(_DEBUG)
 #define BEYONDENGINE_CHECK_GL_ERROR_DEBUG()
 #else
+static const char* pszGLErrorDesc[] =
+{
+    "GL_INVALID_ENUM",
+    "GL_INVALID_VALUE",
+    "GL_INVALID_OPERATION",
+    "GL_STACK_OVERFLOW",
+    "GL_STACK_UNDERFLOW",
+    "GL_OUT_OF_MEMORY",
+    "GL_INVALID_FRAMEBUFFER_OPERATION",
+    "GL_CONTEXT_LOST",
+};
 #define BEYONDENGINE_CHECK_GL_ERROR_DEBUG() \
-    do { \
-    BEATS_ASSERT(std::this_thread::get_id() == CEngineCenter::GetInstance()->GetMainThreadId(), _T("Must Call Opengl Function In Main Thread!"));\
+do {\
+    BEATS_ASSERT(!CApplication::GetInstance() || CApplication::GetInstance()->IsDestructing() || std::this_thread::get_id() == CEngineCenter::GetInstance()->GetMainThreadId(), _T("Must Call Opengl Function In Main Thread!")); \
     GLenum __error = glGetError(); \
-    BEATS_ASSERT(!__error, _T("OpenGL error 0x%04X in %s %s %d\n"), __error, _T(__FILE__), _T(__FUNCTION__), __LINE__);\
+    const char* pszReason = (__error >= 0x0500 && __error <= 0x0507) ? pszGLErrorDesc[__error - 0x0500] : "Unknown error";\
+    BEATS_ASSERT(!__error, _T("OpenGL error 0x%04X %s in %s %s %d\n"), __error, pszReason, _T(__FILE__), _T(__FUNCTION__), __LINE__); \
     } while (false)
 #endif
 
 enum ECommonUniformType
 {
     UNIFORM_P_MATRIX,
-    UNIFORM_MV_MATRIX,
+    UNIFORM_M_MATRIX,
+    UNIFORM_V_MATRIX,
     UNIFORM_MVP_MATRIX,
-    UNIFORM_TIME,
-    UNIFORM_SIN_TIME,
-    UNIFORM_COS_TIME,
-    UNIFORM_RANDOM01,
-    UNIFORM_SAMPLER,
     UNIFORM_TEX0,
     UNIFORM_TEX1,
+    UNIFORM_TEX2,
+    UNIFORM_TEX3,
+    UNIFORM_TEX4,
+    UNIFORM_TEX5,
+    UNIFORM_TEX6,
+    UNIFORM_TEX7,
+    UNIFORM_ISETC,
+    UNIFORM_ETC_HAS_ALPHA,
     UNIFORM_BONE_MATRICES,
-    UNIFORM_AMBIENT_COLOR,
-    UNIFORM_DIFFUSE_COLOR,
-    UNIFORM_SPECULAR_COLOR,
-    UNIFORM_SHININESS,
-
+    UNIFORM_COLOR_SCALE,
     UNIFORM_COUNT,
 };
 
 static const char *COMMON_UNIFORM_NAMES[] =
 {
     "u_PMatrix",
-    "u_MVMatrix",
+    "u_MMatrix",
+    "u_VMatrix",
     "u_MVPMatrix",
-    "u_Time",
-    "u_SinTime",
-    "u_CosTime",
-    "u_Random01",
-    "u_Sampler",
     "u_tex0",
     "u_tex1",
+    "u_tex2",
+    "u_tex3",
+    "u_tex4",
+    "u_tex5",
+    "u_tex6",
+    "u_tex7",
+    "u_isEtc",
+    "u_etcHasAlpha",
     "u_BoneMatrices",
-    "u_AmbientColor",
-    "u_DiffuseColor",
-    "u_SpecularColor",
-    "u_Shininess"
+    "u_ColorScale",
 };
-
-#ifdef USE_UBO
-enum ECommonUniformBlockType
-{
-    UNIFORM_BLOCK_MVP_MATRIX,
-
-    UNIFORM_BLOCK_COUNT,
-};
-
-static const char *COMMON_UNIFORM_BLOCK_NAMES[] =
-{
-    "ub_MVPMatrix",
-};
-#endif
 
 enum ECommonAttribIndex
 {
@@ -176,5 +172,44 @@ struct PixelFormatInfo {
 
 typedef std::map<PixelFormat, const PixelFormatInfo> PixelFormatInfoMap;
 
+enum ERenderGroupID
+{
+    LAYER_UNSET = 0,
+
+    LAYER_BACKGROUND,
+
+    LAYER_3D_MIN,
+    LAYER_UNIVERSE_BUTTOM,
+    LAYER_UNIVERSE_LUNKUO,
+    LAYER_UNIVERSE_HALO,
+    LAYER_UNIVERSE_STAR,
+    LAYER_3D,
+    LAYER_Sprite_Ground,
+    LAYER_Sprite_Shadow,
+    LAYER_Particle_Ground,
+    LAYER_Sprite,
+    LAYER_Sprite_Above,
+    LAYER_Particle,
+    LAYER_3D_AFTER_SCENE,
+    LAYER_UniverseCover,
+    LAYER_3D_BridgeAnimation,
+    LAYER_3D_DEBUG_PRIMITIVE,
+    LAYER_3D_MAX,
+
+    LAYER_2D_MIN,
+    LAYER_2D,
+    LAYER_GUI_MIN = 10000,  // UI RENDER GROUP START
+    LAYER_GUI_POP_MIN = 11000,
+    LAYER_GUI_POP_MAX = 12000,
+    LAYER_GUI = 13000,
+    LAYER_GUI_AUTO_INCREASE_MAX = 47000,
+    LAYER_GUI_TIP_USED_MAX = 48000,
+    LAYER_GUI_SYSTEM_USED_MAX = 49000,
+    LAYER_GUI_MAX = 50000,  // UI RENDER GROUP END
+    LAYER_GUI_EDITOR,
+    LAYER_2D_MAX,
+
+    LAYER_USER,
+};
 #endif
 

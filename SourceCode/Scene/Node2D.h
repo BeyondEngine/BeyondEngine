@@ -1,5 +1,5 @@
-﻿#ifndef BEYOND_ENGINE_SCENE_NODE2D_H_INCLUDE
-#define BEYOND_ENGINE_SCENE_NODE2D_H_INCLUDE
+﻿#ifndef BEYOND_ENGINE_SCENE_NODE2D_H__INCLUDE
+#define BEYOND_ENGINE_SCENE_NODE2D_H__INCLUDE
 
 #include "Node.h"
 
@@ -9,6 +9,7 @@ class CNode2D : public CNode
 public:
     CNode2D();
     virtual ~CNode2D();
+    virtual ENodeType GetType() const override;
 
 };
 

@@ -4,7 +4,7 @@
 
 
 #if (BEYONDENGINE_PLATFORM == PLATFORM_WIN32)
-#include "zlib\include\zlib.h"
+#include "zlib/include/zlib.h"
 #endif
 
 #ifndef  _ZLIBIOAPI_H

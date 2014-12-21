@@ -1,33 +1,39 @@
 #ifndef BEYOND_ENGINE_UTILITY_MATHEXT_VEC4_H__INCLUDE
 #define BEYOND_ENGINE_UTILITY_MATHEXT_VEC4_H__INCLUDE
+class CVec2;
+class CVec3;
+class CMat4;
 
-struct CVec4 : public kmVec4
+class CVec4
 {
 public:
-    explicit CVec4(float x = 0.f, float y = 0.f, float z = 0.f, float w = 0.f)
-    {
-        kmVec4Fill(this, x, y, z, w);
-    }
-    explicit CVec4(const kmVec2 &vec2, float z = 0.f, float w = 0.f)
-    {
-        kmVec4Fill(this, vec2.x, vec2.y, z, w);
-    }
-    explicit CVec4(const kmVec3 &vec3, float w = 0.f)
-    {
-        kmVec4Fill(this, vec3.x, vec3.y, vec3.z, w);
-    }
-    void operator = (const kmVec4 &rhs)
-    {
-        kmVec4Fill(this, rhs.x, rhs.y, rhs.z, rhs.w);
-    }
-    CVec2 XY() const
-    {
-        return CVec2(x, y);
-    }
-    CVec3 XYZ() const
-    {
-        return CVec3(x, y, z);
-    }
+    CVec4(float x = 0.f, float y = 0.f, float z = 0.f, float w = 0.f);
+    CVec4(const CVec2& vec2, float z = 0.f, float w = 0.f);
+    CVec4(const CVec3& vec3, float w = 0.f);
+    CVec4& operator = (const CVec4& rhs);
+    CVec4 operator * (const CMat4& mat) const;
+    CVec4& operator *= (const CMat4& mat);
+    CVec4 operator * (float rhs) const;
+    CVec4& operator *= (float rhs);
+    bool operator == (const CVec4& rhs) const;
+    bool operator != (const CVec4& rhs) const;
+    CVec4 operator + (const CVec4& rhs) const;
+    CVec4 operator - (const CVec4& rhs) const;
+    CVec4& operator += (const CVec4& rhs);
+    CVec4& operator -= (const CVec4& rhs);
+
+    void Fill(float x, float y, float z, float w);
+    float& X();
+    const float& X() const;
+    float& Y();
+    const float& Y() const;
+    float& Z();
+    const float& Z() const;
+    float& W();
+    const float& W() const;
+    CVec4 Interpolate(const CVec4& rhs, float fRate);
+public:
+    glm::vec4 m_data;
 };
 
 #endif

@@ -30,9 +30,10 @@ public:
     float GetNearestCursorPos(CGradientCursor* pCursor);
     float CalCursorPos(wxPoint point);
     wxColor GetColorByPos(float fPos);
-    std::vector<CGradientCursor*>& GetColorList();
-    std::vector<CGradientCursor*>& GetMaskList();
-
+    const std::vector<CGradientCursor*>& GetColorList() const;
+    const std::vector<CGradientCursor*>& GetAlphaList() const;
+    void Reset(bool bAddDefaultColorCursor = false, bool bAddDefaultAlphaCursor = false);
+    const wxImage& GetImage() const;
 protected:
     void OnPaint(wxPaintEvent& event);
     void OnSize(wxSizeEvent& event);
@@ -46,16 +47,16 @@ protected:
 
 private:
     wxRect m_colorIconRect;
-    wxRect m_maskIconRect;
+    wxRect m_alphaIconRect;
     wxPanel* m_pCtrlPanel;
-    wxSlider* m_pMaskSlider;
+    wxSlider* m_pAlphaSlider;
     wxTextCtrl* m_pPosEdit;
     wxButton* m_pSetPosButton;
     wxColourPickerCtrl* m_pColoutPicker;
     CGradientCursor* m_pSelectedCursor;
     CGradientColorBoard* m_pGradientColorBoard;
     std::vector<CGradientCursor*> m_colorCursorList;
-    std::vector<CGradientCursor*> m_maskCursorList;
+    std::vector<CGradientCursor*> m_alphaCursorList;
 
     DECLARE_EVENT_TABLE()
 };

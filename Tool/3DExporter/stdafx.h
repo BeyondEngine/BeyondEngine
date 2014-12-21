@@ -16,7 +16,11 @@
 #include <cstdlib>
 
 // TODO: 在此处引用程序需要的其他头文件
-#include "BeatsPlatFormConfig.h"
-#include "PublicDef.h"
+#include "Framework/PlatformDefine.h"
+#ifdef BEYONDENGINE_PLATFORM
+#undef BEYONDENGINE_PLATFORM
+#endif
+#define BEYONDENGINE_PLATFORM PLATFORM_WIN32
+#include "EnginePublic/PublicDef.h"
 #include "Utility/BeatsUtility/Serializer.h"
 #include "Resource/ResourcePublic.h"

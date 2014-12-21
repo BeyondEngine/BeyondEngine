@@ -1,10 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Skeleton.h"
 #include "SkeletonBone.h"
-#include "Utility/BeatsUtility/Serializer.h"
-#include "RenderManager.h"
-#include "ShaderProgram.h"
-#include "Resource/ResourceManager.h"
 
 CSkeleton::CSkeleton()
 {
@@ -13,74 +9,158 @@ CSkeleton::CSkeleton()
 
 CSkeleton::~CSkeleton()
 {
-
+    BEATS_SAFE_DELETE_MAP(m_bonesIdMap);
 }
 
-SharePtr<CSkeletonBone> CSkeleton::GetSkeletonBone(ESkeletonBoneType type) const
+CSkeletonBone* CSkeleton::GetSkeletonBoneById(uint8_t uIndex) const
 {
-    SharePtr<CSkeletonBone> pRet;
-    std::map<ESkeletonBoneType, SharePtr<CSkeletonBone> >::const_iterator iter = m_bonesMap.find(type);
-    BEATS_ASSERT(iter != m_bonesMap.end(), _T("Can't find bones with type %d %s"), type, pszSkeletonBoneName[type]);
+    CSkeletonBone* pRet = nullptr;
+    std::map<uint8_t, CSkeletonBone* >::const_iterator iter = m_bonesIdMap.find(uIndex);
+    BEATS_ASSERT(iter != m_bonesIdMap.end(), _T("Can't find bones with type %d %s"), uIndex, GetBoneName(uIndex).c_str());
 
-    if (iter != m_bonesMap.end())
+    if (iter != m_bonesIdMap.end())
     {
-        BEATS_ASSERT(iter->second->GetBoneType() == type);
+        BEATS_ASSERT(iter->second->GetIndex() == uIndex);
         pRet = iter->second;
     }
     return pRet;
 }
 
-bool CSkeleton::Load()
+CSkeletonBone* CSkeleton::GetSkeletonBoneByName(const TString& strName) const
+{
+    CSkeletonBone* pRet = nullptr;
+    uint8_t uIndex = GetBoneIndex(strName);
+    ASSUME_VARIABLE_IN_EDITOR_BEGIN(uIndex != 0xFF)
+        pRet = GetSkeletonBoneById(uIndex);
+    ASSUME_VARIABLE_IN_EDITOR_END
+    return pRet;
+}
+
+bool CSkeleton::Load(CSerializer& serializer)
 {
     bool bRet = true;
-    // Load From File
-    const TString& strFilePath = GetFilePath();
-    if (!strFilePath.empty())
+
+    BEATS_ASSERT(serializer.GetWritePos() > 0);
+    uint32_t uBoneCount = 0;
+    // key is the child id, value is the parent id.
+    std::map<uint8_t, uint8_t> childToParentMap;
+    std::map<CSkeletonBone*, CLocation> localLocation;
+    serializer >> uBoneCount;
+    // NOTICE: you have to get this self by this way, so we can get a share pointer.
+    for (uint32_t i = 0; i < uBoneCount; ++i)
     {
-        CSerializer serializer(strFilePath.c_str());
-        size_t uBoneCount = 0;
-        serializer >> uBoneCount;
-        for (size_t i = 0; i < uBoneCount; ++i)
-        {
-            ESkeletonBoneType boneType = eSBT_Count;
-            serializer >> boneType;
-            BEATS_ASSERT(boneType < eSBT_Count, _T("Invalid bone type!"));
-            ESkeletonBoneType boneParentType = eSBT_Count;
-            serializer >> boneParentType;
-            BEATS_ASSERT(boneParentType < eSBT_Count, _T("Invalid bone type!"));
+        TString strBoneName;
+        serializer >> strBoneName;
+        uint8_t boneId = 0xFF;
+        serializer >> boneId;
+        BEATS_ASSERT(boneId != 0xFF, _T("Invalid bone type!"));
+        uint8_t boneParentId = 0xFF;
+        serializer >> boneParentId;
 
-            SharePtr<CSkeletonBone> pNullParentBone;
-            SharePtr<CSkeletonBone> _pSkeletonBone = new CSkeletonBone(pNullParentBone, boneType);
-            _pSkeletonBone->SetParentType(boneParentType);
-            kmMat4  _TPosMatrix;
-            serializer >> _TPosMatrix.mat[0] >> _TPosMatrix.mat[1] >> _TPosMatrix.mat[2] >> _TPosMatrix.mat[3] 
-            >> _TPosMatrix.mat[4] >> _TPosMatrix.mat[5] >> _TPosMatrix.mat[6] >> _TPosMatrix.mat[7]
-            >> _TPosMatrix.mat[8] >> _TPosMatrix.mat[9] >> _TPosMatrix.mat[10] >> _TPosMatrix.mat[11]
-            >> _TPosMatrix.mat[12] >> _TPosMatrix.mat[13] >> _TPosMatrix.mat[14] >> _TPosMatrix.mat[15];
-            _pSkeletonBone->SetTPosMatrix( _TPosMatrix );
-            m_bonesMap[boneType] = _pSkeletonBone;
-        }
-
-        //Fill the parent
-        std::map<ESkeletonBoneType, SharePtr<CSkeletonBone>>::iterator iter = m_bonesMap.begin();
-        for (; iter != m_bonesMap.end(); ++iter)
+        BEATS_ASSERT(childToParentMap.find(boneId) == childToParentMap.end(), _T("Bone %d should have only one parent %d but we are trying to add %d as its parent."), boneId, childToParentMap[boneId], boneParentId);
+        childToParentMap[boneId] = boneParentId;
+        CSkeletonBone* _pSkeletonBone = new CSkeletonBone(boneId, strBoneName, this);
+        CLocation location;
+        serializer >> location.m_scale >> location.m_rotation >> location.m_pos;
+        localLocation[_pSkeletonBone] = location;
+        m_bonesIdMap[boneId] = _pSkeletonBone;
+    }
+    //Fill the parent
+    for (auto iter = childToParentMap.begin(); iter != childToParentMap.end(); ++iter)
+    {
+        BEATS_ASSERT(m_bonesIdMap.find(iter->first) != m_bonesIdMap.end());
+        if (iter->second != 0xFF)
         {
-            ESkeletonBoneType parentType = iter->second->GetParentType();
-            if (parentType != eSBT_Null)
-            {
-                std::map<ESkeletonBoneType, SharePtr<CSkeletonBone>>::iterator parentIter = m_bonesMap.find(parentType);
-                BEATS_ASSERT(parentIter != m_bonesMap.end());
-                iter->second->SetParent(parentIter->second);
-            }
+            BEATS_ASSERT(m_bonesIdMap.find(iter->second) != m_bonesIdMap.end());
+            m_bonesIdMap[iter->first]->SetParent(m_bonesIdMap[iter->second]);
         }
     }
-    super::Load();
+    for (auto iter = localLocation.begin(); iter != localLocation.end(); ++iter)
+    {
+        CMat4 worldTPosMat(iter->second);
+        CSkeletonBone* pParent = iter->first->GetParent();
+        while (pParent != nullptr)
+        {
+            worldTPosMat = CMat4(localLocation[pParent]) * worldTPosMat;
+            pParent = pParent->GetParent();
+        }
+        iter->first->SetTPosWorldTM(worldTPosMat);
+    }
     return bRet;
 }
 
-
-std::map<ESkeletonBoneType, SharePtr<CSkeletonBone>>& CSkeleton::GetBoneMap()
+uint8_t CSkeleton::GetFPS()const
 {
-    return m_bonesMap;
+    return m_uFPS;
 }
 
+void CSkeleton::SetFPS(uint8_t uFps)
+{
+    m_uFPS = uFps;
+}
+
+#ifdef DEVELOP_VERSION
+void CSkeleton::PrintBoneTree(CSkeletonBone* pBone, uint32_t level)
+{
+    if (pBone == nullptr)
+    {
+        for (auto iter = m_bonesIdMap.begin(); iter != m_bonesIdMap.end(); ++iter)
+        {
+            CSkeletonBone* pRootBone = iter->second;
+            if (pRootBone->GetParent() == nullptr)
+            {
+                BEATS_ASSERT(iter->first == pRootBone->GetIndex());
+                BEATS_PRINT("Root Bone: %s id:%d\n", pRootBone->GetName().c_str(), pRootBone->GetIndex());
+                const std::vector<CSkeletonBone*>& childrenBone = pRootBone->GetChildrenBone();
+                for (size_t i = 0; i < childrenBone.size(); ++i)
+                {
+                    BEATS_ASSERT(childrenBone[i] != nullptr);
+                    PrintBoneTree(childrenBone[i], 1);
+                }
+            }
+        }
+    }
+    else
+    {
+        uint32_t uSpaceCount = level;
+        while (uSpaceCount > 0)
+        {
+            BEATS_PRINT("    ");
+            uSpaceCount -= 1;
+        }
+        BEATS_PRINT("Bone: %s id:%d\n", pBone->GetName().c_str(), pBone->GetIndex());
+        const std::vector<CSkeletonBone*>& childrenBone = pBone->GetChildrenBone();
+        for (size_t i = 0; i < childrenBone.size(); ++i)
+        {
+            BEATS_ASSERT(childrenBone[i] != nullptr);
+            PrintBoneTree(childrenBone[i], level + 1);
+        }
+    }
+}
+#endif
+
+const std::map<uint8_t, CSkeletonBone*>& CSkeleton::GetBoneMap() const
+{
+    return m_bonesIdMap;
+}
+
+const TString& CSkeleton::GetBoneName(uint8_t uIndex) const
+{
+    auto iter = m_bonesIdMap.find(uIndex);
+    BEATS_ASSERT(iter != m_bonesIdMap.end());
+    return iter->second->GetName();
+}
+
+uint8_t CSkeleton::GetBoneIndex(const TString& strName) const
+{
+    uint8_t uRet = 0xFF;
+    for (auto iter = m_bonesIdMap.begin(); iter != m_bonesIdMap.end(); ++iter)
+    {
+        if (iter->second->GetName() == strName)
+        {
+            uRet = iter->first;
+            break;
+        }
+    }
+    return uRet;
+}

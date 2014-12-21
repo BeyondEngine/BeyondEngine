@@ -17,9 +17,9 @@ void CBlendEquationRenderStateParam::Apply()
     CRenderer::GetInstance()->BlendEquation(m_nValue);
 }
 
-ERenderState CBlendEquationRenderStateParam::GetRenderStateType() const
+ERenderStateParamType CBlendEquationRenderStateParam::GetRenderStateType() const
 {
-    return eRS_BlendEquationMode;
+    return eRSPT_BlendEquationMode;
 }
 
 void CBlendEquationRenderStateParam::SetBlendEquationType( EBlendEquationType type )
@@ -34,14 +34,14 @@ CBlendEquationRenderStateParam::EBlendEquationType CBlendEquationRenderStatePara
 
 bool CBlendEquationRenderStateParam::operator==( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_BlendEquationMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_BlendEquationMode );
     CBlendEquationRenderStateParam* pOther = (CBlendEquationRenderStateParam*)&other;
     return m_nValue == pOther->m_nValue;
 }
 
 bool CBlendEquationRenderStateParam::operator!=( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_BlendEquationMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_BlendEquationMode );
     CBlendEquationRenderStateParam* pOther = (CBlendEquationRenderStateParam*)&other;
     return m_nValue != pOther->m_nValue;
 }

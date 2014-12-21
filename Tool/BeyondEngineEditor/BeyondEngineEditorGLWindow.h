@@ -23,12 +23,9 @@ public:
     wxGLContext* GetGLContext() const;
     void SetGLContext(wxGLContext* pContext);
     bool SafeGetKeyStage(int nVirtKey);
-    float GetCameraSpeedScale() const;
-    void SetCameraSpeedScale(float fScale);
     wxGLRenderWindow *GetRenderWindow() const;
 
     virtual void Update() = 0;
-    virtual CScene *GetScene();
     virtual void SetContextToCurrent();
     virtual CCamera* GetCamera() = 0;
 
@@ -37,10 +34,10 @@ protected:
     void OnSetCursor(wxSetCursorEvent& event);
     void OnSize(wxSizeEvent& event);
     void OnChar(wxKeyEvent& event);
+    void OnKey(wxKeyEvent& event);
     void OnMouse(wxMouseEvent& event);
     void ShowCursor();
     void HideCursor();
-    void UpdateCamera();
 
 protected:
     CEditorMainFrame*   m_pMainFrame;
@@ -48,7 +45,6 @@ protected:
 
 private:
     float               m_fSpeedUpScale;
-    float               m_fCameraSpeedScale;
     wxPoint             m_startPosition;
     static const int    m_attribList[5];
 

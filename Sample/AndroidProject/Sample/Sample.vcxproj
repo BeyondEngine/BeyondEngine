@@ -43,7 +43,7 @@
     <ReferencePath />
     <LibraryPath />
     <NMakeOutput>$(ProjectDir)Sample-Debug.vgdbsettings</NMakeOutput>
-    <NMakeIncludeSearchPath>E:\Programming\AndroidDev\android-ndk-r9d\platforms\android-16\arch-arm\usr\include;E:\Programming\FCEngine_GitHub\SourceCode;E:\Programming\FCEngine_GitHub\Include\freetype2\include\android;E:\Programming\FCEngine_GitHub\Include\jpeg\include\android;E:\Programming\FCEngine_GitHub\Include\png\include\android;E:\Programming\FCEngine_GitHub\Include\tiff\include\android;E:\Programming\FCEngine_GitHub\Include\webp\include\android;E:\Programming\FCEngine_GitHub\SourceCode\Utility;E:\Programming\FCEngine_GitHub\SourceCode\Utility\BeatsUtility\Platform;E:\Programming\FCEngine_GitHub\SourceCode\Utility\BeatsUtility\Platform\android;E:\Programming\FCEngine_GitHub\SourceCode\Platform;E:\Programming\FCEngine_GitHub\SourceCode\Platform\android;E:\Programming\FCEngine_GitHub\Sample;E:\Programming\AndroidDev\android-ndk-r9d\toolchains\arm-linux-androideabi-4.8\prebuilt\windows\lib\gcc\arm-linux-androideabi\4.8\include;E:\Programming\AndroidDev\android-ndk-r9d\toolchains\arm-linux-androideabi-4.8\prebuilt\windows\lib\gcc\arm-linux-androideabi\4.8\include-fixed;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>C:\android\android-ndk-r10d\platforms\android-16\arch-arm\usr\include;C:\android\android-ndk-r10d\toolchains\arm-linux-androideabi-4.8\prebuilt\windows\lib\gcc\arm-linux-androideabi\4.8\include;C:\android\android-ndk-r10d\toolchains\arm-linux-androideabi-4.8\prebuilt\windows\lib\gcc\arm-linux-androideabi\4.8\include-fixed;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
     <NMakePreprocessorDefinitions>__VisualGDB_CFG_Debug;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -68,15 +68,15 @@
   <ItemGroup>
     <None Include="jni\Android.mk" />
     <None Include="jni\Application.mk" />
-    <None Include="src\com\sample\helper\NDKHelper.java" />
-    <None Include="src\com\sample\Sample\Cocos2dxHelper.java" />
-    <None Include="src\com\sample\Sample\Cocos2dxMusic.java" />
-    <None Include="src\com\sample\Sample\Cocos2dxSound.java" />
-    <None Include="src\com\sample\Sample\SampleNativeActivity.java" />
+    <None Include="src\com\BeyondTech\StarRaiders\BeyondEngineEditText.java" />
+    <None Include="src\com\BeyondTech\StarRaiders\BeyondEngineHelper.java" />
+    <None Include="src\com\BeyondTech\StarRaiders\SdkActivity.java" />
+    <None Include="src\com\BeyondTech\StarRaiders\StarRaidersActivity.java" />
+    <None Include="src\com\BeyondTech\StarRaiders\TextInputWraper.java" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\main.cpp" />
-    <ClCompile Include="..\..\SampleApplication.cpp" />
+    <ClCompile Include="..\..\StarRaidersApplication.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

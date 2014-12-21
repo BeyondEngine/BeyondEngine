@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "wxDialogEditor.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxyManager.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxy.h"
+#include "Component/Component/ComponentProxyManager.h"
+#include "Component/Component/ComponentProxy.h"
 #include "Utility/BeatsUtility/Serializer.h"
 #include "PtrPropertyDescription.h"
 #include "ListPropertyDescription.h"
@@ -14,6 +14,9 @@
 #include "GradientDialog.h"
 #include "GradientColorPropertyDescription.h"
 #include "PropertyGridEditor.h"
+#include "GradientCursor.h"
+#include "GradientCtrl.h"
+#include "RandomPropertyDialog.h"
 
 IMPLEMENT_DYNAMIC_CLASS(wxDialogEditor, wxPGTextCtrlEditor);
 wxDialogEditor::wxDialogEditor()
@@ -42,6 +45,8 @@ wxPGWindowList wxDialogEditor::CreateControls( wxPropertyGrid* propGrid,
 {
     wxPGMultiButton* buttons = new wxPGMultiButton( propGrid, sz );
     buttons->Add(_T("..."));
+    AddDeleteButton(property, buttons);
+
     buttons->Finalize(propGrid, pos);
 
     wxPGWindowList wndList = wxPGTextCtrlEditor::CreateControls( propGrid, property, pos, buttons->GetPrimarySize() );
@@ -59,53 +64,91 @@ bool wxDialogEditor::OnEvent( wxPropertyGrid* propGrid,
         CWxwidgetsPropertyBase* pPropertyDescription = static_cast<CWxwidgetsPropertyBase*>(property->GetClientData());
         if (pPropertyDescription->GetType() == eRPT_Texture)
         {
-            CTexturePreviewDialog* pDialog = (CTexturePreviewDialog*)m_pDialog;
-            CTexturePropertyDescription* pTexturePropertyDescription = static_cast<CTexturePropertyDescription*>(pPropertyDescription);
-            BEATS_ASSERT(pDialog != nullptr);
-            int nInfoIndex = pDialog->ShowModal();
-            if (nInfoIndex != INVALID_DATA)
+            if (ctrl->GetLabel().CmpNoCase(_T("-")) == 0)
             {
-                TexturePreviewInfo info = pDialog->GetTextureInfo(nInfoIndex);
-                bool bValueChanged = false;
-                char szTmp[1024];
-                pTexturePropertyDescription->GetValueAsChar(eVT_CurrentValue, szTmp);
-                wxString textureInfo = szTmp;
-                wxString newInfo = info.fileName + _T("@") + info.textureName;
-                if (textureInfo != newInfo)
+                DeleteEvent(propGrid, property);
+            }
+            else
+            {
+                CTexturePreviewDialog* pDialog = (CTexturePreviewDialog*)m_pDialog;
+                BEATS_ASSERT(pDialog != nullptr);
+                CTexturePropertyDescription* pTexturePropertyDescription = static_cast<CTexturePropertyDescription*>(pPropertyDescription);
+                TString* pValue = (TString*)pTexturePropertyDescription->GetValue(eVT_CurrentValue);
+                if (!pValue->empty())
                 {
-                    bValueChanged = true;
+                    std::vector<TString> strData;
+                    CStringHelper::GetInstance()->SplitString(pValue->c_str(), _T("@"), strData);
+                    BEATS_ASSERT(strData.size() == 2);
+                    const STexturePreviewInfo* pInfo = pDialog->GetTextureInfo(strData[0].c_str(), strData[1].c_str());
+                    if (pInfo == NULL)
+                    {
+                        pDialog->SetCurrentImage(_T(""), _T(""));
+                    }
+                    else
+                    {
+                        pDialog->SetCurrentImage(pInfo->fileName, pInfo->textureName);
+                    }
                 }
-                if (bValueChanged)
+                if (pDialog->ShowModal() == wxID_OK)
                 {
-                    wxVariant newValue(newInfo);
-                    pTexturePropertyDescription->SetValue(newValue, false);
-                    property->SetValue(newValue);
-                    propGrid->Refresh();
+                    char szTmp[1024];
+                    pTexturePropertyDescription->GetValueAsChar(eVT_CurrentValue, szTmp);
+                    wxString textureInfo = szTmp;
+                    wxString newInfo;
+                    int nInfoIndex = pDialog->GetCurrentIndex();
+                    if (nInfoIndex != INVALID_DATA)
+                    {
+                        const STexturePreviewInfo* info = pDialog->GetTextureInfo(nInfoIndex);
+                        BEATS_ASSERT(info != nullptr);
+                        newInfo = info->fileName + _T("@") + info->textureName;
+                    }
+                    if (textureInfo != newInfo)
+                    {
+                        wxVariant newValue(newInfo);
+                        pTexturePropertyDescription->SetValue(newValue, false);
+                        property->SetValue(newValue);
+                        propGrid->Refresh();
+                    }
                 }
             }
         }
         else if (pPropertyDescription->GetType() == eRPT_GradientColor)
         {
-            CGradientDialog* pDialog = (CGradientDialog*)m_pDialog;
             CGradientColorPropertyDescription* pGradientColorPropertyDescription = static_cast<CGradientColorPropertyDescription*>(pPropertyDescription);
+            pGradientColorPropertyDescription->ApplyToDialog();
+            CEngineEditor* pEngineEditor = down_cast<CEngineEditor*>(wxApp::GetInstance());
+            CGradientDialog* pDialog = pEngineEditor->GetGradientDialog();
+            CGradientCtrl* pGradientCtrl = pDialog->GetGradientCtrl();
+            std::map<float, CColor>& colorMap = pGradientColorPropertyDescription->GetColorMap();
+            std::map<float, uint8_t>& alphaMap = pGradientColorPropertyDescription->GetAlphaMap();
             BEATS_ASSERT(pDialog != nullptr);
-            int nInfoIndex = pDialog->ShowModal();
-            if (nInfoIndex != INVALID_DATA)
+            int nRet = pDialog->ShowModal();
+            if (nRet == wxYES)
             {
-                CColorSpline* pColorSpline = pGradientColorPropertyDescription->GetColorSpline();
-                BEATS_ASSERT(pColorSpline);
-                pColorSpline->m_mapColors.clear();
-                int nPosCount = pDialog->GetPosCount();
-                wxString strValue;
-                for (int i = 0; i < nPosCount; i++)
+                const std::vector<CGradientCursor*>& colorList = pGradientCtrl->GetColorList();
+                colorMap.clear();
+                for (uint32_t i = 0; i < colorList.size(); ++i)
                 {
-                    wxColor color = pDialog->GetColorByIndex(i);
-                    float fPos = pDialog->GetPosByIndex(i);
-                    pColorSpline->m_mapColors[fPos] = CColor(color.GetRGBA());
+                    float fPos = colorList[i]->GetPosPercent();
+                    wxColor color = colorList[i]->GetColor();
+                    colorMap[fPos] = CColor(color.Red(), color.Green(), color.Blue(), color.Alpha());
                 }
-                wxVariant newValue(wxString(_T("...")));
+
+                const std::vector<CGradientCursor*>& alphaList = pGradientCtrl->GetAlphaList();
+                alphaMap.clear();
+                for (uint32_t i = 0; i < alphaList.size(); ++i)
+                {
+                    float fPos = alphaList[i]->GetPosPercent();
+                    uint8_t alpha = alphaList[i]->GetColor().Red();
+                    alphaMap[fPos] = alpha;
+                }
+                pGradientColorPropertyDescription->SetValueImage(pGradientCtrl->GetImage());
+                wxString strNewValue = pGradientColorPropertyDescription->WriteToString();
+                wxVariant newValue(strNewValue);
                 pGradientColorPropertyDescription->SetValue(newValue, false);
-                propGrid->ChangePropertyValue(property, newValue);
+                wxBitmap bitmap(pGradientColorPropertyDescription->GetValueImage());
+                property->SetValueImage(bitmap);
+                property->RecreateEditor();
                 propGrid->Refresh();
             }
         }
@@ -113,11 +156,29 @@ bool wxDialogEditor::OnEvent( wxPropertyGrid* propGrid,
         {
             CPropertyGridEditor* pDialog = down_cast<CPropertyGridEditor*>(m_pDialog);
             BEATS_ASSERT(pDialog != nullptr);
-            CListPropertyDescription* pPropertyDescription = static_cast<CListPropertyDescription*>(property->GetClientData());
-            BEATS_ASSERT(pPropertyDescription != NULL);
-            (void)pPropertyDescription;
             pDialog->SetProperty(property);
             pDialog->ShowModal();
+        }
+        else if (pPropertyDescription->GetType() == eRPT_RandomValue)
+        {
+            CRandomPropertyDialog* pDialog = down_cast<CRandomPropertyDialog*>(m_pDialog);
+            SRandomValue* pRandomValue = (SRandomValue*)pPropertyDescription->GetValue(eVT_CurrentValue);
+            pDialog->SetRandomValue(pRandomValue);
+            wxPoint pos = wxGetMousePosition();
+            pos.x -= m_pDialog->GetSize().x;
+            m_pDialog->SetPosition(pos);
+            m_pDialog->ShowModal();
+            TCHAR szBuffer[MAX_PATH];
+            pPropertyDescription->GetValueAsChar(eVT_CurrentValue, szBuffer);
+            TString strDisplayString = szBuffer;
+            size_t uPos = strDisplayString.find_first_of(',');
+            if (uPos != std::string::npos)
+            {
+                strDisplayString = strDisplayString.substr(uPos + 1); // Skip the type string.
+            }
+            property->SetValue(strDisplayString);
+            wxVariant newValue(pRandomValue);
+            pPropertyDescription->SetValue(newValue, false);
         }
     }
 

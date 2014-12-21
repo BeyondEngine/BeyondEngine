@@ -18,19 +18,24 @@ public:
     virtual bool Load() override;
     virtual void Initialize() override;
     virtual bool Unload() override;
-
-    const TString &Name() const;
-
+    virtual bool ShouldClean() const override;
     SharePtr<CTexture> Texture() const;
+    SharePtr<CTextureFrag> GetTextureFrag(const TString &name) const;
 
-    CTextureFrag *GetTextureFrag(const TString &name) const;
-
-    CTextureFrag *CreateTextureFrag(const TString &name, kmVec2 point, kmVec2 size);
+#ifdef EDITOR_MODE
+    virtual bool NeedReload() const override;
+    virtual void Reload() override;
+    virtual void LoadCheckList();
+    static std::map<TString, std::map<TString, char>> m_fragCheckList; // key is the atlasName, second key is frag name, value indicate 0: un-invoke, 1: invoked, -1: missing
+    static std::map<TString, std::set<TString>> CTextureAtlas::m_fragMissingInfo;
+#endif
 
 private:
-    TString m_name;
-    SharePtr<CTexture> m_texture;
-    std::map<TString, CTextureFrag *> m_textureFrags;
+    SharePtr<CTextureFrag> CreateTextureFrag(const TString &name, CVec2 point, CVec2 size);
+
+private:
+    SharePtr<CTexture> m_pTexture;
+    std::map<TString, SharePtr<CTextureFrag> > m_textureFrags;
 };
 
 #endif 

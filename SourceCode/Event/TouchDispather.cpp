@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "TouchDispather.h"
 #include "Event/TouchEvent.h"
 

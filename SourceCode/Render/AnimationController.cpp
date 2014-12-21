@@ -1,65 +1,74 @@
 ﻿#include "stdafx.h"
-#include "Animation3D.h"
+#include "SkeletonAnimation.h"
 #include "AnimationController.h"
 #include "Skeleton.h"
 #include "SkeletonBone.h"
-#include "Resource/ResourcePublic.h"
-#include <math.h>
-#include "RenderManager.h"
 
 CAnimationController::CAnimationController()
     : m_fPlayingTime(0.0f)
     , m_bLoop(false)
     , m_bPlaying(false)
+    , m_bBlending(false)
+    , m_bAllowSkip(true)
     , m_fBlendTime(1.0f)
     , m_uLoopCount(0)
+    , m_matPoolIndex(0)
+    , m_pCurrentAnimation(NULL)
+    , m_pPreAnimation(NULL)
+    , m_pSkeleton(NULL)
 {
 }
 
 CAnimationController::~CAnimationController()
 {
+    BEATS_SAFE_DELETE_VECTOR(m_matPool);
 }
 
-void CAnimationController::SetSkeleton(SharePtr<CSkeleton> skeleton)
+void CAnimationController::SetSkeleton(CSkeleton* pSkeleton)
 {
-    m_pSkeleton = skeleton;
-    m_initBoneWorldTM.clear();
+    m_pSkeleton = pSkeleton;
 }
 
-SharePtr<CAnimation3D> CAnimationController::GetCurrentAnimation()
+CSkeletonAnimation* CAnimationController::GetCurrentAnimation() const
 {
     return m_pCurrentAnimation;
 }
 
-void CAnimationController::PlayAnimation(const SharePtr<CAnimation3D>& pAnimation, float fBlendTime, bool bLoop)
+void CAnimationController::PlayAnimation(CSkeletonAnimation* pAnimation, float fBlendTime, bool bLoop)
 {
-    if(m_pCurrentAnimation)
+    if (m_pCurrentAnimation && m_pCurrentAnimation != pAnimation)
     {
         m_pPreAnimation = m_pCurrentAnimation;
-        size_t currFrame = static_cast<size_t>(m_fPlayingTime * m_pCurrentAnimation->GetFPS());
+        uint32_t currFrame = GetCurrFrame();
         currFrame %= m_pCurrentAnimation->GetFrameCount();
         m_pPreAnimation->SetCurFrame(currFrame);
     }
 
-    m_bonesMatOfFrameMap.clear();
-    
     m_pCurrentAnimation = pAnimation;
+    m_pCurrentAnimation->SetSkeleton(m_pSkeleton);
     m_bLoop = bLoop;
     m_fPlayingTime = 0;
     m_uLoopCount = 0;
     m_bPlaying = true;
-
-    CalcInitBoneWorldTM();
+    m_fBlendTime = fBlendTime;
 }
 
-void CAnimationController::GoToFrame( size_t frame )
+void CAnimationController::GoToFrame( uint32_t frame )
 {
     if(m_pCurrentAnimation)
     {
+        BEATS_ASSERT(m_pCurrentAnimation->GetFPS() > 0);
         m_fPlayingTime = (float)frame / m_pCurrentAnimation->GetFPS();
         m_bPlaying = false;
+        m_bBlending = false;
         CalcDeltaMatrices();
     }
+    m_pPreAnimation = NULL;
+}
+
+void CAnimationController::SetAllowSkip(bool bAllow)
+{
+    m_bAllowSkip = bAllow;
 }
 
 void CAnimationController::Pause()
@@ -77,9 +86,7 @@ void CAnimationController::Resume()
 
 void CAnimationController::Stop()
 {
-    m_fPlayingTime = 0;
-    CalcDeltaMatrices();
-    m_bPlaying = false;
+    GoToFrame(0);
 }
 
 bool CAnimationController::IsPlaying()
@@ -87,12 +94,12 @@ bool CAnimationController::IsPlaying()
     return m_bPlaying;
 }
 
-size_t CAnimationController::GetCurrFrame() const
+uint32_t CAnimationController::GetCurrFrame() const
 {
-    size_t uRet = 0xFFFFFFFF;
+    uint32_t uRet = 0xFFFFFFFF;
     if(m_pCurrentAnimation)
     {
-        uRet = static_cast<size_t>(m_fPlayingTime * m_pCurrentAnimation->GetFPS());
+        uRet = static_cast<uint32_t>(m_fPlayingTime * m_pCurrentAnimation->GetFPS());
     }
     return uRet;
 }
@@ -106,320 +113,230 @@ void CAnimationController::Update(float fDeltaTime)
 {
     if(m_bPlaying && m_pCurrentAnimation && m_pSkeleton)
     {
+        if (!m_bAllowSkip)
+        {
+            float fMaxDeltaTime = 1.0f / m_pCurrentAnimation->GetFPS();
+            if (fDeltaTime > fMaxDeltaTime)
+            {
+                fDeltaTime = fMaxDeltaTime;
+            }
+        }
         m_fPlayingTime += fDeltaTime;
-        if (m_fPlayingTime > m_pCurrentAnimation->Duration())
+        float fDuration = m_pCurrentAnimation->GetDuration();
+        BEATS_ASSERT(fDuration > 0);
+        if (m_fPlayingTime > fDuration)
         {
             if(m_bLoop)
             {
-                m_fPlayingTime = fmod(m_fPlayingTime, m_pCurrentAnimation->Duration());
+                //TODO: HACK: If you enable all codes below, you will find some times fmodf will return invalid result. Don't know why, so I have to do my own calculation.
+                //float fTemp = 0;
+                //BEATS_ASSERT(!isinf(m_fPlayingTime) && !isnan(m_fPlayingTime));
+                //fTemp = fmodf(m_fPlayingTime, fDuration);
+                //BEATS_ASSERT(!isinf(fTemp) && !isnan(fTemp));
+                //BEATS_ASSERT(!isinf(m_fPlayingTime) && !isnan(m_fPlayingTime));
+                //m_fPlayingTime = fTemp;
+                //BEATS_ASSERT(!isinf(m_fPlayingTime) && !isnan(m_fPlayingTime));
+                m_fPlayingTime = BEATS_FMOD(m_fPlayingTime, fDuration);
                 m_uLoopCount++;
             }
             else
             {
-                m_fPlayingTime = m_pCurrentAnimation->Duration();
+                m_fPlayingTime = fDuration;
+                m_bPlaying = false;
             }
         }
+        m_bBlending = m_pPreAnimation && m_fPlayingTime < m_fBlendTime && 0 == m_uLoopCount;
+
         BEYONDENGINE_PERFORMDETECT_START(ePNT_AnimationManager_CalcMatrix)
         CalcDeltaMatrices();
         BEYONDENGINE_PERFORMDETECT_STOP(ePNT_AnimationManager_CalcMatrix)
     }
 }
 
-bool  CAnimationController::CheckBlend()
+bool CAnimationController::IsBlending() const
 {
-    return m_pPreAnimation && m_fPlayingTime <= m_fBlendTime && 0 == m_uLoopCount ;
+    return m_bBlending;
 }
 
-void  CAnimationController::CalcInitBoneWorldTM()
+void CAnimationController::SetLoop(bool bLoop)
 {
-    BEATS_ASSERT(m_pCurrentAnimation);
-    BEATS_ASSERT(m_pSkeleton);
-    const std::vector<ESkeletonBoneType>& bones = m_pCurrentAnimation->GetBones();
-    if(m_initBoneWorldTM.empty())
+    m_bLoop = bLoop;
+}
+
+uint32_t CAnimationController::GetLoopCount() const
+{
+    return m_uLoopCount;
+}
+
+bool CAnimationController::IsLoop() const
+{
+    return m_bLoop;
+}
+
+void CAnimationController::UpdateBlendWorldTM(uint32_t uIndex, const std::map<uint32_t, CMat4>& localMap)
+{
+    if (m_blendBonesWorldTMMap.find(uIndex) == m_blendBonesWorldTMMap.end())
     {
-        for (size_t i = 0; i < bones.size(); ++i)
+        BEATS_ASSERT(localMap.find(uIndex) != localMap.end());
+        const CMat4& localTM = localMap.find(uIndex)->second;
+        CSkeletonBone* parentBone = m_pSkeleton->GetSkeletonBoneById((uint8_t)uIndex)->GetParent();
+        CMat4* pMat = GetMat();
+        if (parentBone != NULL)
         {
-            SharePtr<CSkeletonBone> pSkeletonBone = m_pSkeleton->GetSkeletonBone(bones[i]);
-            kmMat4 initTransform;
-            kmMat4Identity(&initTransform);
-            GetBoneInitWorldTM(initTransform,pSkeletonBone);
-            m_initBoneWorldTM[pSkeletonBone->GetBoneType()] = initTransform;
+            uint32_t parentIndex = parentBone->GetIndex();
+            UpdateBlendWorldTM(parentIndex, localMap);
+            BEATS_ASSERT(m_blendBonesWorldTMMap.find(parentIndex) != m_blendBonesWorldTMMap.end());
+            const CMat4* parentWorldTM = m_blendBonesWorldTMMap[parentIndex];
+            *pMat = (*parentWorldTM) * localTM;
         }
+        else
+        {
+            *pMat = localTM;
+        }
+        m_blendBonesWorldTMMap[uIndex] = pMat;
     }
-}
-
-const kmMat4*  CAnimationController::GetBoneTM(ESkeletonBoneType boneType)
-{
-    size_t indexBone = m_pCurrentAnimation->GetBoneIndexFromType(boneType);
-    return  &m_blendBonesMat[indexBone];
 }
 
 void CAnimationController::CalcDeltaMatrices()
 {
-    m_deltaMatrices.clear();
-    m_curBoneWorldTM.clear();
-    if(CheckBlend())
+    if(IsBlending())
     {
+        m_blendDeltaMatrices.clear();
+        m_blendBonesWorldTMMap.clear();
+        m_matPoolIndex = 0;
         BEYONDENGINE_PERFORMDETECT_START(ePNT_AnimationManager_Blend)
-        BlendAnimation(m_pPreAnimation,m_pCurrentAnimation);
+        BlendAnimation(m_pPreAnimation, m_pCurrentAnimation);
         BEYONDENGINE_PERFORMDETECT_STOP(ePNT_AnimationManager_Blend)
-    }
-
-    const std::vector<ESkeletonBoneType>& bones = m_pCurrentAnimation->GetBones();
-
-    BEYONDENGINE_PERFORMDETECT_START(ePNT_AnimationManager_DeltaMatrix)
-    BoneMatrix bonesMat;
-    BoneMatrix cacheBonesMat;
-    size_t currFrame = static_cast<size_t>(m_fPlayingTime * m_pCurrentAnimation->GetFPS());
-    currFrame %= m_pCurrentAnimation->GetFrameCount();
-    std::map<size_t,BoneMatrix>::const_iterator iter = m_bonesMatOfFrameMap.find(currFrame);
-    if( iter != m_bonesMatOfFrameMap.end())
-    {
-        cacheBonesMat = iter->second;
-        BEATS_ASSERT(bones.size() == cacheBonesMat.size());
-    }
-    for (size_t i = 0; i < bones.size(); ++i)
-    {
-        SharePtr<CSkeletonBone> pSkeletonBone = m_pSkeleton->GetSkeletonBone(bones[i]);
-         if( CheckBlend() )
-         {
-             BEATS_ASSERT(m_blendBonesMat.size() > 0);
-             ESkeletonBoneType boneType = bones[i];
-             SharePtr<CSkeletonBone> pSkeletonBone = m_pSkeleton->GetSkeletonBone(boneType);
-             ESkeletonBoneType parentType = pSkeletonBone->GetParentType();
-
-             kmMat4 curTransform;
-             kmMat4Assign(&curTransform, &m_blendBonesMat[i]);
-             while (eSBT_Null != parentType)
-             {
-                 const kmMat4* mat = GetBoneTM(parentType);
-                 SharePtr<CSkeletonBone> pSkeletonBone = m_pSkeleton->GetSkeletonBone(parentType);
-                 parentType = pSkeletonBone->GetParentType();
-                 kmMat4Multiply(&curTransform, mat, &curTransform);
-             }
-
-             m_curBoneWorldTM[bones[i]] = curTransform;
-        }
-        else
+        BEYONDENGINE_PERFORMDETECT_START(ePNT_AnimationManager_DeltaMatrix)
+        uint32_t currFrame = GetCurrFrame();
+        currFrame %= m_pCurrentAnimation->GetFrameCount();
+        const std::map<uint8_t, CSkeletonBone*>& boneMap = m_pSkeleton->GetBoneMap();
+        for (auto iter = boneMap.begin(); iter != boneMap.end(); ++iter)
         {
-            if(cacheBonesMat.size() > 0)
-            {
-                 m_curBoneWorldTM[bones[i]] = cacheBonesMat[i];
-            }
-            else
-            {
-                kmMat4 curTransform;
-                GetBoneCurWorldTM(curTransform ,bones[i]);
-                m_curBoneWorldTM[bones[i]] = curTransform;
-                bonesMat.push_back(curTransform);
-            }
-
+            CMat4* pWorldTM = NULL;
+            CSkeletonBone* pSkeletonBone = iter->second;
+            uint8_t skeletonType = iter->first;
+            BEATS_ASSERT(m_blendBonesWorldTMMap.find(skeletonType) != m_blendBonesWorldTMMap.end());
+            pWorldTM = m_blendBonesWorldTMMap[skeletonType];
+            CMat4 posMatrixInverse = pSkeletonBone->GetTPosWorldTM();
+            posMatrixInverse.Inverse();
+            CMat4* pMat = GetMat();
+            m_blendDeltaMatrices[skeletonType] = pMat;
+            *pMat = (*pWorldTM) * posMatrixInverse;
         }
-        BEATS_ASSERT(bones[i] == pSkeletonBone->GetBoneType());
-        const kmMat4& tPosMatrix = m_initBoneWorldTM[pSkeletonBone->GetBoneType()];
-        kmMat4 posMatrixInverse;
-        kmMat4Inverse(&posMatrixInverse,&tPosMatrix);
-        kmMat4Multiply(&m_deltaMatrices[pSkeletonBone->GetBoneType()],&m_curBoneWorldTM[bones[i]],&posMatrixInverse);
-    }
-    if(m_bonesMatOfFrameMap.size() < m_pCurrentAnimation->GetFrameCount())
-    {
-        if(bonesMat.size() > 0)
-        {
-            m_bonesMatOfFrameMap[currFrame] = bonesMat;
-        }
-    }
-    BEYONDENGINE_PERFORMDETECT_STOP(ePNT_AnimationManager_DeltaMatrix)
-}
-
-const CAnimationController::BoneMatrixMap& CAnimationController::GetDeltaMatrices() const
-{
-    return m_deltaMatrices;
-}
-
-
-void  CAnimationController::GetBoneInitWorldTM(kmMat4& transform, const SharePtr<CSkeletonBone> pTPosSkeletonBone)
-{
-    const kmMat4& tPosMatrix = pTPosSkeletonBone->GetTPosMatrix();
-    kmMat4Multiply(&transform,&tPosMatrix,&transform);
-    ESkeletonBoneType parentType = pTPosSkeletonBone->GetParentType();
-
-    if(eSBT_Null != parentType)
-    {
-        SharePtr<CSkeletonBone> pParentSkeletonBone = m_pSkeleton->GetSkeletonBone(parentType);
-        GetBoneInitWorldTM(transform,pParentSkeletonBone);
+        BEYONDENGINE_PERFORMDETECT_STOP(ePNT_AnimationManager_DeltaMatrix)
     }
 }
-void  CAnimationController::GetBoneCurWorldTM(kmMat4&  transform, const ESkeletonBoneType boneType)
-{
-    const kmMat4* mat = m_pCurrentAnimation->GetOneBoneMatrixByTime(m_fPlayingTime, boneType);  
-    SharePtr<CSkeletonBone> pSkeletonBone = m_pSkeleton->GetSkeletonBone(boneType);
-    kmMat4Assign(&transform, mat);
-    ESkeletonBoneType parentType = pSkeletonBone->GetParentType();
 
-    BoneMatrixMap::const_iterator iter = m_curBoneWorldTM.find(parentType);
-    if(iter != m_curBoneWorldTM.end())
+CMat4* CAnimationController::GetMat()
+{
+    CMat4* pRet = NULL;
+    if (m_matPoolIndex < m_matPool.size())
     {
-        const kmMat4 absMat =  iter->second;
-        kmMat4Multiply(&transform,&absMat,&transform);
+        pRet = m_matPool[m_matPoolIndex++];
     }
     else
     {
-        while(eSBT_Null != parentType)
-        {
-            const kmMat4* boneMat = m_pCurrentAnimation->GetOneBoneMatrixByTime(m_fPlayingTime, parentType);
-            kmMat4Multiply(&transform,boneMat,&transform);
-
-            SharePtr<CSkeletonBone> pSkeletonBone = m_pSkeleton->GetSkeletonBone(parentType);
-            parentType = pSkeletonBone->GetParentType();
-        }
+        BEATS_ASSERT(m_matPoolIndex == m_matPool.size());
+        pRet = new CMat4;
+        m_matPool.push_back(pRet);
+        m_matPoolIndex = (uint32_t)m_matPool.size();
     }
+    return pRet;
 }
 
-void  CAnimationController::BlendAnimation(const SharePtr<CAnimation3D> pBeforeAnimation, const SharePtr<CAnimation3D> pAfterAnimation)
+const std::map<uint8_t, CMat4*>& CAnimationController::GetBlendDeltaMatrices() const
 {
-     size_t frame = static_cast<size_t>(m_fPlayingTime * m_pCurrentAnimation->GetFPS());
-   
-     size_t beforeFramePlay = m_pPreAnimation->GetCurFrame();
-     size_t beforeFrame =  beforeFramePlay >= pBeforeAnimation->GetFrameCount() ? pBeforeAnimation->GetFrameCount() - 1 : beforeFramePlay;
-     size_t afterFrame =  frame >= pAfterAnimation->GetFrameCount() ? pAfterAnimation->GetFrameCount() - 1 : frame ;
-
-     const std::vector<kmMat4*>& beforeMat = pBeforeAnimation->GetBoneMatrixByFrame(beforeFrame);
-
-     const std::vector<kmMat4*>& afterMat = pAfterAnimation->GetBoneMatrixByFrame(afterFrame);
-
-     BlendData(beforeMat, afterMat); 
+    return m_blendDeltaMatrices;
 }
 
-void  CAnimationController::ClearBlendData()
+CMat4 CAnimationController::GetBoneCurrWorldTM(uint8_t uBoneIndex) const
 {
-    m_blendBonesMat.clear();
-}
-
-void CAnimationController::BlendData(const std::vector<kmMat4*>& startBones, const std::vector<kmMat4*>& endBones )
-{
-    ClearBlendData();
-
-    BEATS_ASSERT(startBones.size() == endBones.size())
-    std::vector<std::vector<kmMat4>> boneOfFrame;
-    size_t boneCount = startBones.size();
-    for (size_t i = 0; i < boneCount; ++i)
+    CMat4 ret;
+    if (m_pCurrentAnimation != NULL)
     {
-        const kmMat4* pMataStart = startBones[i];
-        const kmMat4* pMatEnd = endBones[i];
-        
-        if(pMataStart != pMatEnd && KM_FALSE == kmMat4AreEqual(pMataStart, pMatEnd))
-        {
-            kmMat4 boneInsert;
-            Interpolation(*pMataStart, *pMatEnd,boneInsert);
-            m_blendBonesMat.push_back(boneInsert);
-        }
-        else
-        {
-            kmMat4 matrix;
-            kmMat4Assign(&matrix,pMatEnd);
-            m_blendBonesMat.push_back(matrix);
-        }
+        CSkeletonBone* pBone = m_pSkeleton->GetSkeletonBoneById(uBoneIndex);
+        BEATS_ASSERT(pBone != nullptr);
+        ret = pBone->GetCurrentWorldTM();
     }
+    return ret;
 }
 
-void CAnimationController::Interpolation(const kmMat4& startMat, const kmMat4& endMat,kmMat4& insertMat)
+//TODO:deprecated
+void  CAnimationController::BlendAnimation(const CSkeletonAnimation* /*pBeforeAnimation*/, const CSkeletonAnimation* /*pAfterAnimation*/)
 {
-    kmVec3 pAxis;
-    kmScalar radians;
-    kmMat4RotationToAxisAngle(&pAxis, &radians,&startMat);
+    //std::map<uint32_t, CMat4> localMap;
+    //uint32_t frame = GetCurrFrame();
 
-    kmQuaternion start;
-    kmQuaternionRotationAxis(&start, &pAxis, radians);
+    //uint32_t beforeFramePlay = m_pPreAnimation->GetCurFrame();
+    //uint32_t beforeFrame =  beforeFramePlay >= pBeforeAnimation->GetFrameCount() ? pBeforeAnimation->GetFrameCount() - 1 : beforeFramePlay;
+    //uint32_t afterFrame =  frame >= pAfterAnimation->GetFrameCount() ? pAfterAnimation->GetFrameCount() - 1 : frame ;
 
-    kmMat4RotationToAxisAngle(&pAxis, &radians,&endMat);
+    //const std::map<uint32_t, CMat4*> startBones = pBeforeAnimation->GetBoneLocalMatrixMapByFrame(beforeFrame);
+    //const std::map<uint32_t, CMat4*> endBones = pAfterAnimation->GetBoneLocalMatrixMapByFrame(afterFrame);
+    //BEATS_ASSERT(startBones.size() == endBones.size());
+    //for (auto iter = startBones.begin(); iter != startBones.end(); ++iter)
+    //{
+    //    const CMat4* pMataStart = iter->second;
+    //    auto endIter = endBones.find(iter->first);
+    //    BEATS_ASSERT(endIter != endBones.end());
+    //    const CMat4* pMatEnd = endIter->second;
+    //    CMat4 matrix;
+    //    if(pMataStart != pMatEnd)
+    //    {
+    //        Interpolation(*pMataStart, *pMatEnd, matrix);
+    //    }
+    //    else
+    //    {
+    //        matrix = *pMatEnd;
+    //    }
+    //    localMap[iter->first] = matrix;
+    //}
 
-    kmQuaternion end;
-    kmQuaternionRotationAxis(&end, &pAxis, radians);
+    //for (auto iter = localMap.begin(); iter != localMap.end(); ++iter)
+    //{
+    //    UpdateBlendWorldTM(iter->first, localMap);
+    //}
+    //BEATS_ASSERT(m_blendBonesWorldTMMap.size() == localMap.size());
+}
 
-    kmQuaternion result;
+void CAnimationController::Interpolation(const CMat4& startMat, const CMat4& endMat,CMat4& insertMat)
+{
+    CVec3 pAxis;
+    float radians;
+    startMat.ToAxisAngle(&pAxis, &radians);
+
+    CQuaternion start;
+    start.FromAxisAngle(pAxis, radians);
+
+    endMat.ToAxisAngle(&pAxis, &radians);
+
+    CQuaternion end;
+    end.FromAxisAngle(pAxis, radians);
+
+    CQuaternion result;
 
     if(m_fPlayingTime <= m_fBlendTime )
     {
-        Slerp(&result, &start, &end, (float)m_fPlayingTime / m_fBlendTime);
+        BEATS_ASSERT(!BEATS_FLOAT_EQUAL(m_fBlendTime, 0));
+        result = start.Slerp(end, m_fPlayingTime / m_fBlendTime);
+        CMat4 mat;
+        mat.FromQuaternion(&result);
 
-        kmMat4 mat;
-        kmMat4RotationQuaternion(&mat, &result);
-        
-        kmVec3 posStart;
-        kmVec3 posEnd;
-        kmVec3 posStep;
-        kmVec3 posSub;
-        kmVec3 posReult;
-        kmVec3Fill(&posStart, startMat.mat[12], startMat.mat[13], startMat.mat[14]);
-        kmVec3Fill(&posEnd, endMat.mat[12], endMat.mat[13], endMat.mat[14]);
-        kmVec3Subtract(&posSub, &posEnd, &posStart);
-        kmVec3Scale(&posStep, &posSub, (float)m_fPlayingTime / m_fBlendTime);
-        kmVec3Add(&posReult, &posStart, &posStep);
-        mat.mat[12] = posReult.x;
-        mat.mat[13] = posReult.y;
-        mat.mat[14] = posReult.z;
+        CVec3 posStart;
+        CVec3 posEnd;
+        CVec3 posStep;
+        CVec3 posSub;
+        CVec3 posReult;
+        posStart.Fill(startMat[12], startMat[13], startMat[14]);
+        posEnd.Fill(endMat[12], endMat[13], endMat[14]);
+        posSub = posEnd - posStart;
+        posStep = posSub * ((float)m_fPlayingTime / m_fBlendTime);
+        posReult = posStart + posStep;
+        mat[12] = posReult.X();
+        mat[13] = posReult.Y();
+        mat[14] = posReult.Z();
 
-        kmMat4Assign(&insertMat,&mat);
+        insertMat = mat;
     }
-}
-
-void CAnimationController::Slerp( kmQuaternion* pOut,
-                                 const kmQuaternion* q1,
-                                 const kmQuaternion* q2,
-                                 kmScalar t)
-{
-    float w0,x0,y0,z0;
-    float w1,x1,y1,z1;
-
-    w0 = q1->w;
-    x0 = q1->x;
-    y0 = q1->y;
-    z0 = q1->z;
-
-    w1 = q2->w;
-    x1 = q2->x;
-    y1 = q2->y;
-    z1 = q2->z;
-
-    float w,x,y,z;
-
-    float cosOmega = w0*w1 + x0*x1 + y0*y1 + z0*z1;
-
-    if (cosOmega < 0.0f) 
-    {
-        w1 = w1 * -1;
-        x1 = x1 * -1;
-        y1 = y1 * -1;
-        z1 = z1 * -1;
-        cosOmega = cosOmega * -1;
-    }
-
-    float k0, k1;
-
-    if (cosOmega > 0.9999f) 
-    {
-
-        k0 = 1.0f-t;
-        k1 = t;
-    } 
-    else
-    {
-        float sinOmega = sqrt(1.0f - cosOmega * cosOmega);
-
-        float omega = atan2(sinOmega, cosOmega);
-        float oneOverSinOmega = 1.0f / sinOmega;
-
-        k0 = sin((1.0f - t) * omega) * oneOverSinOmega;
-        k1 = sin(t * omega) * oneOverSinOmega;
-    }
-
-    w = w0 * k0 + w1 * k1;
-    x = x0 * k0 + x1 * k1;
-    y = y0 * k0 + y1 * k1;
-    z = z0 * k0 + z1 * k1;
-
-    pOut->x = x;
-    pOut->y = y;
-    pOut->z = z;
-    pOut->w = w;
 }

@@ -1,9 +1,10 @@
 ﻿#ifndef BEYOND_ENGINE_GUI_FONT_FONTFACE_H__INCLUDE
 #define BEYOND_ENGINE_GUI_FONT_FONTFACE_H__INCLUDE
 
-class CTexture;
-class CMaterial;
+#include "Render/RenderGroupManager.h"
 
+class CTexture;
+class CRenderBatch;
 class CFont;
 
 class CFontGlyph
@@ -55,37 +56,52 @@ private:
     float m_fHeight_border;
 };
 
+enum EFontType
+{
+    e_free_type_font = 0,
+    e_bitmap_font
+};
+
 class CFontFace
 {
 public:
     CFontFace(const TString &name);
     virtual ~CFontFace();
 
-    void PrepareCharacters(const TString &chars);
-    void PrepareCharacters(const wchar_t *wchars);
-    virtual const CFontGlyph *PrepareChar(wchar_t character) = 0;
-    void RenderText(const TString &text, kmScalar x, kmScalar y, float fFontSize = 1.0f,
-        CColor color = 0x000000FF,  CColor borderColor = 0, const kmMat4 *transform = nullptr,
-        bool bGUI = true, const CRect *pScissorRect = nullptr);
-    std::vector<const CFontGlyph *> GetGlyphs(const TString &text);
-    const CFontGlyph *GetGlyph(unsigned long character) const;
+    void PrepareCharacters(const TString &chars, std::vector<const CFontGlyph *>& glyphs);
+    void PrepareCharacters(const wchar_t *wchars, std::vector<const CFontGlyph *>& glyphs);
+    virtual const CFontGlyph *PrepareChar(wchar_t character, bool& glyphRestFlag) = 0;
+    float RenderText(const TString &text, float x, float y, ERenderGroupID renderGroupId, float fFontSize = 1.0f,
+        const CColor& color = 0x000000FF, const CColor&  borderColor = 0, const CMat4 *transform = nullptr,
+        const CRect *pScissorRect = nullptr, float fAlphaScale = 1.0f);
+
+    void GetGlyphs(const TString &text, std::vector<const CFontGlyph *>& glyphs);
     const TString& GetName()const;
     virtual void Clear();
     void SetBorderWeight(float fBorderWeight);
     float GetBorderWeight() const;
     virtual void SetFontSize(int /*nFontSize*/){}; // TODO: HARD HACK. Free type will implement this.
-#ifdef EDITOR_MODE
+    virtual int GetFontSize();
+    void SetFontType(EFontType type);
+    EFontType GetFontType();
+    CVec2 GetTextSize(const TString& text, float fontSize, bool hasBorder);
+#if (BEYONDENGINE_PLATFORM == PLATFORM_WIN32) && defined(DEVELOP_VERSION)
     virtual void SaveToTextureFile(const TCHAR* /*pszFilePath*/) {};
 #endif
+    virtual float GetScaleFactor() const;
 private:
-    virtual void DrawGlyph(const CFontGlyph *glyph, float x, float y, float fFontSize, CColor color, CColor borderColor = 0x000000FF,
-        const kmMat4 *transform = nullptr, bool bGUI = true, const CRect *pRect = nullptr) const = 0;
+    virtual void DrawGlyph(CRenderBatch* pBatch, const CFontGlyph *glyph, float x, float y, float fFontSize, const CColor& color, const CColor& borderColor = 0x000000FF,
+        const CMat4 *transform = nullptr, const CRect *pRect = nullptr, float fAlphaScale = 1.0f) const = 0;
+    virtual CRenderBatch* GetRenderBatch(ERenderGroupID renderGroupId) const = 0;
 
 protected:
     TString m_strName;
-    std::map<unsigned long, CFontGlyph *> m_glyphMap;
-    std::map<GLuint, SharePtr<CMaterial>> m_materialMap;
-    float m_fBorderWeight;
+    std::unordered_map<uint32_t, CFontGlyph *> m_glyphMap;//this map will find frequently, unordered map is faster than map
+    float m_fBorderWeight = 3.0f;
+    EFontType m_eFontType = e_free_type_font;
+    int m_nSize = 52;
+    SharePtr<CTexture> m_pTexture;
+    std::mutex m_glyphMapLocker;
 };
 
 #endif

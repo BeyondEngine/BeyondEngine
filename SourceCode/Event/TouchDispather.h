@@ -12,7 +12,7 @@ public:
     virtual ~CTouchDispather();
 
     void AddTouch( CTouch* pTouch );
-    void DispatchEvent( EEventType type );    
+    void DispatchEvent( EEventType type );
     void Remove( CTouch* pTouch );
 
 private:

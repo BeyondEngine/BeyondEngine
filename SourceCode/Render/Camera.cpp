@@ -1,34 +1,26 @@
 ﻿#include "stdafx.h"
 #include "Camera.h"
 #include "RenderManager.h"
-#include "Renderer.h"
-#include "RenderState.h"
-#include "Framework/Application.h"
 #include "RenderTarget.h"
 
 CCamera::CCamera(ECameraType type /* = eCT_3D */)
     : m_bInvalidateViewMatrix(true)
     , m_bInvalidateProjectionMatrix(true)
-    , m_uWidth(0)
-    , m_uHeight(0)
+    , m_bInvalidFrustumPlanes(true)
+    , m_bLocked(false)
     , m_type(type)
     , m_fRotateSpeed(12.5f)
-    , m_fZNear(10.f)
-    , m_fZFar(1000.f)
-    , m_fFOV(51.8f)
-    , m_uLastUpdateFrameCounter(0)
 {
-    kmVec3Zero(&m_vec3Pos);
-    kmVec3Zero(&m_vec3Rotation);
-    kmVec2Fill(&m_vec2CameraCenterOffset, 0, 0);
-    kmMat4Identity(&m_viewMatrix);
-    kmMat4Identity(&m_projectionMatrix);
-    SetNear(m_type == eCT_2D ? -1.f : 0.1f);
+    m_viewMatrix.Identity();
+    m_projectionMatrix.Identity();
+    if (m_type == eCT_2D)
+    {
+        m_cameraData.m_vec3Pos = CVec3(0, 0, 5);// Set camera to z = 5, to make sure we can see things at z = 0.
+    }
 }
 
 CCamera::~CCamera()
 {
-
 }
 
 CCamera::ECameraType CCamera::GetType() const
@@ -36,27 +28,26 @@ CCamera::ECameraType CCamera::GetType() const
     return m_type;
 }
 
-void CCamera::SetCamera(const kmVec3& pos,const kmVec3& rotate)
-{
-    kmVec3Assign(& m_vec3Pos, &pos);
-    kmVec3Assign(& m_vec3Rotation, &rotate);
-    InvalidateViewMatrix();
-}
-
 void  CCamera::Roll(float angle)
 {
     if (!BEATS_FLOAT_EQUAL(angle, 0))
     {
-        m_vec3Rotation.z += angle * m_fRotateSpeed;
-        InvalidateViewMatrix();
+        if (!m_bLocked)
+        {
+            m_cameraData.m_vec3Rotation.Z() += angle * m_fRotateSpeed;
+            InvalidateViewMatrix();
+        }
     }
 }
 void  CCamera::Pitch(float angle)
 {
     if (!BEATS_FLOAT_EQUAL(angle, 0))
     {
-        m_vec3Rotation.x += angle * m_fRotateSpeed;
-        InvalidateViewMatrix();
+        if (!m_bLocked)
+        {
+            m_cameraData.m_vec3Rotation.X() += angle * m_fRotateSpeed;
+            InvalidateViewMatrix();
+        }
     }
 }
 
@@ -64,137 +55,198 @@ void  CCamera::Yaw(float angle)
 {
     if (!BEATS_FLOAT_EQUAL(angle, 0))
     {
-        m_vec3Rotation.y += angle * m_fRotateSpeed;
-        InvalidateViewMatrix();
+        if (!m_bLocked)
+        {
+            m_cameraData.m_vec3Rotation.Y() += angle * m_fRotateSpeed;
+            InvalidateViewMatrix();
+        }
     }
-}
-
-void  CCamera::Translate(float x, float y, float z)
-{
-    SetViewPos(m_vec3Pos.x + x, m_vec3Pos.y + y, m_vec3Pos.z + z);
 }
 
 float CCamera::GetPitch() const
 {
-    return m_vec3Rotation.x;
+    return m_cameraData.m_vec3Rotation.X();
 }
 
 float CCamera::GetYaw() const
 {
-    return m_vec3Rotation.y;
+    return m_cameraData.m_vec3Rotation.Y();
 }
 
 float CCamera::GetRoll() const
 {
-    return m_vec3Rotation.z;
+    return m_cameraData.m_vec3Rotation.Z();
 }
 
 void CCamera::SetNear(float fZNear)
 {
-    if (!BEATS_FLOAT_EQUAL(m_fZNear, fZNear))
+    if (!BEATS_FLOAT_EQUAL(m_cameraData.m_fZNear, fZNear))
     {
-        m_fZNear = fZNear;
-        InvalidateProjectionMatrix();
+        if (!m_bLocked)
+        {
+            m_cameraData.m_fZNear = fZNear;
+            InvalidateProjectionMatrix();
+        }
     }
 }
 
 void CCamera::SetFar(float fZFar)
 {
-    if (!BEATS_FLOAT_EQUAL(m_fZFar, fZFar))
+    if (!BEATS_FLOAT_EQUAL(m_cameraData.m_fZFar, fZFar))
     {
-        m_fZFar = fZFar;
-        InvalidateProjectionMatrix();
+        if (!m_bLocked)
+        {
+            m_cameraData.m_fZFar = fZFar;
+            InvalidateProjectionMatrix();
+        }
     }
 }
 
 void CCamera::SetFOV(float fFOV)
 {
-    if (!BEATS_FLOAT_EQUAL(m_fFOV, fFOV))
+    if (!BEATS_FLOAT_EQUAL(m_cameraData.m_fFOV, fFOV))
     {
-        m_fFOV = fFOV;
-        InvalidateProjectionMatrix();
+        if (!m_bLocked)
+        {
+            m_cameraData.m_fFOV = fFOV;
+            InvalidateProjectionMatrix();
+        }
     }
 }
 
 float CCamera::GetNear() const
 {
-    return m_fZNear;
+    return m_cameraData.m_fZNear;
 }
 
 float CCamera::GetFar() const
 {
-    return m_fZFar;
+    return m_cameraData.m_fZFar;
 }
 
 float CCamera::GetFOV() const
 {
-    return m_fFOV;
+    return m_cameraData.m_fFOV;
 }
 
-void CCamera::SetViewPos(float x, float y, float z)
+void CCamera::SetViewPos(const CVec3& viewPos)
 {
-    kmVec3Fill(&m_vec3Pos, x, y, z);
-    InvalidateViewMatrix();
+    if (!m_bLocked)
+    {
+        float fOldZValue = m_cameraData.m_vec3Pos.Z();
+        m_cameraData.m_vec3Pos = viewPos;
+        if (m_type == eCT_2D)
+        {
+            m_cameraData.m_vec3Pos.Z() = fOldZValue;
+        }
+        InvalidateViewMatrix();
+    }
 }
 
-const kmVec3& CCamera::GetViewPos() const
+const CVec3& CCamera::GetViewPos() const
 {
-    return m_vec3Pos;
+    return m_cameraData.m_vec3Pos;
 }
 
-void CCamera::SetRotation(float x, float y, float z)
+void CCamera::SetRotation(const CVec3& rotation)
 {
-    kmVec3Fill(&m_vec3Rotation, x, y, z);
-    InvalidateViewMatrix();
+    if (!m_bLocked)
+    {
+        m_cameraData.m_vec3Rotation = rotation;
+        InvalidateViewMatrix();
+    }
 }
 
-const kmVec3& CCamera::GetRotation() const
+const CVec3& CCamera::GetRotation() const
 {
-    return m_vec3Rotation;
+    return m_cameraData.m_vec3Rotation;
 }
 
-const kmMat4& CCamera::GetViewMatrix()
+const CMat4& CCamera::GetViewMatrix(bool bWithShake/*= false*/)
 {
     if (m_bInvalidateViewMatrix)
     {
-        kmMat4Identity(&m_viewMatrix);
+        m_viewMatrix.Identity();
         switch(m_type)
         {
         case eCT_2D:
-            kmMat4Translation(&m_viewMatrix, m_vec3Pos.x, m_vec3Pos.y, m_vec3Pos.z);
+            m_viewMatrix.SetTranslate(m_cameraData.m_vec3Pos * -1); //Get the inverse matrix.
             break;
         case eCT_3D:
             {
-                kmMat4 rotation, axisXRotation, axisYRotation;
-                kmMat4RotationX(&axisXRotation, kmDegreesToRadians(m_vec3Rotation.x));
-                kmMat4RotationY(&axisYRotation, kmDegreesToRadians(m_vec3Rotation.y));
-                kmMat4Multiply(&rotation, &axisYRotation, &axisXRotation);
-
-                kmMat4 translate;
-                kmMat4Translation(&translate, m_vec3Pos.x, m_vec3Pos.y, m_vec3Pos.z);
-                kmMat4Multiply(&m_viewMatrix, &translate, &rotation);
-                kmMat4Inverse(&m_viewMatrix, &m_viewMatrix);
+                CVec3 eye = m_cameraData.m_vec3Pos;
+                CVec3 center(0, 0, -100); //Opengl face to the negative Z as default.
+                CMat4 rotateMatrix;
+                rotateMatrix.FromPitchYawRoll(DegreesToRadians(m_cameraData.m_vec3Rotation.X()), DegreesToRadians(m_cameraData.m_vec3Rotation.Y()), DegreesToRadians(m_cameraData.m_vec3Rotation.Z()));
+                CVec3 up;
+                up = rotateMatrix.GetUpVec3();
+                center *= rotateMatrix;
+                center = center + eye;
+                m_viewMatrix.LookAt(eye, center, up);
+                if (m_cameraData.m_vec3ShakeOffset.LengthSq() != 0)
+                {
+                    eye = m_cameraData.m_vec3Pos;
+                    eye += m_cameraData.m_vec3ShakeOffset;
+                    center.Fill(0, 0, -100); //Opengl face to the negative Z as default.
+                    rotateMatrix.FromPitchYawRoll(DegreesToRadians(m_cameraData.m_vec3Rotation.X()), DegreesToRadians(m_cameraData.m_vec3Rotation.Y()), DegreesToRadians(m_cameraData.m_vec3Rotation.Z()));
+                    up = rotateMatrix.GetUpVec3();
+                    center *= rotateMatrix;
+                    center = center + eye;
+                    m_viewMatrixWithShake.LookAt(eye, center, up);
+                }
+                else
+                {
+                    m_viewMatrixWithShake = m_viewMatrix;
+                }
             }
             break;
         default:
             BEATS_ASSERT(false);
             break;
         }
+        m_viewMatrixInverse = m_viewMatrix;
+        m_viewMatrixInverse.Inverse();
+        m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
+        m_viewProjectionMatrixWithShake = m_projectionMatrix * m_viewMatrixWithShake;
         m_bInvalidateViewMatrix = false;
     }
-    return m_viewMatrix;
+    bool b3DShakeMatrix = GetType() == CCamera::eCT_3D && bWithShake;
+    return b3DShakeMatrix ? m_viewMatrixWithShake : m_viewMatrix;
 }
 
-const kmMat4& CCamera::GetProjectionMatrix()
+const CMat4& CCamera::GetViewMatrixInverse()
+{
+    if (m_bInvalidateViewMatrix)
+    {
+        GetViewMatrix(); //Force update the m_viewMatrixInverse.
+    }
+    return m_viewMatrixInverse;
+}
+
+const CMat4& CCamera::GetViewProjectionMatrix(bool bWithShake/* = false*/)
+{
+    if (m_bInvalidateViewMatrix)
+    {
+        GetViewMatrix(); //Force update the m_viewMatrixInverse.
+    }
+    if (m_bInvalidateProjectionMatrix)
+    {
+        GetProjectionMatrix(); //Force update the m_projectionMatrixInverse.
+    }
+    bool b3DShakeMatrix = GetType() == CCamera::eCT_3D && bWithShake;
+    return  b3DShakeMatrix ? m_viewProjectionMatrixWithShake : m_viewProjectionMatrix;
+}
+
+const CMat4& CCamera::GetProjectionMatrix()
 {
     CRenderManager* pRenderMgr = CRenderManager::GetInstance();
     CRenderTarget* pRenderTarget = pRenderMgr->GetCurrentRenderTarget();
-    size_t uWidth = (size_t)(pRenderTarget->GetWidth() * pRenderTarget->GetScaleFactor());
-    size_t uHeight = (size_t)(pRenderTarget->GetHeight() * pRenderTarget->GetScaleFactor());
-    if (m_uWidth != uWidth || m_uHeight != uHeight)
+    uint32_t uWidth = pRenderTarget->GetDeviceWidth();
+    uint32_t uHeight = pRenderTarget->GetDeviceHeight();
+    if (m_cameraData.m_uTargetWidth != uWidth || m_cameraData.m_uTargetHeight != uHeight)
     {
-        m_uWidth = uWidth;
-        m_uHeight = uHeight;
+        m_cameraData.m_uTargetWidth = uWidth;
+        m_cameraData.m_uTargetHeight = uHeight;
         m_bInvalidateProjectionMatrix = true;
     }
     if (m_bInvalidateProjectionMatrix)
@@ -202,164 +254,232 @@ const kmMat4& CCamera::GetProjectionMatrix()
         switch(m_type)
         {
         case eCT_2D:
-            kmMat4OrthographicProjection(&m_projectionMatrix, 
-                m_vec2CameraCenterOffset.x, 
-                m_uWidth  + m_vec2CameraCenterOffset.x,
-                m_uHeight + m_vec2CameraCenterOffset.y, 
-                m_vec2CameraCenterOffset.y,
-                m_fZNear, m_fZFar);
+            m_projectionMatrix.OrthographicProjection(
+                m_cameraData.m_vec2CameraCenterOffset.X(),
+                m_cameraData.m_uTargetWidth + m_cameraData.m_vec2CameraCenterOffset.X(),
+                m_cameraData.m_uTargetHeight + m_cameraData.m_vec2CameraCenterOffset.Y(),
+                m_cameraData.m_vec2CameraCenterOffset.Y(),
+                m_cameraData.m_fZNear, m_cameraData.m_fZFar);
             break;
         case eCT_3D:
-            kmMat4PerspectiveProjection(&m_projectionMatrix, m_fFOV, (float)m_uWidth / m_uHeight, m_fZNear, m_fZFar);
+            m_projectionMatrix.PerspectiveProjection(m_cameraData.m_fFOV, (float)m_cameraData.m_uTargetWidth / m_cameraData.m_uTargetHeight, m_cameraData.m_fZNear, m_cameraData.m_fZFar);
             break;
         }
+        m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
+        m_viewProjectionMatrixWithShake = m_projectionMatrix * m_viewMatrixWithShake;
         m_bInvalidateProjectionMatrix = false;
     }
     return m_projectionMatrix;
 }
 
-void CCamera::ExecuteMovement(const kmVec3& vec3Speed, int type)
+void CCamera::SetCenterOffset(const CVec2& centerOffset)
 {
-    kmMat4 cameraMat = GetViewMatrix();
-    kmMat4Inverse(&cameraMat, &cameraMat);
-    kmVec3 vec3Translation;
-    kmVec3Zero(&vec3Translation);
-    if ((type & eCMT_TRANVERSE) != 0)
-    {
-        kmVec3 tmpTranslation;
-        kmMat4GetRightVec3(&tmpTranslation, &cameraMat);
-        kmVec3Scale(&tmpTranslation, &tmpTranslation, vec3Speed.x);
-        tmpTranslation.y = 0;
-        kmVec3Add(&vec3Translation, &vec3Translation, &tmpTranslation);
-    }
-    if ((type & eCMT_STRAIGHT) != 0)
-    {
-        kmVec3 tmpTranslation;
-        kmMat4GetForwardVec3(&tmpTranslation, &cameraMat);
-        kmVec3Scale(&tmpTranslation, &tmpTranslation, vec3Speed.z);
-        kmVec3Add(&vec3Translation, &vec3Translation, &tmpTranslation);
-    }
-    if ((type & eCMT_UPDOWN) != 0)
-    {
-        kmVec3 tmpTranslation;
-        kmMat4GetUpVec3(&tmpTranslation, &cameraMat);
-        kmVec3Scale(&tmpTranslation, &tmpTranslation, vec3Speed.y);
-        tmpTranslation.x = 0;
-        tmpTranslation.z = 0;
-        kmVec3Add(&vec3Translation, &vec3Translation, &tmpTranslation);
-    }
-    Translate(vec3Translation.x, vec3Translation.y, vec3Translation.z);
-}
-
-void CCamera::SetCenterOffset(const kmVec2& centerOffset)
-{
-    m_vec2CameraCenterOffset.x = centerOffset.x;
-    m_vec2CameraCenterOffset.y = centerOffset.y;
+    m_cameraData.m_vec2CameraCenterOffset.X() = centerOffset.X();
+    m_cameraData.m_vec2CameraCenterOffset.Y() = centerOffset.Y();
     InvalidateProjectionMatrix();
 }
 
-const kmVec2& CCamera::GetCenterOffset() const
+const CVec2& CCamera::GetCenterOffset() const
 {
-    return m_vec2CameraCenterOffset;
+    return m_cameraData.m_vec2CameraCenterOffset;
 }
 
-CVec3 CCamera::RayCast(float x, float y)
+CVec3 CCamera::RayCast(float x, float y) const
 {
-    kmMat4 viewMatrixInverse;
-    const kmMat4& viewMatrix = GetViewMatrix();
-    kmMat4Inverse(&viewMatrixInverse, &viewMatrix);
-    kmVec3 rightDirection;
-    kmMat4GetRightVec3(&rightDirection, &viewMatrixInverse);
-    kmVec3 upDirection;
-    kmMat4GetUpVec3(&upDirection, &viewMatrixInverse);
-    kmVec3 forwardDirection;
-    kmMat4GetForwardVec3(&forwardDirection, &viewMatrixInverse);
+    CRay3 ray = GetRayFromScreenPos(x, y);
+    CPlane plane(0, 1, 0, 0);
+    float fIntersectDistance = 0;
+    bool bRet = ray.IntersectPlane(plane, fIntersectDistance);
+    CVec3 ret = ray.GetStartPos() + ray.GetDirection() * fIntersectDistance;
+    BEYONDENGINE_UNUSED_PARAM(bRet);
+    BEATS_ASSERT(bRet);
+    return ret;
+}
 
-    float fFOVRadian = kmDegreesToRadians(m_fFOV);
-    float halfHeight = (float) (tanf(fFOVRadian * 0.5f) * m_fZNear);
+CRay3 CCamera::GetRayFromScreenPos(float x, float y) const
+{
+    const CMat4& viewMatrixInverse = const_cast<CCamera*>(this)->GetViewMatrixInverse();
+    CVec3 rightDirection = viewMatrixInverse.GetRightVec3();
+    CVec3 upDirection = viewMatrixInverse.GetUpVec3();
+    CVec3 forwardDirection = viewMatrixInverse.GetForwardVec3();
+
+    float fFOVRadian = DegreesToRadians(m_cameraData.m_fFOV);
+    float halfHeight = (float)(tanf(fFOVRadian * 0.5f) * m_cameraData.m_fZNear);
     CRenderTarget* pCurRenderTarget = CRenderManager::GetInstance()->GetCurrentRenderTarget();
-    size_t uWidth = pCurRenderTarget->GetWidth();
-    size_t uHeight = pCurRenderTarget->GetHeight();
+    uint32_t uWidth = pCurRenderTarget->GetLogicWidth();
+    uint32_t uHeight = pCurRenderTarget->GetLogicHeight();
     float fHalfWidth = halfHeight * uWidth / uHeight;
-    kmVec3Scale(&forwardDirection, &forwardDirection, m_fZNear);
-    kmVec3Scale(&rightDirection, &rightDirection, fHalfWidth);
-    kmVec3Scale(&upDirection, &upDirection, halfHeight);
+    forwardDirection = forwardDirection * m_cameraData.m_fZNear;
+    rightDirection = rightDirection * fHalfWidth;
+    upDirection = upDirection * halfHeight;
 
     x -= uWidth * 0.5f;
     y -= uHeight * 0.5f;
     // normalize to 1
-    x = ((float) x) / (uWidth * 0.5f);
-    y = ((float) y)/ (uHeight * 0.5f);
-    y*= -1;
-    kmVec3Scale(&rightDirection, &rightDirection, x);
-    kmVec3Scale(&upDirection, &upDirection, y);
+    x = ((float)x) / (uWidth * 0.5f);
+    y = ((float)y) / (uHeight * 0.5f);
+    y *= -1;
+    rightDirection = rightDirection * x;
+    upDirection = upDirection * y;
 
-    kmVec3 pos;
-    kmVec3Subtract(&pos, &m_vec3Pos, & forwardDirection);
-    kmVec3Add(&pos, &pos, &rightDirection);
-    kmVec3Add(&pos, &pos, &upDirection);
+    CVec3 posOnNearPlane;
+    posOnNearPlane = m_cameraData.m_vec3Pos - forwardDirection;
+    posOnNearPlane = posOnNearPlane + rightDirection;
+    posOnNearPlane = posOnNearPlane + upDirection;
 
-    kmVec3 directionReally;
-    kmVec3Subtract(&directionReally, &pos, &m_vec3Pos);
-    float fScale = -pos.y / directionReally.y;
-    kmVec3 worldPos;
-    worldPos.x = pos.x + directionReally.x * fScale;
-    worldPos.z = pos.z + directionReally.z * fScale;
-    worldPos.y = 0;
-    return worldPos;
+    CVec3 rayDirection;
+    rayDirection = posOnNearPlane - m_cameraData.m_vec3Pos;
+    CRay3 ret;
+    ret.FromPointAndDirection(m_cameraData.m_vec3Pos, rayDirection);
+    return ret;
 }
 
-CVec3 CCamera::QueryCameraPos(const kmVec3& worldPos, const kmVec2& screenPos)
+CVec3 CCamera::QueryCameraPos(const CVec3& worldPos, const CVec2& screenPos, const CMat4& viewMatrix,
+    float fNear, float fFov, float fCameraHeight)
 {
-    //NOTICE: these codes are comes form calculation.
-    // Basically, read these codes doesn't make sense.
-    kmMat4 viewMatrix = GetViewMatrix();
-    CRenderTarget* pRenderTarget = CRenderManager::GetInstance()->GetCurrentRenderTarget();
-    float fTheta = kmDegreesToRadians(GetFOV() * 0.5f);
-    float fTanTheta = tan(fTheta);
-    float aspect = (float)pRenderTarget->GetWidth() / pRenderTarget->GetHeight();
-    float viewPosZ = worldPos.x * viewMatrix.mat[2] + worldPos.y * viewMatrix.mat[6] + worldPos.z * viewMatrix.mat[10] + viewMatrix.mat[14];
-    float viewposX = (screenPos.x / pRenderTarget->GetWidth() * 2 - 1)*(fTanTheta * aspect * -viewPosZ);
-    float viewPosY = -((1.0f - screenPos.y/pRenderTarget->GetHeight()) * 2 - 1.0f) * (fTanTheta * viewPosZ);
+    CMat4 cleanViewMatrix = viewMatrix;
+    cleanViewMatrix.RemoveTranslate();
+    CMat4 viewInverseMat = cleanViewMatrix;
+    viewInverseMat.Inverse();
 
-    viewMatrix.mat[12] = viewposX - (worldPos.x * viewMatrix.mat[0] + worldPos.y * viewMatrix.mat[4] + worldPos.z * viewMatrix.mat[8]);
-    viewMatrix.mat[13] = viewPosY - (worldPos.x * viewMatrix.mat[1] + worldPos.y * viewMatrix.mat[5] + worldPos.z * viewMatrix.mat[9]);
-    viewMatrix.mat[14] = viewPosZ - (worldPos.x * viewMatrix.mat[2] + worldPos.y * viewMatrix.mat[6] + worldPos.z * viewMatrix.mat[10]);
-
-    kmMat4 invserViewMatrix;
-    kmMat4Inverse(&invserViewMatrix, &viewMatrix);
-    return CVec3(invserViewMatrix.mat[12], invserViewMatrix.mat[13], invserViewMatrix.mat[14]);
+    CVec2 screenPosInClamp = screenPos;
+    float fWidth = (float)CRenderManager::GetInstance()->GetCurrentRenderTarget()->GetLogicWidth();
+    float fHeight = (float)CRenderManager::GetInstance()->GetCurrentRenderTarget()->GetLogicHeight();
+    screenPosInClamp.Y() = fHeight - screenPosInClamp.Y();
+    screenPosInClamp.X() -= fWidth / 2;
+    screenPosInClamp.Y() -= fHeight / 2;
+    screenPosInClamp.X() /= fWidth / 2;
+    screenPosInClamp.Y() /= fHeight / 2;
+    float halfHeight = (float)(tanf(DegreesToRadians(fFov * 0.5f)) * fNear);
+    float halfWidth = halfHeight * fWidth / fHeight;
+    CVec3 tempDir(screenPosInClamp.X() * halfWidth, screenPosInClamp.Y() * halfHeight, -fNear);
+    tempDir.Normalize();
+    tempDir *= viewInverseMat;
+    float fCameraViewDistance = fCameraHeight / tempDir.Dot(CVec3(0, -1, 0));
+    CVec3 ret;
+    ret.X() = worldPos.X() - tempDir.X() * fCameraViewDistance;
+    ret.Y() = fCameraHeight;
+    ret.Z() = worldPos.Z() - tempDir.Z() * fCameraViewDistance;
+    return ret;
 }
 
-void CCamera::WorldToScreen( float x, float y, float z, CVec2& screenPos )
+CVec2 CCamera::WorldToScreen(const CVec3& worldPos, bool bWithShake/* = false*/)
 {
+    CVec2 screenPos;
     BEATS_ASSERT( GetType() == eCT_3D );
-    const kmMat4& viewMatrix = GetViewMatrix();
-    const kmMat4& projectMatrix = GetProjectionMatrix();
-    kmVec4 pos,pos1,pos2;
-    kmVec4Fill(&pos2, x, y, z, 1.0f);
-    kmVec4Transform(&pos1, &pos2, &viewMatrix);
-    kmVec4Transform(&pos, &pos1, &projectMatrix);
-    BEATS_ASSERT(!BEATS_FLOAT_EQUAL(pos.w, 0));
-    screenPos.x = (pos.x / pos.w + 1.0f) * 0.5f;
-    screenPos.y = (pos.y / pos.w + 1.0f) * 0.5f;
-    screenPos.x = CRenderManager::GetInstance()->GetWidth() * screenPos.x;
-    screenPos.y = CRenderManager::GetInstance()->GetHeight() * (1 - screenPos.y);
+    CVec4 pos(worldPos, 1.0f);
+    const CMat4& vpMat = GetViewProjectionMatrix(bWithShake);
+    pos *= vpMat;
+    BEATS_ASSERT(!BEATS_FLOAT_EQUAL(pos.W(), 0));
+    screenPos.X() = (pos.X() / pos.W() + 1.0f) * 0.5f;
+    screenPos.Y() = (pos.Y() / pos.W() + 1.0f) * 0.5f;
+    CRenderTarget* pCurrRenderTarget = CRenderManager::GetInstance()->GetCurrentRenderTarget();
+    BEATS_ASSERT(pCurrRenderTarget != NULL);
+    screenPos.X() = pCurrRenderTarget->GetLogicWidth() * screenPos.X();
+    screenPos.Y() = pCurrRenderTarget->GetLogicHeight() * (1 - screenPos.Y());
+    return screenPos;
 }
 
 void CCamera::InvalidateViewMatrix()
 {
     m_bInvalidateViewMatrix = true;
+    m_bInvalidFrustumPlanes = true;
+#ifdef EDITOR_MODE
     m_uLastUpdateFrameCounter = CEngineCenter::GetInstance()->GetFrameCounter();
+#endif
 }
 
 void CCamera::InvalidateProjectionMatrix()
 {
     m_bInvalidateProjectionMatrix = true;
+    m_bInvalidFrustumPlanes = true;
+#ifdef EDITOR_MODE
     m_uLastUpdateFrameCounter = CEngineCenter::GetInstance()->GetFrameCounter();
+#endif
 }
 
-size_t CCamera::GetLastUpdateFrameCounter() const
+void CCamera::SetShakeOffset(float fOffsetX, float fOffsetY, float fOffsetZ)
 {
-    return m_uLastUpdateFrameCounter;
+    m_cameraData.m_vec3ShakeOffset.Fill(fOffsetX, fOffsetY, fOffsetZ);
+    InvalidateViewMatrix();
+}
+
+const CVec3& CCamera::GetShakeOffset() const
+{
+    return m_cameraData.m_vec3ShakeOffset;
+}
+
+void CCamera::SetCameraData(const SCameraData& cameraData)
+{
+    m_cameraData = cameraData;
+    InvalidateViewMatrix();
+    InvalidateProjectionMatrix();
+}
+
+const SCameraData& CCamera::GetCameraData() const
+{
+    return m_cameraData;
+}
+
+const SFrustumPlanes& CCamera::GetFrustumPlanes()
+{
+    if (m_bInvalidFrustumPlanes)
+    {
+        CMat4 vpMatrix = GetProjectionMatrix() * GetViewMatrix();
+
+        CVec3 vecNormal;
+        vecNormal.X() = vpMatrix[3] + vpMatrix[0];
+        vecNormal.Y() = vpMatrix[7] + vpMatrix[4];
+        vecNormal.Z() = vpMatrix[11] + vpMatrix[8];
+        float fDistance = (vpMatrix[15] + vpMatrix[12]) / vecNormal.Length();
+        vecNormal.Normalize();
+        m_frustumPlanes.m_planes[(uint32_t)EFrustumPlaneType::eFPT_Left].FromPointNormalAndDistance(vecNormal, fDistance);
+
+        vecNormal.X() = vpMatrix[3] - vpMatrix[0];
+        vecNormal.Y() = vpMatrix[7] - vpMatrix[4];
+        vecNormal.Z() = vpMatrix[11] - vpMatrix[8];
+        fDistance = (vpMatrix[15] - vpMatrix[12]) / vecNormal.Length();
+        vecNormal.Normalize();
+        m_frustumPlanes.m_planes[(uint32_t)EFrustumPlaneType::eFPT_Right].FromPointNormalAndDistance(vecNormal, fDistance);
+
+        vecNormal.X() = vpMatrix[3] - vpMatrix[1];
+        vecNormal.Y() = vpMatrix[7] - vpMatrix[5];
+        vecNormal.Z() = vpMatrix[11] - vpMatrix[9];
+        fDistance = (vpMatrix[15] - vpMatrix[13]) / vecNormal.Length();
+        vecNormal.Normalize();
+        m_frustumPlanes.m_planes[(uint32_t)EFrustumPlaneType::eFPT_Top].FromPointNormalAndDistance(vecNormal, fDistance);
+
+        vecNormal.X() = vpMatrix[3] + vpMatrix[1];
+        vecNormal.Y() = vpMatrix[7] + vpMatrix[5];
+        vecNormal.Z() = vpMatrix[11] + vpMatrix[9];
+        fDistance = (vpMatrix[15] + vpMatrix[13]) / vecNormal.Length();
+        vecNormal.Normalize();
+        m_frustumPlanes.m_planes[(uint32_t)EFrustumPlaneType::eFPT_Bottom].FromPointNormalAndDistance(vecNormal, fDistance);
+
+        vecNormal.X() = vpMatrix[3] + vpMatrix[2];
+        vecNormal.Y() = vpMatrix[7] + vpMatrix[6];
+        vecNormal.Z() = vpMatrix[11] + vpMatrix[10];
+        fDistance = (vpMatrix[15] + vpMatrix[14]) / vecNormal.Length();
+        vecNormal.Normalize();
+        m_frustumPlanes.m_planes[(uint32_t)EFrustumPlaneType::eFPT_Near].FromPointNormalAndDistance(vecNormal, fDistance);
+
+        vecNormal.X() = vpMatrix[3] - vpMatrix[2];
+        vecNormal.Y() = vpMatrix[7] - vpMatrix[6];
+        vecNormal.Z() = vpMatrix[11] - vpMatrix[10];
+        fDistance = (vpMatrix[15] - vpMatrix[14]) / vecNormal.Length();
+        vecNormal.Normalize();
+        m_frustumPlanes.m_planes[(uint32_t)EFrustumPlaneType::eFPT_Far].FromPointNormalAndDistance(vecNormal, fDistance);
+        m_bInvalidFrustumPlanes = false;
+    }
+    return m_frustumPlanes;
+}
+
+void CCamera::Lock()
+{
+    m_bLocked = true;
+}
+
+void CCamera::Unlock()
+{
+    m_bLocked = false;
 }

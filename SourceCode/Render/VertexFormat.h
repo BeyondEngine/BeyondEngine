@@ -6,7 +6,7 @@ class CVertexFormat
 public:
     struct SCommonAttrib
     {
-        SCommonAttrib(GLint size, GLenum type, GLboolean normalized, size_t sizeInBytes)
+        SCommonAttrib(GLint size, GLenum type, GLboolean normalized, uint32_t sizeInBytes)
             : size(size)
             , type(type)
             , normalized(normalized)
@@ -16,7 +16,7 @@ public:
         GLint size;
         GLenum type;
         GLboolean normalized;
-        size_t sizeInBytes;
+        uint32_t sizeInBytes;
     };
     struct SAttrib
     {
@@ -35,8 +35,8 @@ public:
 
     bool HasAttrib(GLuint index) const;
     const SAttrib &GetAttrib(GLuint index) const;
-    size_t AttribCount() const;
-    size_t Size() const;
+    uint32_t AttribCount() const;
+    uint32_t Size() const;
     void SetupAttribPointer(GLuint vbo) const;
     void DisableAttribPointer() const;
 
@@ -50,7 +50,10 @@ public:
     template <typename VertexType>
     static const CVertexFormat &Get();
 
-    static const size_t MAX_VERTEX_SIZE = sizeof(CVertexPTB);
+    static const uint32_t MAX_VERTEX_SIZE = sizeof(CVertexPTB);
+#ifdef DEVELOP_VERSION
+    TString m_strTypeName;
+#endif
 
 private:
     CVertexFormat();
@@ -58,11 +61,11 @@ private:
     ~CVertexFormat();
 
     void AddAttrib(const SAttrib &attrib);
-    void SetSize(size_t size);
+    void SetSize(uint32_t size);
 
 private:
     std::map<GLuint, SAttrib> m_attribs;    //<index, SAttrib>
-    size_t m_size;
+    uint32_t m_size;
 };
 
 template <typename AttribType>
@@ -92,13 +95,6 @@ inline const CVertexFormat::SCommonAttrib &CVertexFormat::GetCommonAttrib<CVec4>
 }
 
 template <>
-inline const CVertexFormat::SCommonAttrib &CVertexFormat::GetCommonAttrib<CIVec4>()
-{
-    static SCommonAttrib attrib(4, GL_INT, GL_FALSE, sizeof(CIVec4));
-    return attrib;
-}
-
-template <>
 inline const CVertexFormat::SCommonAttrib &CVertexFormat::GetCommonAttrib<CTex>()
 {
     static SCommonAttrib attrib(2, GL_FLOAT, GL_FALSE, sizeof(CTex));
@@ -121,11 +117,7 @@ inline const CVertexFormat::SCommonAttrib &CVertexFormat::GetCommonAttrib<CColor
 template <typename VertexType>
 inline const CVertexFormat &CVertexFormat::Get()
 {
-#if BEYONDENGINE_PLATFORM == PLATFORM_WIN32
-    static_assert(false, "Unsuported vertex type");
-#else
     BEATS_ASSERT(false, "Unsupported vertex type");
-#endif
     static CVertexFormat format;
     return format;
 }
@@ -142,6 +134,9 @@ inline const CVertexFormat &CVertexFormat::Get<CVertexPTCC>()
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_COLOR, VertexType, color));
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_COLOR2, VertexType, color2));
         format.SetSize(sizeof(VertexType));
+#ifdef DEVELOP_VERSION
+        format.m_strTypeName = "CVertexPTCC";
+#endif
     }
     return format;
 }
@@ -158,6 +153,9 @@ inline const CVertexFormat &CVertexFormat::Get<CVertexPTB>()
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_BONE_INDICES, VertexType, bones));
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_WEIGHTS, VertexType, weights));
         format.SetSize(sizeof(VertexType));
+#ifdef DEVELOP_VERSION
+        format.m_strTypeName = "CVertexPTB";
+#endif
     }
     return format;
 }
@@ -173,6 +171,9 @@ inline const CVertexFormat &CVertexFormat::Get<CVertexPTC>()
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_TEXCOORD0, VertexType, tex));
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_COLOR, VertexType, color));
         format.SetSize(sizeof(VertexType));
+#ifdef DEVELOP_VERSION
+        format.m_strTypeName = "CVertexPTC";
+#endif
     }
     return format;
 }
@@ -187,6 +188,27 @@ inline const CVertexFormat &CVertexFormat::Get<CVertexPT>()
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_POSITION, VertexType, position));
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_TEXCOORD0, VertexType, tex));
         format.SetSize(sizeof(VertexType));
+#ifdef DEVELOP_VERSION
+        format.m_strTypeName = "CVertexPT";
+#endif
+    }
+    return format;
+}
+
+template <>
+inline const CVertexFormat &CVertexFormat::Get<CVertexPTT>()
+{
+    typedef CVertexPTT VertexType;
+    static CVertexFormat format;
+    if (format.AttribCount() == 0)
+    {
+        format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_POSITION, VertexType, position));
+        format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_TEXCOORD0, VertexType, tex));
+        format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_TEXCOORD1, VertexType, lightmapTex));
+        format.SetSize(sizeof(VertexType));
+#ifdef DEVELOP_VERSION
+        format.m_strTypeName = "CVertexPTT";
+#endif
     }
     return format;
 }
@@ -201,6 +223,9 @@ inline const CVertexFormat &CVertexFormat::Get<CVertexPC>()
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_POSITION, VertexType, position));
         format.AddAttrib(MAKE_VERTEX_ATTRIB(ATTRIB_INDEX_COLOR, VertexType, color));
         format.SetSize(sizeof(VertexType));
+#ifdef DEVELOP_VERSION
+        format.m_strTypeName = "CVertexPC";
+#endif
     }
     return format;
 }

@@ -2,7 +2,8 @@
 #define BEYOND_ENGINE_SCENE_NODEEVENT_H__INCLUDE
 
 #include "Event/BaseEvent.h"
-#include "CompWrapper.h"
+#include "EnginePublic/CompWrapper.h"
+#include "Event/EventDispatcher.h"
 
 class CNodeEvent : public CBaseEvent
 {

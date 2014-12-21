@@ -19,12 +19,13 @@ public:
     virtual CPropertyDescriptionBase* CreateNewInstance() override;
     virtual CPropertyDescriptionBase* Clone(bool bCloneValue) override;
     virtual bool IsContainerProperty() override;
-    virtual void LoadFromXML( TiXmlElement* pNode ) override;
+    virtual void LoadFromXML( rapidxml::xml_node<>* pNode ) override;
     virtual void Serialize(CSerializer& serializer, EValueType eValueType = eVT_SavedValue) override;
     virtual void Deserialize(CSerializer& serializer, EValueType eValueType = eVT_CurrentValue) override;
+    virtual bool GetValueByTChar(const TCHAR* pIn, void* pOutValue) override;
 
 private:
-    virtual void ResetChildName() override;
+    void ResetChildName();
     virtual TString GetCurrentName() override;
 
 public:

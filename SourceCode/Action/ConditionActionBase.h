@@ -5,13 +5,13 @@
 
 class CConditionActionBase : public CActionBase
 {
-    DECLARE_REFLECT_GUID_ABSTRACT( CConditionActionBase, 0x11D07A1C, CActionBase )
+    DECLARE_REFLECT_GUID( CConditionActionBase, 0x11D07A1C, CActionBase )
 public:
     CConditionActionBase();
     virtual ~CConditionActionBase();
     virtual void ReflectData(CSerializer& serializer) override;
     virtual bool ExecuteImp(SActionContext* pContext) override;
-    virtual bool Exam(SActionContext* pContext) = 0;
+    virtual bool Exam(SActionContext* pContext);
 
 protected:
     CActionBase* m_pSuccessAction;

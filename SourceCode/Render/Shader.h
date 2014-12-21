@@ -1,7 +1,7 @@
 ﻿#ifndef BEYOND_ENGINE_RENDER_SHADER_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_SHADER_H__INCLUDE
 
-#include "resource/Resource.h"
+#include "Resource/Resource.h"
 #include "Utility/BeatsUtility/Serializer.h"
 
 class CShader : public CResource
@@ -17,8 +17,10 @@ public:
     void SetShaderType(GLenum shaderType);
 
     virtual bool Load() override;
+    virtual bool Unload() override;
     virtual void Initialize() override;
-
+    virtual void Uninitialize() override;
+    virtual bool ShouldClean() const override;
     GLuint ID() const;
 
 private:
@@ -28,8 +30,6 @@ private:
     GLenum m_shaderType;
     GLuint m_uId;
     static CSerializer m_commonHeader;
-    static CSerializer m_vsHeader;
-    static CSerializer m_psHeader;
 };
 
 #endif

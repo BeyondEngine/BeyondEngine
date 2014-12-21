@@ -1,4 +1,4 @@
-﻿#ifndef BEATS_UTILITY_STRINGHELPER_STRINGHELPER_H__INCLUDE
+#ifndef BEATS_UTILITY_STRINGHELPER_STRINGHELPER_H__INCLUDE
 #define BEATS_UTILITY_STRINGHELPER_STRINGHELPER_H__INCLUDE
 
 class CStringHelper
@@ -26,23 +26,35 @@ public:
         eSCT_Force32Bit = 0xFFFFFFFF
     };
 public:
-    // Convert
-    bool SplitString(const TCHAR* pParameter, const TCHAR* pSpliter, std::vector<TString>& result, bool bIgnoreSpace = true);
-    void ConvertToTCHAR(const wchar_t* pData, TCHAR* pBuffer, size_t bufferLength);
-    void ConvertToTCHAR( const char* pData, TCHAR* pBuffer, size_t bufferLength );
-    void ConvertToCHAR( const TCHAR* pData, char* pBuffer, size_t bufferLength );
-    void ConvertToWCHAR( const TCHAR* pData, wchar_t* pBuffer, size_t bufferLength ) const;
+    bool SplitString(const char* pParameter, const char* pSpliter, std::vector<std::string>& result, bool bIgnoreSpace = true);
 
     // Filter and Find
-    TString FilterString(const TCHAR* pData, const std::vector<TString>& filters);
-    int FindFirstString(const TCHAR* pSource, const TCHAR* pTarget,  bool bCaseSensive);
-    int FindLastString(const TCHAR* pSource, const TCHAR* pTarget,  bool bCaseSensive);
+    std::string FilterString(const char* pData, const std::set<std::string>& filters);
+    int FindFirstString(const char* pSource, const char* pTarget, bool bCaseSensive);
+    int FindLastString(const char* pSource, const char* pTarget, bool bCaseSensive);
+
+    uint32_t Utf8GetLength(const char* pszData);
+    uint32_t Utf8GetByteNum(char byte);
+    uint32_t UnicodeGetByteNumFrom(uint32_t code);
+    const char *Utf8ExtractCodePoint(const char* pBuffer, uint32_t& code);
+    std::wstring Utf8ToWString(const char* utf8str);
+    std::string WStringToUtf8(const wchar_t* wstr);
+    bool IsUtf8StartByte(char byte);
+    bool IsAscii(char byte);
+    uint32_t BKDRHash(const char* strData) const;
+    TString ToLower(const TString& strIn) const;
+    TString ToUpper(const TString& strIn) const;
+    TString InsertString(const TString& strSourceStr, const TString& strInsertStr, bool bReverse, int32_t nStartPos = 0, uint32_t uInterval = 0xFFFFFFFF);
 
     // Check character.
+#if (BEYONDENGINE_PLATFORM == PLATFORM_WIN32)
+    // Only available in utf-16
     CStringHelper::EStringCharacterType GetCharacterType(wchar_t character) const;
     CStringHelper::EStringCharacterType GetCharacterType(const char* pszChar) const;
-
-    bool WildMatch(const TCHAR* pat, const TCHAR* str); 
+    std::string Utf8ToString(const char* utf8str);
+    std::string StringToUtf8(const char* str);
+#endif
+    bool WildMatch(const char* pat, const char* str); 
 };
 
 #endif

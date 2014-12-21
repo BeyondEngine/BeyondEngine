@@ -2,50 +2,28 @@
 #include "SceneManager.h"
 #include "Scene.h"
 #include "Node.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProject.h"
-#include "Task/LoadComponentFiles.h"
+#include "Component/Component/ComponentProject.h"
 #include "Task/TaskManager.h"
-#include "GUI/Window/Control.h"
-
+#include "Task/SwitchSceneTask.h"
+#include "ParticleSystem/ParticleEmitter.h"
 CSceneManager* CSceneManager::m_pInstance = nullptr;
 
 CSceneManager::CSceneManager()
-    : m_uSwitchSceneFileId(0xFFFFFFFF)
+    : m_bSwitchingSceneState(false)
+    , m_bRenderSwitcher(true)
+    , m_bUpdateSwitcher(true)
+    , m_bAutoTriggerOnEnter(true)
+    , m_uSwitchSceneCallbackIndex(0)
     , m_pCurrentScene(NULL)
-    , m_loadingSceneTask(new CLoadComponentFiles)
+    , m_pSwitchSceneTask(new CSwitchSceneTask)
 {
+    BEATS_ASSERT(!CApplication::GetInstance()->IsDestructing(), "Should not create singleton when exit the program!");
+    m_pSwitchSceneTask->Initialize();
 }
 
 CSceneManager::~CSceneManager()
 {
-    TSceneMap::iterator iter = m_createSceneMap.begin();
-    for ( ; iter != m_createSceneMap.end(); ++iter)
-    {
-        BEATS_SAFE_DELETE( iter->second );
-    }
-    m_createSceneMap.clear();
-
-    for ( auto itNode : m_nodeVector )
-    {
-        BEATS_SAFE_DELETE( itNode );
-    }
-    m_nodeVector.clear();
-}
-
-unsigned int CSceneManager::GetSceneNumber()
-{
-    return m_addScene.size();
-}
-
-CScene* CSceneManager::GetSceneByName( const TString& name )
-{
-    CScene* pRetScene = nullptr;
-    TSceneMap::iterator iter = m_addScene.find( name );
-    if ( iter != m_addScene.end() )
-    {
-        pRetScene = iter->second;
-    }
-    return pRetScene;
+    m_pSwitchSceneTask->Uninitialize();
 }
 
 CScene* CSceneManager::GetCurrentScene()
@@ -56,25 +34,27 @@ CScene* CSceneManager::GetCurrentScene()
 bool CSceneManager::SetCurrentScene( CScene* pScene )
 {
     bool bRet = true;
-    if (pScene != NULL)
+    if (m_pCurrentScene != pScene)
     {
-        TSceneMap::iterator iter = m_addScene.find( pScene->GetName() );
-        if ( iter == m_addScene.end() )
+        if (m_pCurrentScene)
         {
-            bRet = false;
-        }
-    }
-
-    if ( bRet && m_pCurrentScene != pScene)
-    {
-        if(m_pCurrentScene && m_pCurrentScene->IsInitialized())
-        {
+            BEATS_ASSERT(m_pCurrentScene->IsInitialized());
             m_pCurrentScene->Deactivate();
+            m_pCurrentScene->OnLeave();
         }
         m_pCurrentScene = pScene;
-        if(m_pCurrentScene)
+        if (m_pCurrentScene != NULL)
         {
+#ifdef _DEBUG
+            CComponentProject* pProject = CEngineCenter::GetInstance()->GetComponentManager()->GetProject();
+            uint32_t uFileId = pProject->QueryFileId(m_pCurrentScene->GetId(), true);
+            std::map< uint32_t, CScene* >::iterator iter = m_loadedScene.find(uFileId);
+            BEATS_ASSERT(iter != m_loadedScene.end());
+#endif
             m_pCurrentScene->Activate();
+            BEATS_ASSERT(std::find(m_onEnterScene.begin(), m_onEnterScene.end(), m_pCurrentScene) == m_onEnterScene.end());
+            m_onEnterScene.push_back(m_pCurrentScene);
+            TriggerSwitchSceneAction();
         }
     }
     return bRet;
@@ -82,213 +62,320 @@ bool CSceneManager::SetCurrentScene( CScene* pScene )
 
 void CSceneManager::AddScene( CScene* pScene )
 {
-    TSceneMap::iterator iter = m_addScene.find( pScene->GetName() );
-    BEATS_ASSERT(iter == m_addScene.end(),
-        _T("A scene with name: %s already exists!"), pScene->GetName().c_str());
-    if ( iter == m_addScene.end() )
+    CComponentProject* pProject = CEngineCenter::GetInstance()->GetComponentManager()->GetProject();
+    uint32_t uFileId = pProject->QueryFileId(pScene->GetId(), true);
+    std::map< uint32_t, CScene* >::iterator iter = m_loadedScene.find(uFileId);
+    BEATS_ASSERT(iter == m_loadedScene.end(), _T("Only one scene component can exist in a file"));
+    m_loadedScene[uFileId] = pScene;
+    if (m_pCurrentScene == NULL)
     {
-        m_addScene.insert( std::make_pair( pScene->GetName(), pScene ));
-        if ( m_addScene.size() + m_createSceneMap.size() == 1 )
-        {
-            SetCurrentScene( pScene );
-        }
+        SetCurrentScene(pScene);
     }
 }
 
 bool CSceneManager::RemoveScene( CScene* pScene )
 {
     bool ret = false;
-    TSceneMap::iterator iter = m_addScene.find( pScene->GetName() );
-    if ( iter != m_addScene.end() )
+    CComponentProject* pProject = CEngineCenter::GetInstance()->GetComponentManager()->GetProject();
+    uint32_t uFileId = pProject->QueryFileId(pScene->GetId(), true);
+    std::map< uint32_t, CScene* >::iterator iter = m_loadedScene.find(uFileId);
+    if ( iter != m_loadedScene.end() )
     {
-        m_addScene.erase( iter );
+        m_loadedScene.erase( iter );
         ret = true;
     }
 
-    if ( m_addScene.size() > 0 )
+    if ( m_pCurrentScene == pScene )
     {
-        SetCurrentScene( m_addScene.begin()->second );
-    }
-    else
-    {
-        SetCurrentScene( nullptr );
+        SetCurrentScene(nullptr);
     }
     return ret;
 }
 
-bool CSceneManager::ChangeAddSceneName( CScene* pScene )
+void CSceneManager::SceneSwithNotify()
 {
-    bool ret = false;
-    TSceneMap::iterator iter = m_addScene.begin();
-    for ( ; iter != m_addScene.end(); ++iter )
-    {
-        if ( iter->second == pScene )
-        {
-            m_addScene.erase( iter );
-            ret = true;
-            break;
-        }
-    }
-    if ( ret )
-    {
-        m_addScene.emplace( pScene->GetName(), pScene );
-    }
-    return ret;
 }
 
-void CSceneManager::SwitchScene(size_t uNewSceneComponentId)
+void CSceneManager::SwitchScene(const TString& strFileName)
 {
-    CScene* pOldScene = m_pCurrentScene;
-    if (pOldScene != NULL)
-    {
-        pOldScene->OnLeave();
-    }
-    if (uNewSceneComponentId == pOldScene->GetId()) // HACK: Means we need to go back the base.
-    {
-        uNewSceneComponentId = 30;
-    }
-#ifdef _DEBUG
-    size_t uOldSceneId = pOldScene->GetId();
+    SceneSwithNotify();
+#ifdef DEVELOP_VERSION
+    uint32_t uStartTimeMS = (uint32_t)(CTimeMeter::GetCurrUSec() / 1000);
+    BEATS_PRINT("Start switch scene at time %u\n", uStartTimeMS);
 #endif
-
-#ifdef EDITOR_MODE
-    size_t uNewSceneFileId = CComponentProxyManager::GetInstance()->GetProject()->QueryFileId(uNewSceneComponentId, false);
-    const TString& strFileName = CComponentProxyManager::GetInstance()->GetProject()->GetComponentFileName(uNewSceneFileId);
-    CComponentProxyManager::GetInstance()->OpenFile(strFileName.c_str());
-#else
-    size_t uNewSceneFileId = CComponentInstanceManager::GetInstance()->GetProject()->QueryFileId(uNewSceneComponentId, false);
-    CComponentInstanceManager::GetInstance()->SwitchFile(uNewSceneFileId);
+    BEATS_ASSERT(GetSwitchSceneState() == false);
+    SetSwitchSceneState(true);
+    uint32_t uNewSceneFileId = GetSceneFileId(strFileName);
+    if (m_loadedScene.find(uNewSceneFileId) == m_loadedScene.end())
+    {
+        LoadScene(strFileName);
+        BEYONDENGINE_CHECK_HEAP;
+    }
+    SetCurrentScene(m_loadedScene[uNewSceneFileId]);
+    SetSwitchSceneState(false);
+#ifdef DEVELOP_VERSION
+    uint32_t uEndTimeMS = (uint32_t)(CTimeMeter::GetCurrUSec() / 1000);
+    BEATS_PRINT("Finish switch scene at time %u, elapsed time :%u\n", uEndTimeMS, uEndTimeMS - uStartTimeMS);
 #endif
-    BEATS_ASSERT(m_pCurrentScene != NULL, _T("SwitchScene faield!"));
-    BEATS_ASSERT(m_pCurrentScene->GetId() != uOldSceneId, _T("Scene hasn't changed after call switch Scene."));
-    m_pCurrentScene->OnEnter();
 }
 
-void CSceneManager::SwitchSceneAsync(size_t uNewSceneComponentId)
+bool CSceneManager::SwitchSceneAsync(const TString& strFileName, bool UnloadBeforeLoad)
 {
-#ifdef EDITOR_MODE
-    size_t uFileId = CComponentProxyManager::GetInstance()->GetProject()->QueryFileId(uNewSceneComponentId, false);
-#else
-    size_t uFileId = CComponentInstanceManager::GetInstance()->GetProject()->QueryFileId(uNewSceneComponentId, false);
-#endif
+    SceneSwithNotify();
+    BEATS_ASSERT(!strFileName.empty(), "File name can't be empty.");
+    BEATS_ASSERT(m_bSwitchingSceneState == false);
+    uint32_t uFileId = GetSceneFileId(strFileName);
     BEATS_ASSERT(uFileId != 0xFFFFFFFF);
-    m_loadingSceneTask->GetFiles().clear();
-    CComponentInstanceManager::GetInstance()->CalcSwitchFile(uFileId, m_loadingSceneTask->GetFiles(), m_unloadFiles);
-    CTaskManager::GetInstance()->AddTask(m_loadingSceneTask, true);
-    m_uSwitchSceneFileId = uFileId;
+    m_pSwitchSceneTask->SetUnloadBeforeLoad(UnloadBeforeLoad);
+    m_pSwitchSceneTask->SetTargetSceneFileId(uFileId);
+    CTaskManager::GetInstance()->AddTask(m_pSwitchSceneTask, true);
+    return true;
 }
 
-SharePtr<CLoadComponentFiles> CSceneManager::GetLoadingSceneTask() const
+uint32_t CSceneManager::RegisterSwitchSceneCallBack(std::function<void()> fn, bool bAutoRemove)
 {
-    return m_loadingSceneTask;
+    BEATS_ASSERT(fn != nullptr);
+    uint32_t uRet = m_uSwitchSceneCallbackIndex;
+    m_switchSceneCallbackMap[m_uSwitchSceneCallbackIndex] = fn;
+    if (bAutoRemove)
+    {
+        BEATS_ASSERT(m_autoRemoveList.find(m_uSwitchSceneCallbackIndex) == m_autoRemoveList.end());
+        m_autoRemoveList.insert(m_uSwitchSceneCallbackIndex);
+    }
+    m_uSwitchSceneCallbackIndex++;
+    return uRet;
+}
+
+void CSceneManager::UnregisterSwitchSceneCallBack(uint32_t uId)
+{
+    BEATS_ASSERT(m_switchSceneCallbackMap.find(uId) != m_switchSceneCallbackMap.end());
+    m_switchSceneCallbackMap.erase(uId);
+}
+
+uint32_t CSceneManager::GetLoadingProgress() const
+{
+    return m_pSwitchSceneTask->GetProgress();
+}
+
+const std::map< uint32_t, CScene* >& CSceneManager::GetLoadedScene()
+{
+    return m_loadedScene;
 }
 
 bool CSceneManager::RenderScene()
 {
     bool bRet = false;
-    if ( m_pCurrentScene )
+    if (m_bRenderSwitcher)
     {
-        m_pCurrentScene->Render();
-        bRet = true;
-    }
-#ifdef EDITOR_MODE
-    else
-    {
-        const std::map<size_t, CComponentProxy*>& componentsInScene = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
-        for (auto iter = componentsInScene.begin(); iter != componentsInScene.end(); ++iter)
+        if (m_pCurrentScene)
         {
-            CComponentProxy* pProxy = iter->second;
-            if (pProxy->GetProxyId() == pProxy->GetId() && 
-                pProxy->GetHostComponent() &&
-                pProxy->GetBeConnectedDependencyLines()->size() == 0)
-            {
-                CNode* pNode = dynamic_cast<CNode*>(pProxy->GetHostComponent());
-                CControl* pControl = dynamic_cast<CControl*>( pNode );
-                if (pNode && pNode->GetParentNode() == NULL && pControl == nullptr )
-                {
-                    pNode->Render();
-                    bRet = true;
-                }
-            }
+            m_pCurrentScene->Render();
+            bRet = true;
         }
     }
-#endif
     return bRet;
 }
 
-void CSceneManager::UpdateScene( float dtt )
+void CSceneManager::UpdateScene(float dtt)
 {
-    if (m_uSwitchSceneFileId != 0xFFFFFFFF)
+    if (GetSwitchSceneState())
     {
-        if (m_loadingSceneTask->GetProgress() == 100)
+        if (m_pSwitchSceneTask->GetProgress() == 100)
         {
-            if (m_pCurrentScene != NULL)
+            //HACK: some scene may be loaded when load new scene, so we call on enter here to avoid delay.
+            if (m_bAutoTriggerOnEnter)
             {
-                m_pCurrentScene->OnLeave();
+                TriggerOnEnterAction();
             }
-            CComponentProject* pProject = CComponentInstanceManager::GetInstance()->GetProject();
-            std::map<size_t, std::vector<size_t> >* pFileToComponentMap = pProject->GetFileToComponentMap();
-            std::vector<CComponentBase*> unloadComponents;
-            for (size_t i = 0; i < m_unloadFiles.size(); ++i)
-            {
-                auto iter = pFileToComponentMap->find(m_unloadFiles[i]);
-                BEATS_ASSERT(iter != pFileToComponentMap->end());
-                for (size_t j = 0; j <iter->second.size(); ++j)
-                {
-                    size_t uComponentId = iter->second.at(j);
-                    CComponentBase* pComponent = CComponentInstanceManager::GetInstance()->GetComponentInstance(uComponentId);
-                    BEATS_ASSERT(pComponent != NULL);
-                    unloadComponents.push_back(pComponent);
-                    pComponent->Uninitialize();
-                }
-            }
-            for (size_t i = 0; i < unloadComponents.size(); ++i)
-            {
-                BEATS_SAFE_DELETE(unloadComponents[i]);
-            }
-            unloadComponents.clear();
-            std::vector<CComponentBase*>& loadedComponents = m_loadingSceneTask->GetLoadedComponents();
-            CComponentInstanceManager::GetInstance()->ResolveDependency();
-            for (size_t i = 0; i < loadedComponents.size(); ++i)
-            {
-                loadedComponents[i]->Initialize();
-            }
-            m_loadingSceneTask->GetFiles().clear();
-            m_loadingSceneTask->GetLoadedComponents().clear();
-            CComponentInstanceManager::GetInstance()->SetCurLoadFileId(m_uSwitchSceneFileId);
-            m_uSwitchSceneFileId = 0xFFFFFFFF;
-            if (m_pCurrentScene != NULL)
-            {
-                m_pCurrentScene->OnEnter();
-            }
+            m_pSwitchSceneTask->Reset();
         }
     }
-    if ( m_pCurrentScene )
-    {
-        m_pCurrentScene->Update( dtt );
-    }
-#ifdef EDITOR_MODE
     else
     {
-        const std::map<size_t, CComponentProxy*>& componentsInScene = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
-        for (auto iter = componentsInScene.begin(); iter != componentsInScene.end(); ++iter)
+        if (m_bAutoTriggerOnEnter)
         {
-            CComponentProxy* pProxy = iter->second;
-            if (pProxy->GetProxyId() == pProxy->GetId() && 
-                pProxy->GetHostComponent() &&
-                pProxy->GetBeConnectedDependencyLines()->size() == 0)
+            TriggerOnEnterAction();
+        }
+    }
+
+    if (m_bUpdateSwitcher)
+    {
+        if (m_pCurrentScene && m_pCurrentScene->IsLoaded() && m_pCurrentScene->IsActive())
+        {
+            m_pCurrentScene->Update(dtt);
+        }
+#ifdef EDITOR_MODE
+        else if (!GetSwitchSceneState())
+        {
+            const std::map<uint32_t, CComponentProxy*>& componentsInScene = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
+            for (auto iter = componentsInScene.begin(); iter != componentsInScene.end(); ++iter)
             {
-                CNode* pNode = dynamic_cast<CNode*>(pProxy->GetHostComponent());
-                if (pNode && pNode->GetParentNode() == NULL && pNode->GetType() != eNT_NodeGUI )
+                CComponentProxy* pProxy = iter->second;
+                if (pProxy->GetHostComponent() &&
+                    pProxy->GetBeConnectedDependencyLines()->size() == 0)
                 {
-                    if (!pNode->IsActive())
+                    CNode* pNode = dynamic_cast<CNode*>(pProxy->GetHostComponent());
+                    if (pNode)
                     {
-                        pNode->Activate();
+                        if (pNode->GetParentNode() == NULL && dynamic_cast<CParticleEmitter*>(pNode) == nullptr)
+                        {
+                            pNode->Update(dtt);
+                        }
                     }
-                    pNode->Update(dtt);
                 }
             }
         }
+#endif
+    }
+}
+
+uint32_t CSceneManager::GetSceneFileId(const TString& strFileName)
+{
+    uint32_t uRet = 0xFFFFFFFF;
+    if (strFileName.length() > 0)
+    {
+        CComponentProject* pProject = CEngineCenter::GetInstance()->GetComponentManager()->GetProject();
+        TString strFullFileName = strFileName;
+#ifdef EDITOR_MODE
+        const std::vector<TString>* pFileList = pProject->GetFileList();
+        for (size_t i = 0; i < pFileList->size(); ++i)
+        {
+            const TString& strFilePath = pFileList->at(i);
+            int pos = strFilePath.rfind(strFileName);
+            if (pos != -1 && strFilePath.length() - pos == strFileName.length())
+            {
+                strFullFileName = pFileList->at(i);
+                break;
+            }
+        }
+#endif
+        BEATS_ASSERT(!strFullFileName.empty());
+        strFullFileName = CStringHelper::GetInstance()->ToLower(strFullFileName);
+        uRet = pProject->GetComponentFileId(strFullFileName);
+    }
+    return uRet;
+}
+
+void CSceneManager::SetAutoTriggerOnEnterFlag(bool bAuto)
+{
+    m_bAutoTriggerOnEnter = bAuto;
+}
+
+bool CSceneManager::GetAutoTriggerOnEnterFlag() const
+{
+    return m_bAutoTriggerOnEnter;
+}
+
+void CSceneManager::SetRenderSwitcher(bool bSwitcher)
+{
+    m_bRenderSwitcher = bSwitcher;
+}
+
+void CSceneManager::SetUpdateSwitcher(bool bSwitcher)
+{
+    m_bUpdateSwitcher = bSwitcher;
+}
+
+bool CSceneManager::GetRenderSwitcher() const
+{
+    return m_bRenderSwitcher;
+}
+
+bool CSceneManager::GetUpdateSwitcher() const
+{
+    return m_bUpdateSwitcher;
+}
+
+void CSceneManager::SetSwitchSceneState(bool bIsSwitching)
+{
+    BEATS_ASSERT(!bIsSwitching || !m_bSwitchingSceneState);
+    m_bSwitchingSceneState = bIsSwitching;
+}
+
+bool CSceneManager::GetSwitchSceneState() const
+{
+    return m_bSwitchingSceneState;
+}
+
+void CSceneManager::LoadScene(const TString& strFileName)
+{
+    uint32_t uNewSceneFileId = GetSceneFileId(strFileName);
+#ifdef _DEBUG
+    if (m_pCurrentScene != NULL)
+    {
+        uint32_t uCurrentSceneFileId = CEngineCenter::GetInstance()->GetComponentManager()->GetProject()->QueryFileId(m_pCurrentScene->GetId(), true);
+        BEATS_ASSERT(uCurrentSceneFileId != 0xFFFFFFFF);
+        BEATS_ASSERT(uNewSceneFileId != 0xFFFFFFFF);
+        BEATS_ASSERT(uCurrentSceneFileId != uNewSceneFileId, _T("Switch scene failed! Trying to switch to the same scene!"));
     }
 #endif
+    if (m_pCurrentScene != NULL)
+    {
+        SetCurrentScene(NULL); // Manual call this to trigger OnLeave before any components un-initialize.
+    }
+#ifdef EDITOR_MODE
+    CComponentProject* pProject = CComponentProxyManager::GetInstance()->GetProject();
+    CComponentProxyManager::GetInstance()->OpenFile(pProject->GetComponentFileName(uNewSceneFileId).c_str());
+#else
+    CComponentInstanceManager::GetInstance()->SwitchFile(uNewSceneFileId);
+#endif
+}
+
+void CSceneManager::TriggerOnEnterAction()
+{
+    if (m_bUpdateSwitcher)
+    {
+        if (m_onEnterScene.size() > 0)
+        {
+            BEYONDENGINE_CHECK_HEAP;
+            for (uint32_t i = 0; i < m_onEnterScene.size(); ++i)
+            {
+                if (m_onEnterScene[i] == GetCurrentScene())
+                {
+                    // We can safely call OnEnter here because all components loaded are initialized.
+                    m_onEnterScene[i]->OnEnter();
+                    break;
+                }
+            }
+            m_onEnterScene.clear();
+            // Because OnEnter may cause much time, to avoid delta time too much, we manually clear the delta time.
+            CApplication::GetInstance()->GetUpdateTimeMeter().Tick();
+            BEYONDENGINE_CHECK_HEAP;
+        }
+    }
+}
+
+void CSceneManager::TriggerSwitchSceneAction()
+{
+    for (auto iter = m_switchSceneCallbackMap.begin(); iter != m_switchSceneCallbackMap.end(); )
+    {
+        (iter->second)();
+        auto subIter = m_autoRemoveList.find(iter->first);
+        if (subIter != m_autoRemoveList.end())
+        {
+            m_autoRemoveList.erase(subIter);
+            iter = m_switchSceneCallbackMap.erase(iter);
+        }
+        else
+        {
+            ++iter;
+        }
+    }
+}
+
+void CSceneManager::Reset()
+{
+    if (m_bSwitchingSceneState)
+    {
+        m_pSwitchSceneTask->Reset();
+    }
+    m_bRenderSwitcher = true;
+    m_bUpdateSwitcher = true;
+    m_bAutoTriggerOnEnter = true;
+    m_uSwitchSceneCallbackIndex = 0;
+    m_pCurrentScene = nullptr;
+    m_loadedScene.clear();
+    m_switchSceneCallbackMap.clear();
+    m_autoRemoveList.clear();
+    m_onEnterScene.clear();
 }

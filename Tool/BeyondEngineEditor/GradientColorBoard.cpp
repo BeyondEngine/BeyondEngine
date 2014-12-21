@@ -13,7 +13,6 @@ END_EVENT_TABLE()
 CGradientColorBoard::CGradientColorBoard(wxWindow *parent, wxWindowID id , const wxPoint& pos , const wxSize& size , long style , const wxString& name)
     : wxPanel(parent, id, pos, size, style, name)
 {
-    InitCtrl();
 }
 
 CGradientColorBoard::~CGradientColorBoard()
@@ -21,18 +20,12 @@ CGradientColorBoard::~CGradientColorBoard()
 
 }
 
-void CGradientColorBoard::InitCtrl()
-{
-    
-}
-
 void CGradientColorBoard::OnPaint(wxPaintEvent& /*event*/)
 {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
     wxAutoBufferedPaintDC dc(this);
     DrawBackGround(&dc);
-    
-    dc.DrawBitmap(m_drawBmp, 0, 0);
+    dc.DrawBitmap(wxBitmap(m_mergeImage), 0, 0);
 }
 
 void CGradientColorBoard::DrawBackGround(wxDC* pDc)
@@ -45,34 +38,27 @@ void CGradientColorBoard::DrawBackGround(wxDC* pDc)
     {
         for (int j = 0; j < nRowCount; j++)
         {
-            if ((i + j) % 2 == 0)
-            {
-                pDc->SetBrush(*wxWHITE);
-            }
-            else
-            {
-                pDc->SetBrush(*wxLIGHT_GREY);
-            }
+            pDc->SetBrush((i + j) % 2 == 0 ? *wxWHITE : *wxLIGHT_GREY);
             pDc->DrawRectangle(i * BACKGROUNDSQUARESIZE, j * BACKGROUNDSQUARESIZE, BACKGROUNDSQUARESIZE, BACKGROUNDSQUARESIZE);
         }
     }
 }
 
-wxBitmap& CGradientColorBoard::GetForeGroundBmp()
+const wxImage& CGradientColorBoard::GetImage() const
 {
-    return m_foreGroundBmp;
+    return m_mergeImage;
 }
 
-void CGradientColorBoard::SetBmp(wxBitmap& colorBmp, wxBitmap& maskBmp)
+void CGradientColorBoard::SetBmp(wxBitmap& colorBmp, wxBitmap& alphaBmp)
 {
     m_foreGroundBmp = colorBmp;
-    m_maskBmp = maskBmp;
+    m_alphaBmp = alphaBmp;
 
-    wxImage colorImage = m_foreGroundBmp.ConvertToImage();
-    wxImage maskImage = m_maskBmp.ConvertToImage();
-    if (!colorImage.HasAlpha())
+    m_mergeImage = m_foreGroundBmp.ConvertToImage();
+    wxImage alphaImage = m_alphaBmp.ConvertToImage();
+    if (!m_mergeImage.HasAlpha())
     {
-        colorImage.InitAlpha();
+        m_mergeImage.InitAlpha();
     }
 
     int nColumnCount = GetSize().x;
@@ -81,10 +67,9 @@ void CGradientColorBoard::SetBmp(wxBitmap& colorBmp, wxBitmap& maskBmp)
     {
         for (int j = 0; j < nRowCount; j++)
         {
-            colorImage.SetAlpha(i, j, maskImage.GetRed(i, j));
+            m_mergeImage.SetAlpha(i, j, alphaImage.GetRed(i, j));
         }
     }
-    m_drawBmp = wxBitmap(colorImage);
 }
 
 wxColor CGradientColorBoard::GetColor(int nPositionX, ECursorType eType)
@@ -97,8 +82,9 @@ wxColor CGradientColorBoard::GetColor(int nPositionX, ECursorType eType)
     }
     else if (eType == eCT_Alpha)
     {
-        image = m_maskBmp.ConvertToImage();
+        image = m_alphaBmp.ConvertToImage();
     }
+    nPositionX = nPositionX >= image.GetWidth() ? nPositionX - 1 : nPositionX;
     BEATS_ASSERT(eType != eCT_Invalid);
     wxColor color(image.GetRed(nPositionX, nPositionY)
                 , image.GetGreen(nPositionX, nPositionY)
@@ -109,18 +95,14 @@ wxColor CGradientColorBoard::GetColor(int nPositionX, ECursorType eType)
 wxColor CGradientColorBoard::GetColorWithAlpha(wxPoint point)
 {
     static int nPositionY = 1;
-    wxImage image = m_drawBmp.ConvertToImage();
-    if (image.GetSize().GetWidth() == point.x)
+    if (m_mergeImage.GetSize().GetWidth() <= point.x)
     {
-        point.x -= 1;
+        point.x = m_mergeImage.GetSize().GetWidth() - 1;
     }
-    if (!image.HasAlpha())
-    {
-        image.InitAlpha();
-    }
-    wxColor color(image.GetRed(point.x, nPositionY)
-        , image.GetGreen(point.x, nPositionY)
-        , image.GetBlue(point.x, nPositionY)
-        , image.GetAlpha(point.x, nPositionY));
+    BEATS_ASSERT(m_mergeImage.HasAlpha());
+    wxColor color(m_mergeImage.GetRed(point.x, nPositionY)
+        , m_mergeImage.GetGreen(point.x, nPositionY)
+        , m_mergeImage.GetBlue(point.x, nPositionY)
+        , m_mergeImage.GetAlpha(point.x, nPositionY));
     return color;
 }

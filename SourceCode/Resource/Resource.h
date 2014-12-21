@@ -1,14 +1,12 @@
 ﻿#ifndef BEYOND_ENGINE_RESOURCE_RESOURCE_H__INCLUDE
 #define BEYOND_ENGINE_RESOURCE_RESOURCE_H__INCLUDE
 
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentInstance.h"
-#include "Utility/BeatsUtility/ComponentSystem/ComponentPublic.h"
-
-#include <condition_variable>
+#include "Component/Component/ComponentInstance.h"
+#include "Component/ComponentPublic.h"
 
 #define DECLARE_RESOURCE_TYPE(type)\
     public:\
-    virtual EResourceType GetType(){return type;}\
+    virtual EResourceType GetType() const override { return type; }\
     static const EResourceType RESOURCE_TYPE = type;
 
 class CResource : public CComponentInstance
@@ -22,9 +20,24 @@ public:
     const TString& GetFilePath() const;
     void SetFilePath(const TString& str);
     
+    virtual bool ShouldClean() const;
+#ifdef EDITOR_MODE
     virtual bool OnPropertyChange(void* pVariableAddr, CSerializer* pSerializer) override;
-    virtual EResourceType GetType() = 0;
-
+#endif
+    virtual EResourceType GetType() const = 0;
+#ifdef EDITOR_MODE
+    virtual void Reload();
+    virtual bool NeedReload() const;
+    uint32_t m_uLastModifyTimeLow = 0;
+    uint32_t m_uLastModifyTimeHigh = 0;
+#endif
+#ifdef DEVELOP_VERSION
+    virtual TString GetDescription() const;
+    bool m_bDelayInitialize = false;
+    uint32_t m_uLoadTimeMS = 0;
+    uint32_t m_uInitializeTimeMS = 0;
+    uint32_t m_uFileSize = 0;
+#endif
 protected:
     SReflectFilePath m_strPath;
     CSerializer* m_pData;

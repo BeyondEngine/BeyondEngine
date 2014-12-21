@@ -3,7 +3,8 @@
 #include "Utility/BeatsUtility/StringHelper.h"
 #include "Utility/BeatsUtility/Serializer.h"
 #include "Utility/BeatsUtility/EnumStrGenerator.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxy.h"
+#include "Component/Component/ComponentProxy.h"
+#include "Component/ComponentPublic.h"
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
 
@@ -13,16 +14,17 @@ CEnumPropertyDescription::CEnumPropertyDescription(CSerializer* pSerializer)
     : super(eRPT_Enum)
     , m_pPropertyData(NULL)
 {
-    int iValue = 0;
+    TString strValue;
     if (pSerializer != NULL)
     {
+        int nValue = 0;
         TString enumTypeStr;
-        (*pSerializer) >> iValue;
+        (*pSerializer) >> nValue;
         (*pSerializer) >> enumTypeStr;
         std::vector<TString> vecNames;
         CStringHelper::GetInstance()->SplitString(enumTypeStr.c_str(), _T("::"), vecNames);
         //HACK: Force ignore namespace.
-        enumTypeStr = vecNames[vecNames.size() - 1];
+        enumTypeStr = vecNames.back();
         std::map<TString, SEnumPropertyData*>::iterator iter = m_enumPropertyDataMap.m_data.find(enumTypeStr);
         if (iter == m_enumPropertyDataMap.m_data.end())
         {
@@ -39,20 +41,25 @@ CEnumPropertyDescription::CEnumPropertyDescription(CSerializer* pSerializer)
         {
             m_pPropertyData = iter->second;
         }
+        if (!QueryStringByValue(nValue, strValue))
+        {
+            strValue = (*m_pPropertyData->m_pData->begin())->m_str;
+        }
     }
-    InitializeValue(iValue);
+    InitializeValue(strValue);
 }
 
 CEnumPropertyDescription::CEnumPropertyDescription(const CEnumPropertyDescription& rRef)
     : super(rRef)
     , m_pPropertyData(rRef.m_pPropertyData)
 {
-    InitializeValue(0);
+    TString strValue;
+    InitializeValue(strValue);
 }
 
 CEnumPropertyDescription::~CEnumPropertyDescription()
 {
-    DestroyValue<int>();
+    DestroyValue<TString>();
 }
 
 const SEnumPropertyData* CEnumPropertyDescription::GetEnumPropertyData() const
@@ -60,45 +67,42 @@ const SEnumPropertyData* CEnumPropertyDescription::GetEnumPropertyData() const
     return m_pPropertyData;
 }
 
-int CEnumPropertyDescription::QueryValueByString(const TString& str) const
+bool CEnumPropertyDescription::QueryValueByString(const TString& str, int& outValue) const
 {
     bool bFind = false;
-    int nRet = -1;
     for (int i = 0; i < (int)(m_pPropertyData->m_pData->size()); ++i)
     {
         SEnumData* pData = m_pPropertyData->m_pData->at(i);
         if (pData->m_str == str)
         {
             bFind = true;
-            nRet = pData->m_value;
+            outValue = pData->m_value;
             break;
         }
     }
-    BEATS_ASSERT(bFind, _T("Can't find the enum string %s in %s"), str.c_str(), m_pPropertyData->m_displayString[0].c_str());
-    return nRet;
+    BEATS_ASSERT(bFind, _T("Can't find the enum string %s in Component Id:%d"), str.c_str(), m_pOwner->GetId());
+    return bFind;
 }
 
-TString CEnumPropertyDescription::QueryStringByValue(int nValue) const
+bool CEnumPropertyDescription::QueryStringByValue(int nValue, TString& outString) const
 {
     bool bFind = false;
-    TString strRet;
     for (int i = 0; i < (int)(m_pPropertyData->m_pData->size()); ++i)
     {
         SEnumData* pData = m_pPropertyData->m_pData->at(i);
         if (pData->m_value == nValue)
         {
             bFind = true;
-            strRet = pData->m_str;
+            outString = pData->m_str;
             break;
         }
     }
-    BEATS_ASSERT(bFind, _T("Can't find the enum value %d in %s"), nValue, m_pPropertyData->m_displayString[0].c_str());
-    return strRet;
+    return bFind;
 }
 
 bool CEnumPropertyDescription::AnalyseUIParameterImpl(const std::vector<TString>& parameterUnit)
 {
-    for (size_t i = 0; i < parameterUnit.size(); ++i)
+    for (uint32_t i = 0; i < parameterUnit.size(); ++i)
     {
         TString parameter = parameterUnit[i];
         std::vector<TString> result;
@@ -109,10 +113,10 @@ bool CEnumPropertyDescription::AnalyseUIParameterImpl(const std::vector<TString>
             if (_tcsicmp(result[0].c_str(), UIParameterAttrStr[eUIPAT_DefaultValue]) == 0)
             {
                 int iValue = 0;
-                GetValueByTChar(result[1].c_str(), &iValue);
+                QueryValueByString(result[1], iValue);
                 wxVariant var(iValue);
                 SetValue(var, true);
-                SetValueWithType(&iValue, eVT_DefaultValue);
+                SetValueWithType(&result[1], eVT_DefaultValue);
             }
             else if (_tcsicmp(result[0].c_str(), UIParameterAttrStr[eUIPAT_EnumStringArray]) == 0)
             {
@@ -135,17 +139,29 @@ wxPGProperty* CEnumPropertyDescription::CreateWxProperty()
     wxArrayString labels;
     wxArrayInt values;
     const std::vector<SEnumData*>& enumData = *m_pPropertyData->m_pData;
-    for (size_t i = 0; i < enumData.size(); ++i)
+    for (uint32_t i = 0; i < enumData.size(); ++i)
     {
-        labels.push_back(i < m_pPropertyData->m_displayString.size() ? m_pPropertyData->m_displayString[i].c_str() : enumData[i]->m_str.c_str());
+        wxString strRawString = enumData[i]->m_str;
+        // Manually filter the last useless options if there is.
+        if (enumData.size() - i <= 2)
+        {
+            if (strRawString.EndsWith(_T("_Count")) ||
+                strRawString.EndsWith(_T("_Force32Bit")))
+            {
+                break;
+            }
+        }
+        wxString displayStr = i < m_pPropertyData->m_displayString.size() ? m_pPropertyData->m_displayString[i].c_str() : strRawString;
+        labels.push_back(displayStr);
         values.push_back(enumData[i]->m_value);
     }
-
-    wxPGProperty* pProperty = new wxEnumProperty(wxPG_LABEL, wxPG_LABEL, labels, values, *(int*)m_valueArray[eVT_CurrentValue]);
+    int nCurrValue = 0;
+    QueryValueByString(*(TString*)m_valueArray[eVT_CurrentValue], nCurrValue);
+    wxPGProperty* pProperty = new wxEnumProperty(wxPG_LABEL, wxPG_LABEL, labels, values, nCurrValue);
     pProperty->SetClientData(this);
-    wxVariant var(*(int*)m_valueArray[eVT_DefaultValue]);
+    wxVariant var(*(TString*)m_valueArray[eVT_DefaultValue]);
     pProperty->SetDefaultValue(var);
-    wxVariant curVar(*(int*)m_valueArray[eVT_CurrentValue]);
+    wxVariant curVar(*(TString*)m_valueArray[eVT_CurrentValue]);
     pProperty->SetValue(curVar);
     pProperty->SetModifiedStatus(!IsDataSame(true));
     return pProperty;
@@ -154,26 +170,28 @@ wxPGProperty* CEnumPropertyDescription::CreateWxProperty()
 void CEnumPropertyDescription::SetValue(wxVariant& value, bool bSaveValue /*= true*/)
 {
     int iNewValue = value.GetInteger();
-    SetValueWithType(&iNewValue, eVT_CurrentValue);
+    TString strNewValue;
+    QueryStringByValue(iNewValue, strNewValue);
+    SetValueWithType(&strNewValue, eVT_CurrentValue);
     if (bSaveValue)
     {
-        SetValueWithType(&iNewValue, eVT_SavedValue);
+        SetValueWithType(&strNewValue, eVT_SavedValue);
     }
 }
 
 bool CEnumPropertyDescription::CopyValue(void* pSourceValue, void* pTargetValue)
 {
-    bool bRet = *(int*)pTargetValue != *(int*)pSourceValue;
+    bool bRet = *(TString*)pTargetValue != *(TString*)pSourceValue;
     if (bRet)
     {
-        *(int*)pTargetValue = *(int*)pSourceValue;
+        *(TString*)pTargetValue = *(TString*)pSourceValue;
     }
     return bRet;
 }
 
 bool CEnumPropertyDescription::IsDataSame( bool bWithDefaultOrXML )
 {
-    bool bRet = *(int*)m_valueArray[(bWithDefaultOrXML ? eVT_DefaultValue : eVT_SavedValue)] == *(int*)m_valueArray[eVT_CurrentValue];
+    bool bRet = *(TString*)m_valueArray[(bWithDefaultOrXML ? eVT_DefaultValue : eVT_SavedValue)] == *(TString*)m_valueArray[eVT_CurrentValue];
     return bRet;
 }
 
@@ -185,22 +203,46 @@ CPropertyDescriptionBase* CEnumPropertyDescription::CreateNewInstance()
 
 void CEnumPropertyDescription::GetValueAsChar( EValueType type, char* pOut ) const
 {
-    int iValue = *(int*)m_valueArray[type];
-    sprintf(pOut, "%d", iValue);
+    sprintf(pOut, "%s", ((TString*)m_valueArray[type])->c_str());
 }
 
 bool CEnumPropertyDescription::GetValueByTChar(const TCHAR* pIn, void* pOutValue)
 {
-    *(int*)pOutValue = _tstoi(pIn);
-    return true;
+    int nValue = 0;
+    bool bRet = QueryValueByString(pIn, nValue);
+    if (!bRet)
+    {
+        _set_errno(0);
+        TCHAR* pEndChar = NULL;
+        int32_t iValue = _tcstol(pIn, &pEndChar, 10);
+        if (_tcslen(pEndChar) == 0 && errno == 0)
+        {
+            std::string strRet;
+            bRet = QueryStringByValue(iValue, strRet);
+            if (bRet)
+            {
+                *(TString*)pOutValue = strRet;
+            }
+        }
+    }
+    else
+    {
+        *(TString*)pOutValue = pIn;
+    }
+    return bRet;
 }
 
 void CEnumPropertyDescription::Serialize(CSerializer& serializer, EValueType eValueType /*= eVT_SavedValue*/)
 {
-    serializer << *(int*)m_valueArray[eValueType];
+    TString* pStrValue = (TString*)m_valueArray[eValueType];
+    int nValue = 0;
+    QueryValueByString(*pStrValue, nValue);
+    serializer << nValue;
 }
 
 void CEnumPropertyDescription::Deserialize(CSerializer& serializer, EValueType eValueType /*= eVT_CurrentValue*/)
 {
-    serializer >> *(int*)m_valueArray[eValueType];
+    int nValue = 0;
+    serializer >> nValue;
+    QueryStringByValue(nValue, *(TString*)m_valueArray[eValueType]);
 }

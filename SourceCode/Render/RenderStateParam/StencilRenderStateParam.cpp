@@ -19,14 +19,14 @@ void CStencilRenderStateParam::Apply()
     CRenderer::GetInstance()->StencilOp(m_nFail, m_nZFail, m_nZPass);
 }
 
-ERenderState CStencilRenderStateParam::GetRenderStateType() const
+ERenderStateParamType CStencilRenderStateParam::GetRenderStateType() const
 {
-    return eRS_StencilMode;
+    return eRSPT_StencilMode;
 }
 
 bool CStencilRenderStateParam::operator==( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_StencilMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_StencilMode );
     CStencilRenderStateParam* pOther = ( CStencilRenderStateParam* )&other;
     return ( m_nZFail == pOther->m_nZFail && m_nFail == pOther->m_nFail && m_nZPass == pOther->m_nZPass );
 }
@@ -47,7 +47,7 @@ void CStencilRenderStateParam::GetValue( EStencilType& fail, EStencilType& zFali
 
 bool CStencilRenderStateParam::operator!=( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_StencilMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_StencilMode );
     CStencilRenderStateParam* pOther = ( CStencilRenderStateParam* )&other;
     return ( m_nZFail != pOther->m_nZFail || m_nFail != pOther->m_nFail || m_nZPass != pOther->m_nZPass );
 }

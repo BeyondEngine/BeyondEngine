@@ -1,7 +1,7 @@
 ﻿#ifndef BEYOND_ENGINE_RENDER_SHADERUNIFORM_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_SHADERUNIFORM_H__INCLUDE
 
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentInstance.h"
+#include "Component/Component/ComponentInstance.h"
 
 enum EShaderUniformType
 {
@@ -23,17 +23,15 @@ enum EShaderUniformType
     eSUT_Force32Bit = 0xFFFFFF
 };
 
-class CShaderUniform : public CComponentInstance
+class CShaderUniform
 {
-    DECLARE_REFLECT_GUID(CShaderUniform, 0xD707AB1C, CComponentInstance)
 public:
     CShaderUniform();
     CShaderUniform(const TString& strName, EShaderUniformType type);
     CShaderUniform( const CShaderUniform& other );
-    const CShaderUniform& operator=( const CShaderUniform& other );
+    CShaderUniform& operator=( const CShaderUniform& other );
     virtual ~CShaderUniform();
 
-    virtual void ReflectData(CSerializer& serializer) override;
     void SetData(const std::vector<float>& data);
     std::vector<float>& GetData();
     const TString& GetName() const;
@@ -41,17 +39,15 @@ public:
     EShaderUniformType GetType() const;
     void SetType(EShaderUniformType type);
 
-    void SendUniform();
+    void SendUniform() const;
     bool operator==( const CShaderUniform& other ) const;
-
     bool operator!=( const CShaderUniform& other ) const;
     void ResetData();
 
     CShaderUniform* Clone( );
 
 private:
-    bool CheckType( );
-    bool ComparePtrVector( const std::vector<float> & v1, const std::vector<float> & v2 ) const;
+    bool CheckType() const;
 private:
     EShaderUniformType m_type;
     //TODO: Don't use float to simulate other type of data.

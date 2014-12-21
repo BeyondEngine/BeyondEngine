@@ -511,8 +511,10 @@ etc1_uint32 etc1_get_encoded_data_size(etc1_uint32 width, etc1_uint32 height) {
 // pOut - pointer to encoded data. Must be large enough to store entire encoded image.
 
 int etc1_encode_image(const etc1_byte* pIn, etc1_uint32 width, etc1_uint32 height,
-        etc1_uint32 pixelSize, etc1_uint32 stride, etc1_byte* pOut) {
-    if (pixelSize < 2 || pixelSize > 3) {
+        etc1_uint32 pixelSize, etc1_uint32 stride, etc1_byte* pOut)
+{
+    if (pixelSize < 2 || pixelSize > 3)
+    {
         return -1;
     }
     static const unsigned short kYMask[] = { 0x0, 0xf, 0xff, 0xfff, 0xffff };
@@ -524,25 +526,34 @@ int etc1_encode_image(const etc1_byte* pIn, etc1_uint32 width, etc1_uint32 heigh
     etc1_uint32 encodedWidth = (width + 3) & ~3;
     etc1_uint32 encodedHeight = (height + 3) & ~3;
 
-    for (etc1_uint32 y = 0; y < encodedHeight; y += 4) {
+    for (etc1_uint32 y = 0; y < encodedHeight; y += 4)
+    {
         etc1_uint32 yEnd = height - y;
-        if (yEnd > 4) {
+        if (yEnd > 4)
+        {
             yEnd = 4;
         }
         int ymask = kYMask[yEnd];
-        for (etc1_uint32 x = 0; x < encodedWidth; x += 4) {
+        for (etc1_uint32 x = 0; x < encodedWidth; x += 4)
+        {
             etc1_uint32 xEnd = width - x;
-            if (xEnd > 4) {
+            if (xEnd > 4)
+            {
                 xEnd = 4;
             }
             int mask = ymask & kXMask[xEnd];
-            for (etc1_uint32 cy = 0; cy < yEnd; cy++) {
+            for (etc1_uint32 cy = 0; cy < yEnd; cy++)
+            {
                 etc1_byte* q = block + (cy * 4) * 3;
-                const etc1_byte* p = pIn + pixelSize * x + stride * (y + cy);
-                if (pixelSize == 3) {
+                const etc1_byte* p = pIn + pixelSize * x + stride * (height - y - cy - 1);
+                if (pixelSize == 3)
+                {
                     memcpy(q, p, xEnd * 3);
-                } else {
-                    for (etc1_uint32 cx = 0; cx < xEnd; cx++) {
+                }
+                else
+                {
+                    for (etc1_uint32 cx = 0; cx < xEnd; cx++)
+                    {
                         int pixel = (p[1] << 8) | p[0];
                         *q++ = ( unsigned char )convert5To8(pixel >> 11);
                         *q++ = ( unsigned char )convert6To8(pixel >> 5);
@@ -568,8 +579,10 @@ int etc1_encode_image(const etc1_byte* pIn, etc1_uint32 width, etc1_uint32 heigh
 
 int etc1_decode_image(const etc1_byte* pIn, etc1_byte* pOut,
         etc1_uint32 width, etc1_uint32 height,
-        etc1_uint32 pixelSize, etc1_uint32 stride) {
-    if (pixelSize < 2 || pixelSize > 3) {
+        etc1_uint32 pixelSize, etc1_uint32 stride) 
+{
+    if (pixelSize < 2 || pixelSize > 3) 
+    {
         return -1;
     }
     etc1_byte block[ETC1_DECODED_BLOCK_SIZE];
@@ -577,25 +590,34 @@ int etc1_decode_image(const etc1_byte* pIn, etc1_byte* pOut,
     etc1_uint32 encodedWidth = (width + 3) & ~3;
     etc1_uint32 encodedHeight = (height + 3) & ~3;
 
-    for (etc1_uint32 y = 0; y < encodedHeight; y += 4) {
+    for (etc1_uint32 y = 0; y < encodedHeight; y += 4)
+    {
         etc1_uint32 yEnd = height - y;
-        if (yEnd > 4) {
+        if (yEnd > 4)
+        {
             yEnd = 4;
         }
-        for (etc1_uint32 x = 0; x < encodedWidth; x += 4) {
+        for (etc1_uint32 x = 0; x < encodedWidth; x += 4)
+        {
             etc1_uint32 xEnd = width - x;
-            if (xEnd > 4) {
+            if (xEnd > 4)
+            {
                 xEnd = 4;
             }
             etc1_decode_block(pIn, block);
             pIn += ETC1_ENCODED_BLOCK_SIZE;
-            for (etc1_uint32 cy = 0; cy < yEnd; cy++) {
+            for (etc1_uint32 cy = 0; cy < yEnd; cy++)
+            {
                 const etc1_byte* q = block + (cy * 4) * 3;
-                etc1_byte* p = pOut + pixelSize * x + stride * (y + cy);
-                if (pixelSize == 3) {
+                etc1_byte* p = pOut + pixelSize * x + stride * (height - y - cy - 1);
+                if (pixelSize == 3)
+                {
                     memcpy(p, q, xEnd * 3);
-                } else {
-                    for (etc1_uint32 cx = 0; cx < xEnd; cx++) {
+                }
+                else
+                {
+                    for (etc1_uint32 cx = 0; cx < xEnd; cx++)
+                    {
                         etc1_byte r = *q++;
                         etc1_byte g = *q++;
                         etc1_byte b = *q++;

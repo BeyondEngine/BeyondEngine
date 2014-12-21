@@ -28,7 +28,7 @@ public:
     CImage();
     ~CImage();
 
-    enum  class EFormat
+    enum EFormat
     {
         //! JPEG
         eF_JPG,
@@ -54,13 +54,12 @@ public:
         eF_UNKOWN
     };
 
-    bool InitWithImageFile( const TString& path );
+    bool InitWithImageData( const unsigned char* data, ssize_t dataLen, const TCHAR* filename);
 
-    bool InitWithImageData( const unsigned char* data, ssize_t dataLen );
-
-    bool InitWithRawData(const unsigned char * data, ssize_t dataLen, int width, int height, int bitsPerComponent, bool preMulti = false);
+    bool InitWithRawData(const unsigned char * data, ssize_t dataLen, int width, int height, int bitsPerComponent, const TCHAR* filename, bool preMulti = false);
 
     const unsigned char* GetData() const;
+    void SetData(PixelFormat renderFormat, unsigned char* pData, ssize_t len);
     ssize_t GetDataLength() const;
     EFormat GetFileType() const;
     PixelFormat GetRenderFormat() const;
@@ -72,36 +71,36 @@ public:
     bool HasPremultipliedAlpha() const;
 
     int GetBitPerPixel();
-    bool HasAlpha();
-    bool IsCompressed();
-
-    bool SaveToFile( const TString& fileName, bool bToRGB = true );
-
+    void SetRGB(int32_t x, int32_t y, unsigned char r, unsigned char g, unsigned char b);
+    unsigned char GetAlpha(int32_t x, int32_t y) const;
+    bool HasAlpha() const;
+    bool IsCompressed() const;
+    bool SaveToFile( const TString& fileName);
     static const PixelFormatInfoMap& GetPixelFormatInfoMap();
 
     static int CcNextPOT(int x);
 
 protected:
-    bool InitWithJpgData(const unsigned char *  data, ssize_t dataLen);
-    bool InitWithPngData(const unsigned char * data, ssize_t dataLen);
-    bool InitWithTiffData(const unsigned char * data, ssize_t dataLen);
-    bool InitWithWebpData(const unsigned char * data, ssize_t dataLen);
-    bool InitWithPVRData(const unsigned char * data, ssize_t dataLen);
-    bool InitWithPVRv2Data(const unsigned char * data, ssize_t dataLen);
-    bool InitWithPVRv3Data(const unsigned char * data, ssize_t dataLen);
-    bool InitWithETCData(const unsigned char * data, ssize_t dataLen);
-    bool InitWithS3TCData(const unsigned char * data, ssize_t dataLen);
-    bool InitWithATITCData(const unsigned char *data, ssize_t dataLen);
-    bool InitWithTGAData(TImageTGA* tgaData);
-
-    bool SaveImageToPNG(const TString& filePath, bool bIgnoreAlpha = true);
+    bool InitWithJpgData(const unsigned char *  data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithPngData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithTiffData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithWebpData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithPVRData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithPVRv2Data(const unsigned char * data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithPVRv3Data(const unsigned char * data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithETCData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithS3TCData(const unsigned char * data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithATITCData(const unsigned char *data, ssize_t dataLen, const TCHAR* filename);
+    bool InitWithTGAData(TImageTGA* tgaData, const char* filename);
+    bool SaveImageToPNG(const TString& filePath);
     bool SaveImageToJPG(const TString& filePath);
+    bool SaveImageToBMP(const TString& filePath);
 
 protected:
     // noncopyable
     CImage(const CImage&    rImg);
     CImage& operator=(const CImage&);
-    
+
     /*
      @brief The same result as with initWithImageFile, but thread safe. It is caused by
      loadImage() in TextureCache.cpp.
@@ -110,7 +109,7 @@ protected:
      @return  true if loaded correctly.
      */
     bool InitWithImageFileThreadSafe(const TString& fullpath);
-    
+
     EFormat DetectFormat(const unsigned char * data, ssize_t dataLen);
     bool IsPng(const unsigned char * data, ssize_t dataLen);
     bool IsJpg(const unsigned char * data, ssize_t dataLen);
@@ -133,6 +132,7 @@ protected:
     int m_height;
     EFormat m_fileType;
     PixelFormat m_renderFormat;
+    bool m_bUnpack = false;
     bool m_preMulti;
     TMipmapInfo m_mipmaps[MIPMAP_MAX];   // pointer to mipmap images
     int m_numberOfMipmaps;

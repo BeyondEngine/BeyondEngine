@@ -2,20 +2,19 @@
 #define BEYOND_ENGINE_RENDER_STATICMESHDATA_H__INCLUDE
 
 #include "Resource/Resource.h"
+#include "Scene/Node3D.h"
+#include "MathExt/AABBBox.h"
 
-class CRenderBatch;
 class CMaterial;
-
-struct SSubMesh
+class CNodeAnimationData;
+class CRenderBatch;
+struct SSubMesh : public CNode3D
 {
-    SSubMesh()
-        : m_pRenderBatch(nullptr)
-    {
-    }
-
-    std::vector<CVertexPT> m_vertices;
-    SharePtr<CMaterial> m_material;
-    CRenderBatch *m_pRenderBatch;
+    SSubMesh();
+    virtual ~SSubMesh();
+    CRenderBatch *m_pRenderBatch = nullptr;
+    CNodeAnimationData* m_pNodeAnimationData = nullptr;
+    CAABBBox m_aabb;
 };
 
 class CStaticMeshData : public CResource
@@ -27,12 +26,22 @@ public:
     virtual ~CStaticMeshData();
 
     virtual bool Load() override;
-    virtual bool Unload() override;
+    virtual void Initialize() override;
+    virtual void Uninitialize() override;
 
-    const std::vector<SSubMesh *> &GetSubMeshes() const;
+    const std::vector<SSubMesh*>& GetSubMeshes() const;
+#ifdef EDITOR_MODE
+    virtual void Reload() override;
+#endif
+#ifdef DEVELOP_VERSION
+    virtual TString GetDescription() const override;
+    uint32_t m_uVertexCount = 0;
+#endif
 
+    const CAABBBox& GetAABB() const;
 private:
     std::vector<SSubMesh *> m_subMeshes;
+    CAABBBox m_aabb;
 };
 
 #endif

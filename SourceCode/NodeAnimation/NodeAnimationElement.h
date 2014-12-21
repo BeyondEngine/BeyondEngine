@@ -1,7 +1,7 @@
 #ifndef BEYOND_ENGINE_NODEANIMATION_NODEANIMATIONELEMENT_H__INCLUDE
 #define BEYOND_ENGINE_NODEANIMATION_NODEANIMATIONELEMENT_H__INCLUDE
 
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentInstance.h"
+#include "Component/Component/ComponentInstance.h"
 
 enum ENodeAnimationElementType
 {
@@ -12,8 +12,9 @@ enum ENodeAnimationElementType
     eNAET_UIAlpha,
     eNAET_ColorScale,
     eNAET_UV,
-    eNAET_PosInRate,
     eNAET_Anchor,
+    eNAET_AlphaScale,
+    eNAET_contentSize,
 
     eNAET_Count,
     eNAET_Force32Bit = 0xFFFFFFFF
@@ -28,8 +29,9 @@ static const TCHAR* strNodeAnimationElementType[] =
     _T("UI透明度"),
     _T("颜色比例"),
     _T("纹理坐标"),
-    _T("比例位置"),
     _T("锚点"),
+    _T("透明度比例"),
+    _T("内部尺寸")
 };
 
 class CNode;
@@ -42,15 +44,17 @@ public:
 
     virtual void ReflectData(CSerializer& serializer) override;
     ENodeAnimationElementType GetType() const;
-    bool GetValue(size_t uFrame, CVec3& outValue);
-    void Apply(CNode* pNode, size_t uCurrFrame);
-    void AddKeyFrame(size_t uFramePos, const CVec3& data);
-    void RemoveKeyFrame(size_t uFramePos);
-    const std::map<size_t, CVec3>& GetKeyFrames() const;
+    void SetType(ENodeAnimationElementType type);
+    bool GetValue(uint32_t uFrame, CVec3& outValue);
+    bool SetValue(uint32_t uFrame, CVec3& value);
+    void Apply(CNode* pNode, uint32_t uCurrFrame);
+    void AddKeyFrame(uint32_t uFramePos, const CVec3& data);
+    void RemoveKeyFrame(uint32_t uFramePos);
+    const std::map<uint32_t, CVec3>& GetKeyFrames() const;
 
 private:
     ENodeAnimationElementType m_type;
-    std::map<size_t, CVec3> m_keyFrames;
+    std::map<uint32_t, CVec3> m_keyFrames;
 };
 
 #endif

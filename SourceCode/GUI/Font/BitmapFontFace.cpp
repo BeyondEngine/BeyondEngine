@@ -1,9 +1,7 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "BitmapFontFace.h"
-#include "Resource/ResourcePathManager.h"
 #include "BeatsUtility/FilePathTool.h"
-#include "TinyXML/tinyxml.h"
-#include "Utf8String.h"
+
 #include "Resource/ResourceManager.h"
 #include "Render/TextureAtlas.h"
 #include "Render/RenderManager.h"
@@ -21,113 +19,142 @@ CBitmapFontFace::CBitmapFontFace(const TString &filename)
     , m_fDefaultWidth(0.f)
     , m_fDefaultHeight(0.f)
 {
-    LoadFontFile(filename);
+    m_strFontName = filename;
+    LoadFontFile(m_strFontName);
 }
 
 CBitmapFontFace::~CBitmapFontFace()
 {
-
+    CleanFontData();
 }
 
 void CBitmapFontFace::LoadFontFile(const TString &filename)
 {
     // Load From File
-    TString strResourcePath = CResourcePathManager::GetInstance()->GetResourcePath
-        (CResourcePathManager::eRPT_Font);
+    TString strResourcePath = CResourceManager::GetInstance()->GetResourcePath(eRT_Font);
     strResourcePath.append(_T("/"));
     strResourcePath += filename;
     TCHAR szBuffer[MAX_PATH];
     CFilePathTool::GetInstance()->Canonical(szBuffer, strResourcePath.c_str());
+    CSerializer serialier;
+    CFilePathTool::GetInstance()->LoadFile(&serialier, szBuffer, "rb");
+    char manualFileEndDataForString = 0;
+    serialier << manualFileEndDataForString;
+    rapidxml::xml_document<> doc;
+   try
+   {
+       doc.parse<rapidxml::parse_default>((char*)serialier.GetBuffer());
+       rapidxml::xml_node<> *root = doc.first_node("Font");
+       BEATS_ASSERT(root != nullptr,
+           _T("Font file %s not found or incorrect!"), szBuffer);
 
-    TiXmlDocument doc;
-    CSerializer serializer;
-    CFilePathTool::GetInstance()->LoadFile(&serializer, szBuffer, _T("rb"));
-    if (serializer.GetWritePos() != serializer.GetReadPos())
-    {
-        doc.Parse((char*)serializer.GetReadPtr());
-    }
-    TiXmlElement *root = doc.RootElement();
-    BEATS_ASSERT(root && strcmp(root->Value(), "Font") == 0, 
-        _T("Font file %s not found or incorrect!"), szBuffer);
+       const char *name = root->first_attribute("Name")->value();
+       BEATS_ASSERT(name);
+       m_strName = name;
+       m_fDefaultWidth = (float)_ttof(root->first_attribute("DefaultWidth")->value());
+       m_fDefaultHeight = (float)_ttof(root->first_attribute("DefaultHeight")->value());
 
-    const char *name = root->Attribute("Name");
-    BEATS_ASSERT(name);
-    m_strName = name;
-    root->QueryFloatAttribute("DefaultWidth", &m_fDefaultWidth);
-    root->QueryFloatAttribute("DefaultHeight", &m_fDefaultHeight);
+       for (rapidxml::xml_node<> *pElemImage = root->first_node("Glyph");
+           pElemImage != nullptr; pElemImage = pElemImage->next_sibling("Glyph"))
+       {
+           const char *strChar = pElemImage->first_attribute("Char")->value();
+           BEATS_ASSERT(strChar);
+           std::wstring strUniChar = CStringHelper::GetInstance()->Utf8ToWString(strChar);
+           BEATS_ASSERT(strUniChar.size() == 1);
+           uint32_t code = static_cast<uint32_t>(strUniChar[0]);
+           const char *strAtlas = pElemImage->first_attribute("Atlas")->value();
+           BEATS_ASSERT(strAtlas);
+           const char *strFrag = pElemImage->first_attribute("SubTexture")->value();
+           BEATS_ASSERT(strFrag);
+#ifdef DISABLE_RENDER
+           strAtlas = "name.xml";
+           strFrag = "name_confirm";
+#endif
+           SharePtr<CTextureAtlas> pAtlas = CResourceManager::GetInstance()->GetResource<CTextureAtlas>(strAtlas);
+           BEATS_ASSERT(pAtlas);
 
-    for(TiXmlElement *elemImage = root->FirstChildElement("Glyph");
-        elemImage != nullptr; elemImage = elemImage->NextSiblingElement("Glyph"))
-    {
-        const char *strChar = elemImage->Attribute("Char");
-        BEATS_ASSERT(strChar);
-        std::wstring strUniChar = Utf8ToWString(strChar);
-        BEATS_ASSERT(strUniChar.size() == 1);
-        unsigned long code = static_cast<unsigned long>(strUniChar[0]);
-        const char *strAtlas = elemImage->Attribute("Atlas");
-        BEATS_ASSERT(strAtlas);
-        const char *strFrag = elemImage->Attribute("SubTexture");
-        BEATS_ASSERT(strFrag);
-        SharePtr<CTextureAtlas> pAtlas = CResourceManager::GetInstance()->
-            GetResource<CTextureAtlas>(strAtlas);
-        BEATS_ASSERT(pAtlas);
-        CTextureFrag *pFrag = pAtlas->GetTextureFrag(strFrag);
-        BEATS_ASSERT(pFrag);
-
-        CBitmapFontGlyph *pGlyph = new CBitmapFontGlyph;
-        pGlyph->SetWidth(m_fDefaultWidth, false);
-        pGlyph->SetHeight(m_fDefaultHeight, false);
-        pGlyph->pFrag = pFrag;
-        m_glyphMap.insert(std::make_pair(code, pGlyph));
-
-        auto itr = m_materialMap.find(pAtlas->Texture()->ID());
-        if(itr == m_materialMap.end())
-        {
-            SharePtr<CMaterial> material = CFontManager::GetInstance()->CreateDefaultMaterial(true);
-            material->SetTexture(0, pAtlas->Texture());
-            m_materialMap[pAtlas->Texture()->ID()] = material;
-        }
-    }
+           CBitmapFontGlyph *pGlyph = new CBitmapFontGlyph;
+           pGlyph->pFrag = pAtlas->GetTextureFrag(strFrag);
+           BEATS_ASSERT(pGlyph->pFrag, "bitmap font frag not found");
+           pGlyph->SetWidth(pGlyph->pFrag->GetSize().X(), false);
+           pGlyph->SetHeight(pGlyph->pFrag->GetSize().Y(), false);
+           pGlyph->SetWidth(pGlyph->pFrag->GetSize().X(), true);
+           pGlyph->SetHeight(pGlyph->pFrag->GetSize().Y(), true);
+           m_glyphMapLocker.lock();
+           m_glyphMap.insert(std::make_pair(code, pGlyph));
+           m_glyphMapLocker.unlock();
+           m_pTexture = pAtlas->Texture();
+       }
+   }
+   catch (rapidxml::parse_error &e)
+   {
+       BEATS_ASSERT(false, _T("Load config file %s faled!/n%s/n"), szBuffer, e.what());
+       BEYONDENGINE_UNUSED_PARAM(e);
+   }
 }
 
-const CFontGlyph *CBitmapFontFace::PrepareChar(wchar_t character)
+const CFontGlyph *CBitmapFontFace::PrepareChar(wchar_t character, bool& bGlyphReset)
 {
+    bGlyphReset = false;
+    const CFontGlyph* pRet = nullptr;
+    m_glyphMapLocker.lock();
     auto itr = m_glyphMap.find(character);
-    return itr != m_glyphMap.end() ? itr->second : nullptr;
-}
-
-void CBitmapFontFace::DrawGlyph(const CFontGlyph *glyph, float x, float y, float fFontSize, CColor color, CColor borderColor,
-                                const kmMat4 *transform, bool bGUI, const CRect *pRect ) const
-{
-    const CBitmapFontGlyph *pGlyph = down_cast<const CBitmapFontGlyph *>(glyph);
-    CQuadP quad;
-    quad.tl.x = x;
-    quad.tl.y = y;
-    quad.tr.x = x + pGlyph->GetWidth(false) * fFontSize;
-    quad.tr.y = quad.tl.y;
-    quad.bl.x = quad.tl.x;
-    quad.bl.y = y + pGlyph->GetHeight(false) * fFontSize;
-    quad.br.x = quad.tr.x;
-    quad.br.y = quad.bl.y;
-
-    SharePtr<CMaterial> pMaterial;
-    if(!pRect)
+    if (itr != m_glyphMap.end())
     {
-        auto itr = m_materialMap.find(pGlyph->pFrag->Texture()->ID());
-        BEATS_ASSERT(itr != m_materialMap.end());
-        pMaterial = itr->second;
+        pRet = itr->second;
     }
+#ifdef EDITOR_MODE
     else
     {
-        pMaterial = CFontManager::GetInstance()->CreateDefaultMaterial(false);
-        pMaterial->SetTexture(0, pGlyph->pFrag->Texture());
-        pMaterial->GetRenderState()->SetBoolState(CBoolRenderStateParam::eBSP_ScissorTest, true);
-        pMaterial->GetRenderState()->SetScissorRect(pRect->position.x, pRect->position.y, pRect->size.x, pRect->size.y);
+        itr = m_glyphMap.begin();
+        pRet = itr->second;
     }
+#endif
+    m_glyphMapLocker.unlock();
+    return pRet;
+}
 
-    CRenderBatch *batch = (bGUI ? CFontManager::GetInstance()->GetRenderGroupGUI()
-                                : CFontManager::GetInstance()->GetRenderGroup2D() )
-                                ->GetRenderBatch(VERTEX_FORMAT(CVertexPTC), pMaterial, GL_TRIANGLES, true );
+void CBitmapFontFace::DrawGlyph(CRenderBatch* pBatch, const CFontGlyph *glyph, float x, float y, float fFontSize, const CColor& color, const CColor& borderColor,
+    const CMat4 *transform, const CRect *pRect, float fAlphaScale ) const
+{
+    BEATS_ASSERT(pBatch);
+    const CBitmapFontGlyph *pGlyph = down_cast<const CBitmapFontGlyph *>(glyph);
+    CQuadP quad;
+    quad.tl.X() = x;
+    quad.tl.Y() = y;
+    quad.tr.X() = x + pGlyph->GetWidth(false) * fFontSize;
+    quad.tr.Y() = quad.tl.Y();
+    quad.bl.X() = quad.tl.X();
+    quad.bl.Y() = y + pGlyph->GetHeight(false) * fFontSize;
+    quad.br.X() = quad.tr.X();
+    quad.br.Y() = quad.bl.Y();
+    CColor realColor = color;
+    realColor.a = (unsigned char)((float)color.a * fAlphaScale);
+    BEATS_ASSERT(!pRect);
+    pBatch->AddQuad(&quad, &pGlyph->pFrag->GetQuadT(), realColor, borderColor, transform);
+}
 
-    batch->AddQuad(&quad, &pGlyph->pFrag->Quad(), color, transform);
+CRenderBatch* CBitmapFontFace::GetRenderBatch(ERenderGroupID renderGroupId) const
+{
+    CRenderGroup* pRenderGroup = CRenderGroupManager::GetInstance()->GetRenderGroupByID(renderGroupId);
+    SharePtr<CMaterial> pMaterial = CRenderManager::GetInstance()->GetImageMaterial();
+    std::map<unsigned char, SharePtr<CTexture> > textureMap;
+    textureMap[0] = m_pTexture;
+    CRenderBatch* pRet = pRenderGroup->GetRenderBatch(VERTEX_FORMAT(CVertexPTCC), pMaterial, GL_TRIANGLES, true, true, &textureMap);
+    BEATS_ASSERT(pRet != nullptr);
+    return pRet;
+}
+
+void CBitmapFontFace::Reload()
+{
+    CleanFontData();
+    LoadFontFile(m_strFontName);
+}
+
+void CBitmapFontFace::CleanFontData()
+{
+    m_glyphMapLocker.lock();
+    BEATS_SAFE_DELETE_MAP(m_glyphMap);
+    m_glyphMapLocker.unlock();
+    m_pTexture = nullptr;
 }

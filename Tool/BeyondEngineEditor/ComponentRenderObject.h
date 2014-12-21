@@ -27,7 +27,7 @@ private:
     void RenderGridLine();
     void RenderDraggingDependencyLine();
     void RenderComponents();
-    void ConvertWorldPosToGridPos(const kmVec2* pVectorPos, int* pOutGridX, int* pOutGridY);
+    void ConvertWorldPosToGridPos(const CVec2* pVectorPos, int* pOutGridX, int* pOutGridY);
     void ConvertGridPosToWorldPos( int gridX, int gridY, float* pOutWorldPosX, float* pOutWorldPosY);
     void ConvertWindowPosToWorldPos(const wxPoint& windowPos, float* pOutWorldPosX, float* pOutWorldPosY);
 

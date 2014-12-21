@@ -1,11 +1,8 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "GridRenderObject.h"
 #include "RenderBatch.h"
-#include "CommonTypes.h"
-#include "RenderGroupManager.h"
 #include "RenderGroup.h"
 #include "Material.h"
-#include "RenderState.h"
 
 CGridRenderObject::CGridRenderObject()
     : m_pGridBatch(nullptr)
@@ -30,9 +27,9 @@ CGridRenderObject::~CGridRenderObject()
 
 void CGridRenderObject::DoRender()
 {
-    if(m_pGridBatch->GetVertexCount() > 0)
+    if(m_pGridBatch->GetDataSize() > 0)
     {
-        CRenderGroup *pRenderGroup = CRenderGroupManager::GetInstance()->GetRenderGroup(CRenderGroupManager::LAYER_3D);
+        CRenderGroup *pRenderGroup = CRenderGroupManager::GetInstance()->GetRenderGroupByID(LAYER_3D_DEBUG_PRIMITIVE);
         pRenderGroup->AddRenderBatch(m_pGridBatch);
     }
 }
@@ -43,12 +40,12 @@ void CGridRenderObject::GetGridStartPos(int& x, int& y) const
     y = m_nStartGridPosZ;
 }
 
-size_t CGridRenderObject::GetGridWidth() const
+uint32_t CGridRenderObject::GetGridWidth() const
 {
     return m_uGridWidth;
 }
 
-size_t CGridRenderObject::GetGridHeight() const
+uint32_t CGridRenderObject::GetGridHeight() const
 {
     return m_uGridHeight;
 }
@@ -78,7 +75,7 @@ void CGridRenderObject::SetGridStartPos(int x, int y)
     }
 }
 
-void CGridRenderObject::SetGridWidth(size_t uWidth)
+void CGridRenderObject::SetGridWidth(uint32_t uWidth)
 {
     if (m_uGridWidth != uWidth)
     {
@@ -91,7 +88,7 @@ void CGridRenderObject::SetGridWidth(size_t uWidth)
     }
 }
 
-void CGridRenderObject::SetGridHeight(size_t uHeight)
+void CGridRenderObject::SetGridHeight(uint32_t uHeight)
 {
     if (m_uGridHeight != uHeight)
     {
@@ -120,7 +117,7 @@ void CGridRenderObject::SetLineWidth(float fLineWidth)
     m_fLineWidth = fLineWidth;
     if (m_pGridBatch != NULL)
     {
-        m_pMaterial->GetRenderState()->SetLineWidth(m_fLineWidth);
+        m_pMaterial->SetLineWidth(m_fLineWidth);
     }
 }
 
@@ -167,18 +164,16 @@ void CGridRenderObject::SetAxisZColor(const CColor& color)
 void CGridRenderObject::InitGridData()
 {
     m_pMaterial = new CMaterial();
-    m_pMaterial->SetSharders( _T("PointColorShader.vs"), _T("PointColorShader.ps"));
-    m_pMaterial->SetDepthTest(true);
+    m_pMaterial->SetSharders( _T("pointcolorshader.vs"), _T("pointcolorshader.ps"));
+    m_pMaterial->SetDepthTestEnable(false);
     m_pMaterial->SetBlendEnable(true);
     m_pMaterial->SetBlendSource(GL_SRC_ALPHA);
     m_pMaterial->SetBlendDest(GL_ONE_MINUS_SRC_ALPHA);
     m_pMaterial->SetBlendEquation(GL_FUNC_ADD);
-    m_pMaterial->GetRenderState()->SetLineWidth(m_fLineWidth);
-    m_pMaterial->GetRenderState()->SetPointSize(5.f);
-    m_pMaterial->SetTexture(0, nullptr );
-
-    m_pGridBatch = new CRenderBatch(
-        VERTEX_FORMAT(CVertexPC), m_pMaterial, GL_LINES, false);
+    m_pMaterial->SetLineWidth(m_fLineWidth);
+    m_pMaterial->SetPointSize(5.f);
+    m_pMaterial->Initialize();
+    m_pGridBatch = new CRenderBatch(VERTEX_FORMAT(CVertexPC), m_pMaterial, GL_LINES, false);
     m_pGridBatch->SetStatic(true);
     CreateVertexData();
 }
@@ -192,33 +187,39 @@ void CGridRenderObject::CreateVertexData()
     {
         for (int i = 0; i <= (int)m_uGridWidth; ++i)
         {
-            kmVec3Fill(&vertex.position, (m_nStartGridPosX + i) * m_fGridDistance, 0, m_nStartGridPosZ * m_fGridDistance);
+            vertex.position.Fill((m_nStartGridPosX + i) * m_fGridDistance, 0, m_nStartGridPosZ * m_fGridDistance);
             vertex.color = (m_nStartGridPosX + i) == 0 ? m_axisZColor : m_lineColor; // Axis Z
             m_pGridBatch->AddVertices(&vertex, 1);
-            kmVec3Fill(&vertex.position, (m_nStartGridPosX + i) * m_fGridDistance, 0, (m_nStartGridPosZ + (int)m_uGridHeight) * m_fGridDistance);
+            vertex.position.Fill((m_nStartGridPosX + i) * m_fGridDistance, 0, (m_nStartGridPosZ + (int)m_uGridHeight) * m_fGridDistance);
             m_pGridBatch->AddVertices(&vertex, 1);
         }
         for (int j = 0; j <= (int)m_uGridHeight; ++j)
         {
-            kmVec3Fill(&vertex.position, m_nStartGridPosX * m_fGridDistance, 0, (m_nStartGridPosZ + j) * m_fGridDistance);
+            vertex.position.Fill(m_nStartGridPosX * m_fGridDistance, 0, (m_nStartGridPosZ + j) * m_fGridDistance);
             vertex.color = (m_nStartGridPosZ + j) == 0 ? m_axisXColor : m_lineColor; // Axis X
             m_pGridBatch->AddVertices(&vertex, 1);
-            kmVec3Fill(&vertex.position, (m_nStartGridPosX + (int)m_uGridWidth) * m_fGridDistance, 0, (m_nStartGridPosZ + j) * m_fGridDistance);
+            vertex.position.Fill((m_nStartGridPosX + (int)m_uGridWidth) * m_fGridDistance, 0, (m_nStartGridPosZ + j) * m_fGridDistance);
             m_pGridBatch->AddVertices(&vertex, 1);
         }
+        m_pGridBatch->RefreshStaticBatch(); // Update the buffer object.
     }
 
     if (!BEATS_FLOAT_EQUAL(m_fPositiveLineLength, 0))
     {
         CVertexPC originVertex;
         originVertex.color = 0xFFFF00FF;
-        kmVec3Zero(&originVertex.position);
+        originVertex.position.Zero();
         m_pGridBatch->AddVertices(&originVertex, 1);
 
         CVertexPC axisPositive;
         axisPositive.color = 0xFFFF00FF;
         float fLineLength = MIN(m_fPositiveLineLength, m_fGridDistance * m_uGridWidth * 0.5f);
-        kmVec3Fill(&axisPositive.position, fLineLength, fLineLength, fLineLength);
+        axisPositive.position.Fill(fLineLength, fLineLength, fLineLength);
         m_pGridBatch->AddVertices(&axisPositive, 1);
     }
+}
+
+float CGridRenderObject::GetPositiveLineLength() const
+{
+    return m_fPositiveLineLength;
 }

@@ -4,11 +4,29 @@
 #include <jni.h>
 #include <string>
 
+#define SDK_ACTIVITY_CLASS_NAME "com/beyondtech/starraiders/SdkActivity"
+#define ACTIVITY_CLASS_NAME "com/beyondtech/starraiders/StarRaidersActivity"
+#define BEYONDENGINE_HELPER_CLASS_NAME "com/beyondtech/starraiders/BeyondEngineHelper"
+
 typedef struct JniMethodInfo_
 {
-    JNIEnv *    env;
-    jclass      classID;
-    jmethodID   methodID;
+    JNIEnv *    env = nullptr;
+    jclass      classID = nullptr;
+    jmethodID   methodID = 0;
+    void CleanUp()
+    {
+        if (classID && env)
+        {
+            env->DeleteLocalRef(classID);
+        }
+        env = nullptr;
+        classID = nullptr;
+        methodID = 0;
+    }
+    ~JniMethodInfo_()
+    {
+        CleanUp();
+    }
 } JniMethodInfo;
 
 class JniHelper
@@ -32,7 +50,6 @@ public:
 
     static jmethodID loadclassMethod_methodID;
     static jobject classloader;
-
 private:
     static JNIEnv* cacheEnv(JavaVM* jvm);
 

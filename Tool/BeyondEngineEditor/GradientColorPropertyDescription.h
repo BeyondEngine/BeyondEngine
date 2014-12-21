@@ -12,21 +12,26 @@ public:
 
     virtual ~CGradientColorPropertyDescription();
 
-    virtual bool AnalyseUIParameterImpl(const std::vector<TString>& parameterUnit);
-    virtual wxPGProperty* CreateWxProperty();
-    virtual void SetValue(wxVariant& value, bool bSaveValue = true);
+    virtual void Initialize() override;
+    virtual wxPGProperty* CreateWxProperty() override;
+    virtual bool AnalyseUIParameterImpl(const std::vector<TString>& parameterUnit) override;
+    virtual void SetValue(wxVariant& value, bool bSaveValue = true) override;
     virtual bool CopyValue(void* pSourceValue, void* pTargetValue) override;
-    virtual bool IsDataSame(bool bWithDefaultOrXML);
-    virtual CPropertyDescriptionBase* CreateNewInstance();
+    virtual bool IsDataSame(bool bWithDefaultOrXML) override;
+    virtual CPropertyDescriptionBase* CreateNewInstance() override;
     virtual void GetValueAsChar(EValueType type, char* pOut) const override;
     virtual bool GetValueByTChar(const TCHAR* pIn, void* pOutValue) override;
     virtual void Serialize(CSerializer& serializer, EValueType eValueType = eVT_SavedValue) override;
     virtual void Deserialize(CSerializer& serializer, EValueType eValueType = eVT_CurrentValue) override;
 
-    TString FormatSplineValue();
-    CColorSpline* GetColorSpline();
+    void ApplyToDialog();
+    TString WriteToString() const;
+    void ReadFromString(const TString& strValue);
+    std::map<float, CColor>& GetColorMap();
+    std::map<float, uint8_t>& GetAlphaMap();
 private:
-    CColorSpline m_colorSplineValue;
+    std::map<float, CColor> m_colorMap;
+    std::map<float, uint8_t> m_alphaMap;
 };
 
 #endif

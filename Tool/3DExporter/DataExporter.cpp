@@ -3,172 +3,15 @@
 #include "Utility/BeatsUtility/Serializer.h"
 #include "3DSceneExport.h"
 #include "notetrck.h"
+#include "FilePathTool.h"
 
 #define  MAX_BONE_BLEND 4
 
 extern IGameTextureMap* GetTextureMap(IGameMaterial* pMat, int nSlot);
-extern const TCHAR* GetFileFullNameFromPathName(const TCHAR* pszPathName, size_t uStrLen);
-
-inline static ESkeletonBoneType GetBoneType( const CHAR* pszNewName)
-{
-    ESkeletonBoneType ret = eSBT_Null;
-    if (strcmp ( pszNewName, "Bip01 头部")==0)  
-        ret = eSBT_Head;
-    else if (strcmp ( pszNewName, "Bip01 Neck")==0)  
-        ret = eSBT_Neck;
-    else if (strcmp ( pszNewName, "Bip01 R Clavicle")==0)  
-        ret = eSBT_RightClavicle;
-    else if (strcmp ( pszNewName, "Bip01 L Clavicle")==0)  
-        ret = eSBT_LeftClavicle;
-    else if (strcmp ( pszNewName, "Bip01 R UpperArm")==0)  
-        ret = eSBT_RightUpperArm;
-    else if (strcmp ( pszNewName, "Bip01 L UpperArm")==0)  
-        ret = eSBT_LeftUpperArm;
-    else if (strcmp ( pszNewName, "Bip01 R Forearm")==0)  
-        ret = eSBT_RightForearm;
-    else if (strcmp ( pszNewName, "Bip01 L Forearm")==0)  
-        ret = eSBT_LeftForearm;
-    else if (strcmp ( pszNewName, "Bip01 R Hand")==0)  
-        ret = eSBT_RightHand;
-    else if (strcmp ( pszNewName, "Bip01 L Hand")==0)  
-        ret = eSBT_LeftHand;
-    else if (strcmp ( pszNewName, "Bip01 R Finger0")==0)  
-        ret = eSBT_RightFinger1;
-    else if (strcmp ( pszNewName, "Bip01 R Finger1")==0)  
-        ret = eSBT_RightFinger2;	
-    else if (strcmp ( pszNewName, "Bip01 R Finger2")==0)  
-        ret = eSBT_RightFinger3;
-    else if (strcmp ( pszNewName, "Bip01 R Finger3")==0)  
-        ret = eSBT_RightFinger4;
-    else if (strcmp ( pszNewName, "Bip01 L Finger0")==0)  
-        ret = eSBT_LeftFinger1;
-    else if (strcmp ( pszNewName, "Bip01 L Finger1")==0)  
-        ret = eSBT_LeftFinger2;
-    else if (strcmp ( pszNewName, "Bip01 L Finger2")==0)  
-        ret = eSBT_LeftFinger3;
-    else if (strcmp ( pszNewName, "Bip01 L Finger3")==0)  
-        ret = eSBT_LeftFinger4;	
-
-    else if (strcmp ( pszNewName, "Bip01 R Finger01")==0)  
-        ret = eSBT_RightFinger11;
-    else if (strcmp ( pszNewName, "Bip01 R Finger11")==0)  
-        ret = eSBT_RightFinger21;	
-    else if (strcmp ( pszNewName, "Bip01 R Finger21")==0)  
-        ret = eSBT_RightFinger31;
-    else if (strcmp ( pszNewName, "Bip01 R Finger31")==0)  
-        ret = eSBT_RightFinger41;
-    else if (strcmp ( pszNewName, "Bip01 L Finger01")==0)  
-        ret = eSBT_LeftFinger11;
-    else if (strcmp ( pszNewName, "Bip01 L Finger11")==0)  
-        ret = eSBT_LeftFinger21;
-    else if (strcmp ( pszNewName, "Bip01 L Finger21")==0)  
-        ret = eSBT_LeftFinger31;
-    else if (strcmp ( pszNewName, "Bip01 L Finger31")==0)  
-        ret = eSBT_LeftFinger41;	
-
-    else if (strcmp ( pszNewName, "Bip01 R Finger02")==0)  
-        ret = eSBT_RightFinger12;
-    else if (strcmp ( pszNewName, "Bip01 R Finger12")==0)  
-        ret = eSBT_RightFinger22;	
-    else if (strcmp ( pszNewName, "Bip01 R Finger22")==0)  
-        ret = eSBT_RightFinger32;
-    else if (strcmp ( pszNewName, "Bip01 R Finger32")==0)  
-        ret = eSBT_RightFinger42;
-    else if (strcmp ( pszNewName, "Bip01 L Finger02")==0)  
-        ret = eSBT_LeftFinger12;
-    else if (strcmp ( pszNewName, "Bip01 L Finger12")==0)  
-        ret = eSBT_LeftFinger22;
-    else if (strcmp ( pszNewName, "Bip01 L Finger22")==0)  
-        ret = eSBT_LeftFinger32;
-    else if (strcmp ( pszNewName, "Bip01 L Finger32")==0)  
-        ret = eSBT_LeftFinger42;	
-
-    else if (strcmp ( pszNewName, "Bip01 R Finger0Nub")==0)  
-        ret = eSBT_RightFinger13;
-    else if (strcmp ( pszNewName, "Bip01 R Finger1Nub")==0)  
-        ret = eSBT_RightFinger23;	
-    else if (strcmp ( pszNewName, "Bip01 R Finger2Nub")==0)  
-        ret = eSBT_RightFinger33;
-    else if (strcmp ( pszNewName, "Bip01 R Finger3Nub")==0)  
-        ret = eSBT_RightFinger43;
-    else if (strcmp ( pszNewName, "Bip01 L Finger0Nub")==0)  
-        ret = eSBT_LeftFinger13;
-    else if (strcmp ( pszNewName, "Bip01 L Finger1Nub")==0)  
-        ret = eSBT_LeftFinger23;
-    else if (strcmp ( pszNewName, "Bip01 L Finger2Nub")==0)  
-        ret = eSBT_LeftFinger33;
-    else if (strcmp ( pszNewName, "Bip01 L Finger3Nub")==0)  
-        ret = eSBT_LeftFinger43;	
-
-    else if (strcmp ( pszNewName, "Bip01 Spine2")==0)  
-        ret = eSBT_Spine2;
-    else if (strcmp ( pszNewName, "Bip01 Spine1")==0)  
-        ret = eSBT_Spine1;
-    else if (strcmp ( pszNewName, "Bip01 Spine")==0)  
-        ret = eSBT_Spine;
-    else if (strcmp ( pszNewName, "Bip01 骨盆")==0)  
-        ret = eSBT_Pelvis;
-    else if (strcmp ( pszNewName, "Bip01")==0)  
-        ret = eSBT_Root;
-    else if (strcmp ( pszNewName, "Bip01 R Thigh")==0)  
-        ret = eSBT_RightThigh;
-    else if (strcmp ( pszNewName, "Bip01 L Thigh")==0)  
-        ret = eSBT_LeftThigh;
-    else if (strcmp ( pszNewName, "Bip01 R Calf")==0)  
-        ret = eSBT_RightCalf;
-    else if (strcmp ( pszNewName, "Bip01 L Calf")==0)  	
-        ret = eSBT_LeftCalf;
-    else if (strcmp ( pszNewName, "Bip01 R Foot")==0)  
-        ret = eSBT_RightFoot;
-    else if (strcmp ( pszNewName, "Bip01 L Foot")==0)  
-        ret = eSBT_LeftFoot;
-    else if (strcmp ( pszNewName, "Bip01 R Toe0")==0)  
-        ret = eSBT_RightToe1;
-    else if (strcmp ( pszNewName, "Bip01 L Toe0")==0)  
-        ret = eSBT_LeftToe1;
-    else if (strcmp ( pszNewName, "Bip01 R Toe01")==0)  
-        ret = eSBT_RightToe2;
-    else if (strcmp ( pszNewName, "Bip01 L Toe01")==0)  
-        ret = eSBT_LeftToe2;
-    else if (strcmp ( pszNewName, "Bip01 R Toe02")==0)  
-        ret = eSBT_RightToe3;
-    else if (strcmp ( pszNewName, "Bip01 L Toe02")==0)  
-        ret = eSBT_LeftToe3;
-
-    else if (strcmp ( pszNewName, "Bip01 R ForeTwist")==0)  
-        ret = eSBT_RightForeTwist;
-    else if (strcmp ( pszNewName, "Bip01 RUpArmTwist")==0)  
-        ret = eSBT_RightUpArmTwist;
-    else if (strcmp ( pszNewName, "Bip01 L ForeTwist")==0)  
-        ret = eSBT_LeftForeTwist;
-    else if (strcmp ( pszNewName, "Bip01 LUpArmTwist")==0)  
-        ret = eSBT_LeftUpArmTwist;
-    else if (strcmp ( pszNewName, "Bone04")==0)  
-        ret = eSBT_Tooth;
-    else if (strcmp ( pszNewName, "Bip01 L Toe0Nub")==0)  
-        ret = eSBT_LeftToe5;
-    else if (strcmp ( pszNewName, "Bip01 R Toe0Nub")==0)  
-        ret = eSBT_RightToe5;
-    else if (strcmp ( pszNewName, "Bone01")==0)  
-        ret = eSBT_UserDefineBone;
-    else if (strcmp ( pszNewName, "Bone02")==0)  
-        ret = eSBT_UserDefineBone1;
-    else if (strcmp ( pszNewName, "Bone03")==0)  
-        ret = eSBT_UserDefineBone2;
-    else if (strcmp ( pszNewName, "Bone01(mirrored)")==0)  
-        ret = eSBT_UserDefineBone3;
-    else if (strcmp ( pszNewName, "Bone02(mirrored)")==0)  
-        ret = eSBT_UserDefineBone4;
-    else if (strcmp ( pszNewName, "Bip01 头部Nub")==0)  
-        ret = eSBT_Count;
-
-    BEATS_ASSERT(ret != eSBT_Null, _T("GetBoneType"));
-    return ret;
-}
 
 inline static void GetMaterialCnt(IGameMaterial* pRootMat, UINT& uMatCnt)
 {
-    if(pRootMat == NULL)	
+    if(pRootMat == NULL)
     {
         uMatCnt = 0;
         return;
@@ -190,7 +33,7 @@ inline static void GetMaterialCnt(IGameMaterial* pRootMat, UINT& uMatCnt)
     }
 }
 
-inline static IGameMaterial*		GetMaterial(UINT& index, IGameMaterial* pRootMat, IGameMaterial* pParent, INT nChildID, IGameMaterial** pParentRet, INT* pChildIDRet)
+inline static IGameMaterial* GetMaterial(UINT& index, IGameMaterial* pRootMat, IGameMaterial* pParent, INT nChildID, IGameMaterial** pParentRet, INT* pChildIDRet)
 {
     BEATS_ASSERT(pRootMat != NULL);
     BEATS_ASSERT(pParentRet != NULL);
@@ -257,11 +100,12 @@ CDataExporter::~CDataExporter()
 
 void CDataExporter::InitNodeBones()
 {
+    m_boneNameCheck.clear();
     UINT uTotalRootNodeCnt = m_pIGameScene->GetTopLevelNodeCount();
     for(UINT x = 0; x < uTotalRootNodeCnt; x++)
     {
         IGameNode* pNode = m_pIGameScene->GetTopLevelNode(x);
-        this->CollectBoneNode(m_listBones, pNode);
+        CollectBoneNode(m_listBones, pNode);
     }
 }
 
@@ -280,44 +124,126 @@ void CDataExporter::SetExportFileName(const TString& strFileName)
     m_strFileName = strFileName;
 }
 
-void CDataExporter::ExportSkeletonAnimation()
+uint8_t CDataExporter::GetBoneIndex(const TString& strBoneName)
 {
-    InitNodeBones();
-    InitFrameInfo();
-
-    ExportSkeleton();
-    ExportMesh();
-
-    ExportAnimation();
+    uint8_t uBoneIndex = 0xFF;
+    BEATS_ASSERT(!strBoneName.empty(), _T("Bone name will never be empty!"));
+    if (!strBoneName.empty())
+    {
+        for (int32_t i = 0; i < m_listBones.Count(); ++i)
+        {
+            if (m_listBones[i]->GetName() == strBoneName)
+            {
+                uBoneIndex = (uint8_t)i;
+                break;
+            }
+        }
+    }
+    BEATS_ASSERT(uBoneIndex != 0xFF);
+    return uBoneIndex;
 }
 
-void CDataExporter::ExportSkeleton()
+bool CDataExporter::ExportSkeletonAnimation()
+{
+    bool bRet = false;
+    InitNodeBones();
+    InitFrameInfo();
+    m_pIGameScene->SetStaticFrame(0);
+
+    CSerializer modeldata;
+    ExportMesh(modeldata);
+    ExportSkeleton(modeldata);
+    ExportAnimation(modeldata);
+    if (modeldata.GetWritePos() > 0)
+    {
+        std::string filename = m_strFileName;
+        filename = filename.substr(0, filename.length() - 4);
+        filename.append(_T(".model"));
+        modeldata.Deserialize(filename.c_str());
+        bRet = true;
+    }
+    return bRet;
+}
+
+void CDataExporter::ExportSkeleton(CSerializer& modelData)
 {
     m_pIGameScene->SetStaticFrame(0);
 
-    UINT nBoneCount = (UINT)m_listBones.Count();
-
-    CSerializer serializer;
-    serializer << nBoneCount;
-
-    for(UINT x = 0; x < nBoneCount; x++)
+    uint32_t uBoneCount = (uint32_t)m_listBones.Count();
+    if (uBoneCount > 0)
     {
-        IGameNode* pNode = m_listBones[x];
-        assert(pNode != NULL);
-        
-        this->ExportSkeletonNode(pNode, serializer);
+        CSerializer serializer;
+        serializer << uBoneCount;
+        if (uBoneCount >= 32)
+        {
+            TCHAR szBuffer[MAX_PATH];
+            _stprintf_s(szBuffer, MAX_PATH, "骨骼的数量不能大于31, 当前骨骼数量为 %d, 导出失败！", uBoneCount);
+            MessageBox(NULL, szBuffer, "骨骼过多", MB_OK);
+        }
+        for (UINT x = 0; x < uBoneCount; x++)
+        {
+            IGameNode* pNode = m_listBones[x];
+            assert(pNode != NULL);
+            ExportSkeletonNode(pNode, serializer);
+        }
+        serializer.SetReadPos(0);
+        modelData.Serialize(serializer);
     }
-
-    std::string  filename = m_strFileName;
-    filename.append(_T(".ske"));
-    serializer.Deserialize(filename.c_str());
 }
 
-void    CDataExporter::ExportMesh()
+void CDataExporter::ExportMesh(CSerializer& modelData)
 {
     GetSkinInfo();
+    if (m_skinMeshDataList.size() > 0)
+    {
+        CSerializer serializer;
+        serializer << m_skinMeshDataList.size();
+        for (uint32_t i = 0; i < m_skinMeshDataList.size(); ++i)
+        {
+            uint32_t uMaterialSize = m_skinMeshDataList[i].m_vMaterialName.size();
+            if (uMaterialSize > 1)
+            {
+                TCHAR szBuffer[MAX_PATH];
+                _stprintf_s(szBuffer, MAX_PATH, "材质的数量不能大于1, 当前骨骼数量为 %d, 导出失败！", uMaterialSize);
+                MessageBox(NULL, szBuffer, "材质过多", MB_OK);
+            }
+            serializer << uMaterialSize;
 
-    ExportSkinnedMesh();
+            for (uint32_t j = 0; j < uMaterialSize; ++j)
+            {
+                serializer << m_skinMeshDataList[i].m_vMaterialName[j];
+            }
+
+            //vertex data
+            int iMeshVertexCount = m_skinMeshDataList[i].m_vecPos.size();
+            serializer << iMeshVertexCount;
+
+            for (uint32_t j = 0; j < m_skinMeshDataList[i].m_vecPos.size(); ++j)
+            {
+                const SSkinMeshData& currMeshData = m_skinMeshDataList[i];
+                serializer << currMeshData.m_vecPos[j].x << currMeshData.m_vecPos[j].y << currMeshData.m_vecPos[j].z;
+                serializer << currMeshData.m_vecUV[j].x << currMeshData.m_vecUV[j].y;
+                uint8_t cBoneWeightSize = currMeshData.m_vecWeightData[j].size();
+                serializer << cBoneWeightSize;
+                for (uint32_t z = 0; z < cBoneWeightSize; ++z)
+                {
+                    const SWeightData& weightdata = m_skinMeshDataList[i].m_vecWeightData[j][z];
+                    serializer << weightdata.uboneIndex << weightdata.fWeight;
+                }
+            }
+
+            //PosIndex
+            int iMeshPosIndexCount = m_skinMeshDataList[i].m_indices.size();
+            serializer << iMeshPosIndexCount;
+            for (int j = 0; j < iMeshPosIndexCount; ++j)
+            {
+                serializer << m_skinMeshDataList[i].m_indices[j];
+            }
+        }
+
+        serializer.SetReadPos(0);
+        modelData.Serialize(serializer);
+    }
 }
 
 BOOL CDataExporter::CollectBoneNode(Tab<IGameNode*>& res, IGameNode* pNode)
@@ -333,6 +259,10 @@ BOOL CDataExporter::CollectBoneNode(Tab<IGameNode*>& res, IGameNode* pNode)
 
     if (bBone)
     {
+        TString strBoneName = pNode->GetName();
+        BEATS_ASSERT(!strBoneName.empty(), "Bone Name can't be empty!");
+        BEATS_ASSERT(m_boneNameCheck.find(strBoneName) == m_boneNameCheck.end(), "Bone name %s is repeated!", strBoneName.c_str());
+        m_boneNameCheck.insert(strBoneName);
         res.Append(1, &pNode);
     }
 
@@ -341,7 +271,7 @@ BOOL CDataExporter::CollectBoneNode(Tab<IGameNode*>& res, IGameNode* pNode)
     {
         IGameNode* pChild = pNode->GetNodeChild(x);
         BEATS_ASSERT(pChild != NULL);
-        this->CollectBoneNode(res, pChild);
+        CollectBoneNode(res, pChild);
     }
 
     return TRUE;
@@ -355,18 +285,18 @@ BOOL CDataExporter::ExportSkeletonNode(IGameNode* pNode, CSerializer& serializer
     IGameObject::MaxType maxType = pObject->GetMaxType();
 
     BEATS_ASSERT(gameType == IGameObject::IGAME_BONE && maxType != IGameObject::IGAME_MAX_HELPER, _T("Error at exporting a bone!"));
-
 #endif
 
-    //BoneType
-    ESkeletonBoneType type = GetBoneType(pNode->GetName());
-    ESkeletonBoneType parentType = eSBT_Null;
+    const TString strBoneName = pNode->GetName();
+    uint8_t uBoneIndex = GetBoneIndex(strBoneName);
     IGameNode* pParentNode = pNode->GetNodeParent();
+    uint8_t uParentNodeIndex = 0xFF;
     if ( pParentNode )
     {
-        parentType = GetBoneType(pParentNode->GetName());
+        const TString strParentBoneName = pParentNode->GetName();
+        uParentNodeIndex = GetBoneIndex(strParentBoneName);
     }
-    serializer << type << parentType;
+    serializer << strBoneName << uBoneIndex << uParentNodeIndex;
 
     GMatrix matParent;
     GMatrix matRelative;
@@ -389,11 +319,19 @@ BOOL CDataExporter::ExportSkeletonNode(IGameNode* pNode, CSerializer& serializer
         matRelative = matWorld;
     }
 
-    for(size_t i = 0; i < 4; i++)
+    Point3 translate = matRelative.Translation();
+    Point3 scale = matRelative.Scaling();
+    matRelative.SetRow(3, Point4(0, 0, 0, 1)); // Clear translation
+    GMatrix transposeMat;
+    for (int i = 0; i < 4; ++i)
     {
-        Point4 pt = matRelative.GetRow(i);
-        serializer << pt.x << pt.y << pt.z << pt.w;
+        transposeMat.SetRow(i, matRelative.GetColumn(i));
     }
+    Quat quaternion = transposeMat.Rotation();
+    quaternion.Normalize();
+    serializer << scale.x << scale.y << scale.z;
+    serializer << quaternion.x << quaternion.y << quaternion.z << quaternion.w;
+    serializer << translate.x << translate.y << translate.z;
 
     return TRUE;
 }
@@ -401,12 +339,12 @@ BOOL CDataExporter::ExportSkeletonNode(IGameNode* pNode, CSerializer& serializer
 BOOL CDataExporter::ExportAnimationNode(IGameNode* pNode, CSerializer& serializer)
 {
 #ifdef _DEBUG
-	IGameObject* pObject = pNode->GetIGameObject();
-	IGameObject::ObjectTypes gameType = pObject->GetIGameType();
-	IGameObject::MaxType maxType = pObject->GetMaxType();
+    IGameObject* pObject = pNode->GetIGameObject();
+    IGameObject::ObjectTypes gameType = pObject->GetIGameType();
+    IGameObject::MaxType maxType = pObject->GetMaxType();
 
-	BOOL bBone = gameType == IGameObject::IGAME_BONE && maxType != IGameObject::IGAME_MAX_HELPER;
-	BEATS_ASSERT(bBone, _T("Error at exporting a bone! ExportAnimationNode"));
+    BOOL bBone = gameType == IGameObject::IGAME_BONE && maxType != IGameObject::IGAME_MAX_HELPER;
+    BEATS_ASSERT(bBone, _T("Error at exporting a bone! ExportAnimationNode"));
 #endif // _DEBUG
 
     GMatrix matParent;
@@ -430,12 +368,19 @@ BOOL CDataExporter::ExportAnimationNode(IGameNode* pNode, CSerializer& serialize
         matRelative = matWorld;
     }
 
-    for(size_t i = 0; i < 4; i++)
+    Point3 translate = matRelative.Translation();
+    Point3 scale = matRelative.Scaling();
+    matRelative.SetRow(3, Point4(0, 0, 0, 1)); // Clear translation
+    GMatrix transposeMat;
+    for (int i = 0; i < 4; ++i)
     {
-        Point4 pt = matRelative.GetRow(i);
-        serializer << pt.x << pt.y << pt.z << pt.w;
+        transposeMat.SetRow(i, matRelative.GetColumn(i));
     }
-
+    Quat quaternion = transposeMat.Rotation();
+    quaternion.Normalize();
+    serializer << scale.x << scale.y << scale.z;
+    serializer << quaternion.x << quaternion.y << quaternion.z << quaternion.w;
+    serializer << translate.x << translate.y << translate.z;
     return TRUE;
 }
 
@@ -499,201 +444,143 @@ void CDataExporter::GetSkinInfo()
                     IGameTextureMap* pTextureMap = GetTextureMap(pMat, ID_DI);
                     BEATS_ASSERT(pTextureMap != NULL);
                     const TCHAR* pszTexFileName = pTextureMap->GetBitmapFileName();
-                    std::string textureName = GetFileFullNameFromPathName(pszTexFileName, (size_t)_tcslen(pszTexFileName));
+                    std::string textureName = CFilePathTool::GetInstance()->FileName(pszTexFileName);
                     meshData.m_vMaterialName.push_back(textureName);
                 }
             }
 
             IGameMesh* pMesh = (IGameMesh*)pNode->GetIGameObject();
             IGameSkin* pSkin = pMesh->GetIGameSkin();
-            pMesh->SetUseWeightedNormals();
-            pMesh->InitializeData();
-            Tab<int> mapNums = pMesh->GetActiveMapChannelNum();
-            BEATS_ASSERT( mapNums.Count() == 1);
-            int uFaceCount = pMesh->GetNumberOfFaces();
-
-            for(int i = 0; i < uFaceCount; ++i)
+            if (pSkin)
             {
-                FaceEx* pFace = pMesh->GetFace(i);
-                DWORD mapIndex[3];
-                bool bAccessUV = pMesh->GetMapFaceIndex(mapNums[0], pFace->meshFaceIndex, mapIndex);
-                for (int j = 0; j < 3; ++j)
+                pMesh->SetUseWeightedNormals();
+                pMesh->InitializeData();
+                Tab<int> mapNums = pMesh->GetActiveMapChannelNum();
+                BEATS_ASSERT(mapNums.Count() == 1);
+                int uFaceCount = pMesh->GetNumberOfFaces();
+
+                for (int i = 0; i < uFaceCount; ++i)
                 {
-                    Point3 ptUV = pMesh->GetMapVertex(mapNums[0], bAccessUV ? mapIndex[j] : pFace->texCoord[j]);
-                    int indexPos = pFace->vert[j];
-                    Point3 pos = pMesh->GetVertex(indexPos);
+                    FaceEx* pFace = pMesh->GetFace(i);
+                    DWORD mapIndex[3];
+                    bool bAccessUV = pMesh->GetMapFaceIndex(mapNums[0], pFace->meshFaceIndex, mapIndex);
+                    for (int j = 0; j < 3; ++j)
+                    {
+                        Point3 ptUV = pMesh->GetMapVertex(mapNums[0], bAccessUV ? mapIndex[j] : pFace->texCoord[j]);
+                        int indexPos = pFace->vert[j];
+                        Point3 pos = pMesh->GetVertex(indexPos);
 
-                    //Filter the pos
-                    size_t uVertexCount = meshData.m_vecPos.size();
-                    size_t uVertexIndex = 0;
-                    for (; uVertexIndex < uVertexCount; ++uVertexIndex)
-                    {
-                        if (meshData.m_vecPos[uVertexIndex] == pos && meshData.m_vecUV[uVertexIndex] == ptUV)
+                        //Filter the pos
+                        uint32_t uVertexCount = meshData.m_vecPos.size();
+                        uint32_t uVertexIndex = 0;
+                        for (; uVertexIndex < uVertexCount; ++uVertexIndex)
                         {
-                            break;
-                        }
-                    }
-                    bool bNewVertex = uVertexIndex == uVertexCount;
-                    if (bNewVertex)
-                    {
-                        meshData.m_vecPos.push_back(pos);
-                        meshData.m_vecUV.push_back(ptUV);
-                    }
-                    meshData.m_indices.push_back(uVertexIndex);
-
-                    if (bNewVertex)
-                    {
-                        int uEffectedBoneCount = pSkin->GetNumberOfBones(indexPos);
-                        float fWeightSum = 0;
-                        int nValidDataCounter = 0;
-                        // HACK: Sometimes the uEffectedBoneCount will be greater than MAX_BONE_BLEND, so we filter those data with 0 weight.
-                        // This should never happens.
-                        for (int w = 0; w < uEffectedBoneCount && nValidDataCounter < MAX_BONE_BLEND; ++w)
-                        {
-                            float fWeight = pSkin->GetWeight(indexPos, w);
-                            if (!BEATS_FLOAT_EQUAL(fWeight, 0))
+                            if (meshData.m_vecPos[uVertexIndex] == pos && meshData.m_vecUV[uVertexIndex] == ptUV)
                             {
-                                SWeightData data;
-                                INode* pBone = pSkin->GetBone(indexPos, w);
-                                const char* pszBoneName = pBone->GetName();
-                                ESkeletonBoneType boneType = GetBoneType(pszBoneName);
-                                data.type = boneType;
-                                data.fWeight = fWeight;
-                                fWeightSum += fWeight;
-                                meshData.m_vecWeightData.push_back(data);
-                                ++nValidDataCounter;
+                                break;
                             }
                         }
-                        // Fill the rest data.
-                        for (; nValidDataCounter < MAX_BONE_BLEND; ++nValidDataCounter)
+                        bool bNewVertex = uVertexIndex == uVertexCount;
+                        if (bNewVertex)
                         {
-                            SWeightData data;
-                            meshData.m_vecWeightData.push_back(data);
+                            meshData.m_vecPos.push_back(pos);
+                            meshData.m_vecUV.push_back(ptUV);
                         }
-                        BEATS_ASSERT(fWeightSum > 0.98f && fWeightSum < 1.01f);
+                        meshData.m_indices.push_back(uVertexIndex);
+
+                        if (bNewVertex)
+                        {
+                            int uEffectedBoneCount = pSkin->GetNumberOfBones(indexPos);
+                            float fWeightSum = 0;
+                            int nValidDataCounter = 0;
+                            std::vector<SWeightData> weightData;
+                            // HACK: Sometimes the uEffectedBoneCount will be greater than MAX_BONE_BLEND, so we filter those data with 0 weight.
+                            // This should never happens.
+                            for (int w = 0; w < uEffectedBoneCount && w < MAX_BONE_BLEND; ++w)
+                            {
+                                float fWeight = pSkin->GetWeight(indexPos, w);
+                                if (!BEATS_FLOAT_EQUAL(fWeight, 0))
+                                {
+                                    SWeightData data;
+                                    INode* pBone = pSkin->GetBone(indexPos, w);
+                                    const char* pszBoneName = pBone->GetName();
+                                    uint8_t boneIndex = GetBoneIndex(pszBoneName);
+                                    data.uboneIndex = boneIndex;
+                                    data.fWeight = fWeight;
+                                    fWeightSum += fWeight;
+                                    weightData.push_back(data);
+                                }
+                            }
+                            meshData.m_vecWeightData.push_back(weightData);
+                            BEATS_ASSERT(fWeightSum > 0.98f && fWeightSum < 1.01f);
+                        }
                     }
                 }
+                m_skinMeshDataList.push_back(meshData);
             }
-            m_skinMeshDataList.push_back(meshData);
         }
         pNode->ReleaseIGameObject();
     }
 }
 
-void CDataExporter::ExportSkinnedMesh()
-{
-    CSerializer serializer;
-
-    serializer << m_skinMeshDataList.size();
-
-    for(size_t i = 0; i < m_skinMeshDataList.size(); ++i)
-    {
-        serializer << m_skinMeshDataList[i].m_vMaterialName.size();
-       
-        for(size_t j = 0; j < m_skinMeshDataList[i].m_vMaterialName.size(); ++j)
-        {
-            serializer << m_skinMeshDataList[i].m_vMaterialName[j];
-        }
-       
-        //vertex data
-        int iMeshVertexCount = m_skinMeshDataList[i].m_vecPos.size();
-        serializer << iMeshVertexCount;
-           
-        for(size_t j = 0; j < m_skinMeshDataList[i].m_vecPos.size(); ++j)
-        {
-            serializer << m_skinMeshDataList[i].m_vecPos[j].x << m_skinMeshDataList[i].m_vecPos[j].y << m_skinMeshDataList[i].m_vecPos[j].z;
-            serializer << m_skinMeshDataList[i].m_vecUV[j].x << m_skinMeshDataList[i].m_vecUV[j].y;
-
-            for(int z = 0; z < MAX_BONE_BLEND; ++z)
-            {
-                const SWeightData& weightdata = m_skinMeshDataList[i].m_vecWeightData[j * MAX_BONE_BLEND + z];
-                serializer << weightdata.type << weightdata.fWeight;
-            }
-        }
-
-        //PosIndex
-        int iMeshPosIndexCount = m_skinMeshDataList[i].m_indices.size();
-        serializer << iMeshPosIndexCount;
-        for(int j = 0; j < iMeshPosIndexCount; ++j)
-        {
-            serializer << m_skinMeshDataList[i].m_indices[j];
-        }
-    }
-
-    std::string  filename = m_strFileName;
-    filename.append(_T(".skin"));
-    serializer.Deserialize(filename.c_str());
-}
-
-void CDataExporter::ExportAnimation()
+void CDataExporter::ExportAnimation(CSerializer& modelData)
 {
     InitAminiationSegment();
 
-    size_t nBoneCount = (size_t)m_listBones.Count();
-    if(nBoneCount > 0)
+    uint8_t uBoneCount = (uint8_t)m_listBones.Count();
+    if (uBoneCount > 0)
     {
         CSerializer serializer;
-        int nFrameCount = m_nEndFrame - m_nStartFrame;
-        if(m_vKeys.size() > 1)
+        uint32_t animationCount = m_animationSegment.size();
+        if (animationCount > 0)
         {
-            size_t keySize = m_vKeys.size();
-            int _nStartFrame = m_nStartFrame;
-            for ( size_t i = 0 ; i < keySize; ++i )
-            {
-                int _nEndFrame = m_vKeys[i].m_nKeyTime;
-                nFrameCount = _nEndFrame - _nStartFrame+1;
-                serializer << nBoneCount << m_uFPS << nFrameCount;
-                for(size_t x = 0; x < nBoneCount; x++)
-                {
-                    IGameNode* pNode = m_listBones[x];
-                    ESkeletonBoneType type = GetBoneType(pNode->GetName());
-                    serializer << type;
-                }
-                for(int frame = _nStartFrame; frame <= _nEndFrame; ++frame)
-                {
-                    m_pIGameScene->SetStaticFrame(frame);
-                    for(size_t x = 0; x < nBoneCount; x++)
-                    {
-                        IGameNode* pNode = m_listBones[x];
-                        BEATS_ASSERT(pNode != NULL);
-                        this->ExportAnimationNode(pNode, serializer);
-                    }
-                }
-                _nStartFrame = _nEndFrame;
-                std::string  name = m_strFileName;
-                std::string keyname = m_vKeys[i].m_strKeyName;
-                keyname.erase(keyname.find_last_not_of("\n\r")+1);
-                name.append(keyname);
-                name.append(_T(".ani"));
-                serializer.Deserialize(name.c_str());
+            modelData << animationCount << m_uFPS;
 
-            }	
-        }
-        else
-        {
-            serializer << nBoneCount << m_uFPS << nFrameCount;
-            for(size_t x = 0; x < nBoneCount; x++)
+            int16_t _nStartFrame = m_nStartFrame;
+            uint16_t uFrameCount = 0;
+            for (uint32_t i = 0; i < animationCount; i++)
             {
-                IGameNode* pNode = m_listBones[x];
-                ESkeletonBoneType type = GetBoneType(pNode->GetName());
-                serializer << type;
-            }
-            for(int frame = m_nStartFrame; frame <= m_nEndFrame; frame++)
-            {
-                m_pIGameScene->SetStaticFrame(frame);
-                for(size_t x = 0; x < nBoneCount; x++)
+                int _nEndFrame = m_animationSegment[i].m_nKeyTime;
+                uFrameCount = _nEndFrame - _nStartFrame + 1;
+                const TString& strAniName = m_animationSegment[i].m_strKeyName;
+                if (strAniName.find("\r") != TString::npos ||
+                    strAniName.find("\n") != TString::npos)
+                {
+                    TCHAR szBuffer[MAX_PATH];
+                    _stprintf_s(szBuffer, MAX_PATH, "骨骼动画名 %s 中不能包含回车或者换行！", strAniName.c_str());
+                    MessageBox(BEYONDENGINE_HWND, szBuffer, "导出错误", MB_OK);
+                }
+                serializer << uFrameCount << strAniName << _nStartFrame;
+                for (uint32_t x = 0; x < (uint32_t)m_listBones.Count(); ++x)
                 {
                     IGameNode* pNode = m_listBones[x];
                     BEATS_ASSERT(pNode != NULL);
-                    this->ExportAnimationNode(pNode, serializer);
+                    auto pControl = pNode->GetIGameControl();
+                    std::set<int> keyList;
+                    IGameKeyTab posList;
+                    pControl->GetQuickSampledKeys(posList, IGAME_POS);
+                    MergeKeyFrame(keyList, posList);
+                    IGameKeyTab rotList;
+                    pControl->GetQuickSampledKeys(rotList, IGAME_ROT);
+                    MergeKeyFrame(keyList, rotList);
+                    IGameKeyTab scaleList;
+                    pControl->GetQuickSampledKeys(scaleList, IGAME_SCALE);
+                    MergeKeyFrame(keyList, scaleList);
+                    serializer << keyList.size();
+                    for (auto iter = keyList.begin(); iter != keyList.end(); ++iter)
+                    {
+                        uint16_t keyIndex = *iter;
+                        serializer << keyIndex;
+                        m_pIGameScene->SetStaticFrame(keyIndex);
+                        ExportAnimationNode(pNode, serializer);
+                    }
                 }
+                _nStartFrame = _nEndFrame + 1;
             }
-            std::string  filename = m_strFileName;
-            filename.append(_T(".ani"));
-            serializer.Deserialize(filename.c_str());
+            serializer.SetReadPos(0);
+            modelData.Serialize(serializer);
         }
     }
-
 }
 
 void CDataExporter::InitAminiationSegment()
@@ -714,31 +601,17 @@ void CDataExporter::InitAminiationSegment()
            stKeyValue keyValue;
            keyValue.m_nKeyTime  = ( nt->GetKeyTime(j) / nTickPerFrame );
            keyValue.m_strKeyName =  nt->keys[j]->note;
-           m_vKeys.push_back( keyValue );
+           m_animationSegment.push_back( keyValue );
         }
     }
-
 }
 
-void    CDataExporter::GetMaterialInfo(IGameNode* pNode)
+void CDataExporter::MergeKeyFrame(std::set<int>& outList, const IGameKeyTab& keyList)
 {
-    IGameMaterial* pRootMat = pNode->GetNodeMaterial();
-    if(pRootMat != NULL)
+    int nTickPerFrame = m_pIGameScene->GetSceneTicks();
+    for (int i = 0; i < keyList.Count(); ++i)
     {
-        UINT uMatCnt = 0;
-        GetMaterialCnt(pRootMat, uMatCnt);
-        m_vMeshMeterialCnt.push_back(uMatCnt);
-        for(UINT x = 0; x < uMatCnt; x++)
-        {
-            UINT index = x;
-            INT nChildID;
-            IGameMaterial* pParentMat;
-            IGameMaterial* pMat = GetMaterial(index, pRootMat, NULL, -1, &pParentMat, &nChildID);
-            IGameTextureMap* pTextureMap = GetTextureMap(pMat, ID_DI);
-            BEATS_ASSERT(pTextureMap != NULL);
-            const TCHAR* pszTexFileName = pTextureMap->GetBitmapFileName();
-            std::string textureName = GetFileFullNameFromPathName(pszTexFileName, (size_t)_tcslen(pszTexFileName));
-        }
+        int nIndex = keyList[i].t / nTickPerFrame;
+        outList.insert(nIndex);
     }
 }
-

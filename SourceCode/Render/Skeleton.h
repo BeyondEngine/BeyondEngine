@@ -1,25 +1,30 @@
 ﻿#ifndef BEYOND_ENGINE_RENDER_SKELETON_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_SKELETON_H__INCLUDE
 
-#include "resource/Resource.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentInstance.h"
 class CSkeletonBone;
 
-class CSkeleton : public CResource
+class CSkeleton
 {
-    DECLARE_REFLECT_GUID(CSkeleton, 0x1147A0EF, CResource)
-    DECLARE_RESOURCE_TYPE(eRT_Skeleton)
-
 public:
     CSkeleton();
     virtual ~CSkeleton();
 
-    virtual bool Load() override;
+    CSkeletonBone* GetSkeletonBoneById(uint8_t uIndex) const;
+    CSkeletonBone* GetSkeletonBoneByName(const TString& strName) const;
+    const std::map<uint8_t, CSkeletonBone* >& GetBoneMap() const;
 
-    SharePtr<CSkeletonBone> GetSkeletonBone(ESkeletonBoneType type) const;
-    std::map<ESkeletonBoneType, SharePtr<CSkeletonBone>>& GetBoneMap();
+    const TString& GetBoneName(uint8_t uIndex) const;
+    uint8_t GetBoneIndex(const TString& strName) const;
+    bool Load(CSerializer& serializer);
+
+    uint8_t GetFPS()const;
+    void SetFPS(uint8_t uFPS);
+#ifdef DEVELOP_VERSION
+    void PrintBoneTree(CSkeletonBone* pBone, uint32_t level);
+#endif
 private:
-    std::map<ESkeletonBoneType, SharePtr<CSkeletonBone>> m_bonesMap;
+    uint8_t m_uFPS = 0;
+    std::map<uint8_t, CSkeletonBone*> m_bonesIdMap;
 };
 
 #endif

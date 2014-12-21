@@ -1,9 +1,19 @@
 #include "Framework/Application.h"
 #import "Framework/ios/AppDelegate.h"
 
-int CApplication::Run(void *)
+int CApplication::Run(int argc, char * argv[], void *)
 {
     @autoreleasepool {
-    return UIApplicationMain(0, nullptr, nil, NSStringFromClass([AppDelegate class]));
+    return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
     }
+}
+
+void CApplication::OnSwitchToBackground()
+{
+    Pause();
+}
+
+void CApplication::OnSwitchToForeground()
+{
+    Resume();
 }

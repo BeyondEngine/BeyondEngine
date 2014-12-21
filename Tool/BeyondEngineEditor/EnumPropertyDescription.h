@@ -28,8 +28,7 @@ struct SEnumPropertyDataMapWrapper
     }
     ~SEnumPropertyDataMapWrapper()
     {
-        typedef std::map<TString, SEnumPropertyData*> TEnumPropertyDataType;
-        BEATS_SAFE_DELETE_MAP(m_data, TEnumPropertyDataType);
+        BEATS_SAFE_DELETE_MAP(m_data);
     }
 
     std::map<TString, SEnumPropertyData*> m_data;
@@ -43,15 +42,15 @@ public:
     virtual ~CEnumPropertyDescription();
 
     const SEnumPropertyData* GetEnumPropertyData() const;
-    int QueryValueByString(const TString& str) const;
-    TString QueryStringByValue(int nValue) const;
+    bool QueryValueByString(const TString& str, int& outValue) const;
+    bool QueryStringByValue(int nValue, TString& outString) const;
 
-    virtual bool AnalyseUIParameterImpl(const std::vector<TString>& parameterUnit);
-    virtual wxPGProperty* CreateWxProperty();
-    virtual void SetValue(wxVariant& value, bool bSaveValue = true);
+    virtual bool AnalyseUIParameterImpl(const std::vector<TString>& parameterUnit) override;
+    virtual wxPGProperty* CreateWxProperty() override;
+    virtual void SetValue(wxVariant& value, bool bSaveValue = true) override;
     virtual bool CopyValue(void* pSourceValue, void* pTargetValue) override;
-    virtual bool IsDataSame(bool bWithDefaultOrXML);
-    virtual CPropertyDescriptionBase* CreateNewInstance();
+    virtual bool IsDataSame(bool bWithDefaultOrXML) override;
+    virtual CPropertyDescriptionBase* CreateNewInstance() override;
     virtual void GetValueAsChar(EValueType type, char* pOut) const override;
     virtual bool GetValueByTChar(const TCHAR* pIn, void* pOutValue) override;
     virtual void Serialize(CSerializer& serializer, EValueType eValueType = eVT_SavedValue) override;

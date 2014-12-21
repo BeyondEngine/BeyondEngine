@@ -17,7 +17,9 @@
 #include "EditCameraWnd.h"
 #include "BeyondEngineEditorComponentWindow.h"
 #include "Render/RenderGroupManager.h"
-#include "GUI/WindowManager.h"
+#include "ViewAgentBase.h"
+
+#pragma comment(lib,"Imm32.lib")
 
 #define MaxSpeedUpScale 30.0f
 #define SpeedUpRate 0.3f
@@ -25,6 +27,7 @@
 BEGIN_EVENT_TABLE(CBeyondEngineEditorGLWindow, wxGLCanvas)
     EVT_SIZE(CBeyondEngineEditorGLWindow::OnSize)
     EVT_CHAR(CBeyondEngineEditorGLWindow::OnChar)
+    EVT_KEY_DOWN(CBeyondEngineEditorGLWindow::OnKey)
     EVT_MOUSE_EVENTS(CBeyondEngineEditorGLWindow::OnMouse)
     EVT_SET_CURSOR(CBeyondEngineEditorGLWindow::OnSetCursor)
     EVT_MOUSE_CAPTURE_LOST(CBeyondEngineEditorGLWindow::OnCaptureLost)
@@ -43,7 +46,6 @@ CBeyondEngineEditorGLWindow::CBeyondEngineEditorGLWindow(wxWindow *parent,
                                      const wxPoint& pos, const wxSize& size,
                                      long style, const wxString& name)
     : wxGLCanvas(parent, id, m_attribList, pos, size, style | wxFULL_REPAINT_ON_RESIZE, name)
-    , m_fCameraSpeedScale(10.0F)
     , m_fSpeedUpScale(1.0F)
 {
     m_pMainFrame = static_cast<CEngineEditor*>(wxApp::GetInstance())->GetMainFrame();
@@ -68,9 +70,9 @@ wxGLContext* CBeyondEngineEditorGLWindow::GetGLContext() const
 void CBeyondEngineEditorGLWindow::OnSize(wxSizeEvent& event)
 {
     wxSize size = event.GetSize();
-    size_t uWidth = static_cast<size_t>(size.GetWidth());
-    size_t uHeight = static_cast<size_t>(size.GetHeight());
-    m_pRenderWindow->SetDeviceResolution(uWidth, uHeight);
+    uint32_t uWidth = static_cast<uint32_t>(size.GetWidth());
+    uint32_t uHeight = static_cast<uint32_t>(size.GetHeight());
+    m_pRenderWindow->SetDeviceSize(uWidth, uHeight);
     if (IsShownOnScreen())
     {
         CRenderManager::GetInstance()->SetCurrentRenderTarget(m_pRenderWindow);
@@ -92,152 +94,7 @@ wxGLRenderWindow *CBeyondEngineEditorGLWindow::GetRenderWindow() const
 
 void CBeyondEngineEditorGLWindow::OnMouse(wxMouseEvent& event)
 {
-    ((CEngineEditor*)wxApp::GetInstance())->GetMainFrame()->OnMouseInCurrentView(event);
-    if (event.GetSkipped())
-    {
-        if(event.ButtonDown(wxMOUSE_BTN_RIGHT))
-        {
-            if (!HasCapture())
-            {
-                CaptureMouse();
-            }
-            HideCursor();
-            SetFocus();//Call this for catch the EVT_MOUSEWHEEL event, in left mouse button down event is not necessary to call this
-            m_startPosition = event.GetPosition();
-        }
-        else if(event.ButtonUp(wxMOUSE_BTN_RIGHT))
-        {
-            if (!event.LeftIsDown() && HasCapture())
-            {
-                ReleaseMouse();
-                ShowCursor();
-            }
-        }
-        else if(event.ButtonDown(wxMOUSE_BTN_LEFT))
-        {
-            if (!HasCapture())
-            {
-                CaptureMouse();
-            }
-            HideCursor();
-            m_startPosition = event.GetPosition();
-        }
-        else if(event.ButtonUp(wxMOUSE_BTN_LEFT))
-        {
-            if (!event.RightIsDown() && HasCapture())
-            {
-                ReleaseMouse();
-                ShowCursor();
-            }
-        }
-        else if(event.Dragging())
-        {
-            wxPoint curPos = event.GetPosition();
-            wxPoint pnt = ClientToScreen(m_startPosition);
-            SetCursorPos(pnt.x, pnt.y);
-            if (event.RightIsDown())
-            {
-                float fDeltaX = m_startPosition.x - curPos.x;
-                float fDeltaY = m_startPosition.y - curPos.y;
-                wxSize clientSize = GetClientSize();
-                fDeltaX /= clientSize.x;
-                fDeltaY /= clientSize.y;
-                float fScale = m_pRenderWindow->GetScaleFactor();
-                fDeltaX /= fScale;
-                fDeltaY /= fScale;
-                CCamera *pCamera = GetCamera();
-                if(pCamera)
-                {
-                    pCamera->Yaw(fDeltaX);
-                    pCamera->Pitch(fDeltaY);
-                }
-            }
-        }
-        if (event.GetWheelRotation() != 0)
-        {
-            CCamera *pCamera = GetCamera();
-            if(pCamera)
-            {
-                kmVec3 vec3Speed;
-                kmVec3Fill(&vec3Speed, SHIFTWHEELSPEED, SHIFTWHEELSPEED, SHIFTWHEELSPEED);
-                kmVec3Scale(&vec3Speed, &vec3Speed, event.GetWheelRotation() > 0 ? 1.0f : -1.0f);
-                pCamera->ExecuteMovement(vec3Speed, (1 << CCamera::eCMT_STRAIGHT));
-            }
-        }
-    }
-    event.Skip();
-}
-
-void CBeyondEngineEditorGLWindow::UpdateCamera()
-{
-    kmVec3 vec3Speed;
-    kmVec3Fill(&vec3Speed, 1.0f, 1.0f, 1.0f);
-    if ( SafeGetKeyStage(VK_SHIFT) )
-    {
-        kmVec3Scale(&vec3Speed, &vec3Speed, 5.0F * 0.016F * m_fCameraSpeedScale * m_fSpeedUpScale);
-    }
-    else
-    {
-        kmVec3Scale(&vec3Speed, &vec3Speed, 1.0F * 0.016F * m_fCameraSpeedScale * m_fSpeedUpScale);
-    }
-    int type = CCamera::eCMT_NOMOVE;
-    bool bShouldSpeedUp = false;
-    bool bPressA = SafeGetKeyStage('A');
-    bool bPressD = SafeGetKeyStage('D');
-    if ( bPressA || bPressD )
-    {
-        type |= CCamera::eCMT_TRANVERSE;
-        if (bPressA)
-        {
-            vec3Speed.x *= -1;
-        }
-        bShouldSpeedUp = true;
-    }
-    bool bPressW = SafeGetKeyStage('W');
-    bool bPressS = SafeGetKeyStage('S');
-
-    if ( bPressW || bPressS )
-    {
-        type |= CCamera::eCMT_STRAIGHT;
-        if (bPressW)
-        {
-            vec3Speed.z *= -1;
-        }
-        bShouldSpeedUp = true;
-    }
-    bool bPressUp = SafeGetKeyStage('E');
-    bool bPressDown = SafeGetKeyStage('Q');
-
-    if ( bPressUp || bPressDown )
-    {
-        type |= CCamera::eCMT_UPDOWN;
-        if (bPressDown)
-        {
-            vec3Speed.y *= -1;
-        }
-        bShouldSpeedUp = true;
-    }
-
-    if (bShouldSpeedUp )
-    {
-        if (m_fSpeedUpScale < MaxSpeedUpScale)
-        {
-            m_fSpeedUpScale += SpeedUpRate;
-        }
-    }
-    else
-    {
-        m_fSpeedUpScale = 1.0f;
-    }
-    if (type != CCamera::eCMT_NOMOVE)
-    {
-        CCamera *pCamera = GetCamera();
-        if(pCamera)
-        {
-            BEATS_ASSERT(pCamera->GetType() == CCamera::eCT_3D);
-            pCamera->ExecuteMovement(vec3Speed, type);
-        }
-    }
+    m_pMainFrame->OnMouseInCurrentView(event);
 }
 
 void CBeyondEngineEditorGLWindow::SetGLContext( wxGLContext* pContext )
@@ -279,70 +136,6 @@ void CBeyondEngineEditorGLWindow::OnSetCursor( wxSetCursorEvent& event )
     ((CEngineEditor*)wxApp::GetInstance())->GetMainFrame()->SetCursor();
 }
 
-float CBeyondEngineEditorGLWindow::GetCameraSpeedScale() const
-{
-    return m_fCameraSpeedScale;
-}
-
-void CBeyondEngineEditorGLWindow::SetCameraSpeedScale( float fScale )
-{
-    m_fCameraSpeedScale = fScale;
-}
-
-CScene *CBeyondEngineEditorGLWindow::GetScene()
-{
-    CComponentProxy* pSceneProxy = NULL;
-    const std::map<size_t, CComponentProxy*>& components = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
-    for (auto iter = components.begin(); iter != components.end(); ++iter)
-    {
-        if (iter->second->GetGuid() == CScene::REFLECT_GUID || iter->second->GetParentGuid() == CScene::REFLECT_GUID)
-        {
-            pSceneProxy = iter->second;
-            break;
-        }
-    }
-    CScene* pScene = NULL;
-    if (pSceneProxy != NULL)
-    {
-        pScene = down_cast<CScene*>(pSceneProxy->GetHostComponent());
-        BEATS_ASSERT(pScene != NULL);
-    }
-    else
-    {
-        const std::map<size_t, std::map<size_t, CComponentBase*>*>* pInstanceMap = CComponentProxyManager::GetInstance()->GetComponentInstanceMap();
-        bool bFindScene = false;
-        auto iterScene = pInstanceMap->find(CScene::REFLECT_GUID);
-        if (iterScene != pInstanceMap->end())
-        {
-            BEATS_ASSERT(iterScene->second->size() < 2);
-            CComponentProxy* pProxy = down_cast<CComponentProxy*>(iterScene->second->begin()->second);
-            pScene = down_cast<CScene*>(pProxy->GetHostComponent());
-            BEATS_ASSERT(pScene != NULL);
-            bFindScene = true;
-        }
-        if (!bFindScene)
-        {
-            std::vector<size_t> vecDerivedClass;
-            CComponentProxyManager::GetInstance()->QueryDerivedClass(CScene::REFLECT_GUID, vecDerivedClass, true);
-            for (size_t i = 0; i < vecDerivedClass.size(); ++i)
-            {
-                auto iterSceneDerived = pInstanceMap->find(vecDerivedClass[i]);
-                if (iterSceneDerived != pInstanceMap->end())
-                {
-                    BEATS_ASSERT(iterSceneDerived->second->size() < 2);
-                    CComponentProxy* pProxy = down_cast<CComponentProxy*>(iterSceneDerived->second->begin()->second);
-                    pScene = down_cast<CScene*>(pProxy->GetHostComponent());
-                    BEATS_ASSERT(pScene != NULL);
-                    break;
-                }
-            }
-        }
-    }
-    // TODO: If this assert never triggered, try to use GetCurrentScene instead.
-    //BEATS_ASSERT(pScene == CSceneManager::GetInstance()->GetCurrentScene());
-    return pScene;
-}
-
 void CBeyondEngineEditorGLWindow::OnCaptureLost(wxMouseCaptureLostEvent& /*event*/)
 {
     if (HasCapture())
@@ -351,8 +144,69 @@ void CBeyondEngineEditorGLWindow::OnCaptureLost(wxMouseCaptureLostEvent& /*event
     }
 }
 
-void CBeyondEngineEditorGLWindow::OnChar( wxKeyEvent& event )
+void CBeyondEngineEditorGLWindow::OnChar(wxKeyEvent& event)
 {
-    wxChar c = (wxChar)event.GetKeyCode();
-    CWindowManager::GetInstance()->OnCharEvent( (const TCHAR*)&c, 1 );
+    wxUint32 wParam = event.GetRawKeyCode();
+    if (wParam == VK_F1)
+    {
+#ifdef DEVELOP_VERSION
+        CLogManager::GetInstance()->Show(!CLogManager::GetInstance()->IsShown());
+#endif
+    }
+    if (wParam < 0x20)
+    {
+        if (VK_BACK == wParam)
+        {
+        }
+        else if (VK_RETURN == wParam)
+        {
+        }
+        else if (VK_TAB == wParam)
+        {
+            // tab input
+        }
+        else if (VK_ESCAPE == wParam)
+        {
+            // ESC input
+        }
+    }
+    else if (wParam < 128)
+    {
+    }
+    else
+    {
+#ifdef UNICODE
+        TCHAR szUtf8[8] = { 0 };
+        int nLen = WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)&wParam, 1, szUtf8, sizeof(szUtf8), NULL, NULL);
+        CIMEManager::GetInstance()->OnCharEvent(szUtf8, nLen);
+#else
+        static bool bFirstChar = true;
+        static char iFirsz = 0;
+        if (bFirstChar)
+        {
+            iFirsz = wParam;
+            bFirstChar = false;
+        }
+        else
+        {
+            char szChar[2];
+            szChar[0] = iFirsz;
+            szChar[1] = wParam;
+            int n = MultiByteToWideChar(CP_ACP, 0, szChar, 2, NULL, 0);
+            wchar_t* szWchar = new wchar_t[n];
+            MultiByteToWideChar(CP_ACP, 0, szChar, 2, szWchar, n);
+            TCHAR szUtf8[8] = { 0 };
+            WideCharToMultiByte(CP_UTF8, 0, szWchar, 1, szUtf8, sizeof(szUtf8), NULL, NULL);
+            iFirsz = 0;
+            bFirstChar = true;
+            delete[] szWchar;
+        }
+#endif
+    }
+}
+
+void CBeyondEngineEditorGLWindow::OnKey(wxKeyEvent& event)
+{
+    ((CEngineEditor*)wxApp::GetInstance())->GetMainFrame()->OnKeyInCurrentView(event);
+    event.Skip();
 }

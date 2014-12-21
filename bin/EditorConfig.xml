@@ -1,4 +1,13 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 <Root>
-    <Config LastOpenProject="..\Resource\FCGame.bcp" LastOpenFile="..\Resource\TestScene.bcf" Language="1" ShowAboutDlg="1" />
+    <Config LastOpenProject="e:\lwm\project\beyondengine_github_publish\resource\fcgame.bcp" LastOpenFile="..\resource\testscene.bcf" Language="1" ShowAboutDlg="1"/>
+    <coordinate AxisColorX="0xff0000ff" AxisColorY="0xff00ff" AxisColorZ="0xffff" AxisSelectColor="0xffff00ff" PanelSelectColor="0xffff0099" AxisLengthFactor="0.350000" ConeHeightFactor="0.200000" ConeBottomColorFactor="0.500000" ConeAngle="15.000000" TranslatePanelStartPosRate="0.400000"/>
+    <SceneGridParam BGColor="0xff" iGridStartPosX="1" iGridStartPosY="0" iGridWidth="0" iGridHeight="0" fGridDistance="1.000000" fGridLineWidth="1.000000" bRenderPositiveDirectionLine="0" bRenderMapGrid="0" bRenderPathFindingGrid="0" bRenderBuilding="1" bRenderSprite="1" bRenderSpriteEdge="0" bRenderAttackRange="0" bEnableSpriteDepthTest="0" bRenderSpriteUserDefinePos="0" bRenderGameObjectCenterPosPoint="0" bEnableUI="1" fVolume="1.000000" fSfxVolume="1.000000" bRenderLandingshipSelectArea="0" bEnableShakeCamera="1" bEnableUpdateParticle="1" bEnableRenderParticle="1" bRenderParticleWireFrame="0" uFPS="60" uLanguage="0" fGlobalColorFactor="1.000000" fontSize="24.000000" fontBorderSize="1.000000"/>
+    <CameraParam fPosX="0.000000" fPosY="100.000000" fPosZ="0.000000" fRotationX="-90.000000" fRotationY="0.000000" fRotationZ="0.000000" fClipNear="0.010000" fClipFar="1000.000000" fSpeed="1.000000" fShiftMoveSpeedRate="5.000000" fFov="25.000000"/>
+    <ResolutionConfig/>
+    <LastOpenFilesConfig>
+        <Config LastOpenFile="e:\lwm\project\beyondengine_github_publish\resource\testscene.bcf"/>
+        <Config LastOpenFile="e:\lwm\project\beyondengine_github_publish\resource\loadingscene.bcf"/>
+    </LastOpenFilesConfig>
 </Root>
+

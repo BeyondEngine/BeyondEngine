@@ -5,14 +5,13 @@
 
 class CGameViewAgent : public CViewAgentBase
 {
+    typedef CViewAgentBase super;
     BEATS_DECLARE_SINGLETON(CGameViewAgent);
 public:
     virtual void InView();
     virtual void OutView();
-    virtual void ProcessMouseEvent(wxMouseEvent& event);
+    virtual void ProcessKeyboardEvent(wxKeyEvent& event) override;
 
-private:
-    bool m_bStartTouch;
 };
 
 #endif

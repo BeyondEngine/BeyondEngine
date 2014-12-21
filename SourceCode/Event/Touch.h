@@ -6,34 +6,35 @@
 class CTouch
 {
 public:
-    CTouch( int id);
+    CTouch(size_t id);
     ~CTouch();
     CTouch( CTouch&& other );
 
     CTouch& operator=( CTouch&& other );
 public:
-    int ID() const;
-
-    void UpdateTouchInfo( int id, float x, float y );
+    size_t ID() const;
+    void UpdateTouchInfo(size_t id, float x, float y);
     
     void SetTapCount(unsigned int uTapCount);
     unsigned int GetTapCount() const;
 
     //all point is the device touch location coordinates
-    const kmVec2& GetStartPoint() const;
-    const kmVec2& GetCurrentPoint() const;
-    const kmVec2& GetPreviousPoint() const;
+    const CVec2& GetStartPoint() const;
+    const CVec2& GetCurrentPoint() const;
+    const CVec2& GetPreviousPoint() const;
     float GetDelta() const;
 
-    const kmVec2& GetDeltaXY();
+    const CVec2& GetDeltaXY();
+    void Reset(size_t uID);
+
 private:
     bool m_bStart;
-    int m_id;
-    size_t m_uTapCount;
-    kmVec2 m_ve2StartPoint;
-    kmVec2 m_ve2Point;
-    kmVec2 m_ve2PreviousPoint;
-    kmVec2 m_deltaXY;
+    size_t m_id;
+    uint32_t m_uTapCount;
+    CVec2 m_ve2StartPoint;
+    CVec2 m_ve2Point;
+    CVec2 m_ve2PreviousPoint;
+    CVec2 m_deltaXY;
 };
 
 #endif//TOUCH_H_INCLUDE

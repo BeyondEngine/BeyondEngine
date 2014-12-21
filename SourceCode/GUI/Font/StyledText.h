@@ -5,66 +5,62 @@ class CFontFace;
 
 struct SStyledTextSegment
 {
-    SStyledTextSegment(const TString &text, const CVec2 &pos, const CVec2 &size,
+    SStyledTextSegment(const TString &text, const CVec2 &pos, float fSize, float fHeight,
         CFontFace *pFontFace, CColor color)
-        : text(text), pos(pos), size(size), pFontFace(pFontFace), color(color){}
+        : text(text), pos(pos), fSize(fSize), fHeight(fHeight), pFontFace(pFontFace), color(color)
+    {
+    }
 
     SStyledTextSegment( const SStyledTextSegment& other )
     {
         text = other.text;
         pos = other.pos;
-        size = other.size;
+        fSize = other.fSize;
         pFontFace = other.pFontFace;
         color = other.color;
+        fHeight = other.fHeight;
+        m_bIsNewLine = other.m_bIsNewLine;
+        contentSize = other.contentSize;
     }
 
+    bool m_bIsNewLine = false;
     TString text;
     CVec2 pos;
-    CVec2 size;
+    float fSize;
+    float fHeight;
     CFontFace *pFontFace;
     CColor color;
+    CVec2 contentSize;
 };
 
 typedef std::vector<SStyledTextSegment> TStyledTextSegmentList;
 
 struct SMarkInfo
 {
-    enum EMarkType
+    SMarkInfo(CFontFace * pFace, const CColor& color, float size)
+        : fSize(size)
+        , fCalculationWidthFontSize(size)
+        , ccolor(color)
+        , pFontFace(pFace)
+        , bStartMarkFlag(false)
     {
-        eMT_UNKNOWN,
-        eMT_COLOR,
-        eMT_FONT,
-    };
-
-    SMarkInfo()
+    }
+    SMarkInfo(const SMarkInfo& info)
     {
-        markType = eMT_UNKNOWN;
-        isOpenMark = true;
+        ccolor = info.ccolor;
+        fSize = info.fSize;
+        fCalculationWidthFontSize = info.fCalculationWidthFontSize;
+        pFontFace = info.pFontFace;
+        bStartMarkFlag = info.bStartMarkFlag;
     }
     virtual ~SMarkInfo(){}
-
-    EMarkType markType;
-    bool isOpenMark;
+    CColor ccolor;
+    float fSize;
+    float fCalculationWidthFontSize;
+    CFontFace * pFontFace;
+    bool bStartMarkFlag;
 };
 
-struct SColorMarkInfo : public SMarkInfo
-{
-    SColorMarkInfo()
-    {
-        markType = eMT_COLOR;
-    }
-    CColor color;
-};
-
-struct SFontMarkInfo : public SMarkInfo
-{
-    SFontMarkInfo()
-    {
-        markType = eMT_FONT;
-        pFontFace = nullptr;
-    }
-    CFontFace *pFontFace;
-};
 enum EHoriAlign
 {
     eHA_LEFT,
@@ -84,53 +80,56 @@ public:
     CStyledTextParser(
         const TCHAR *pText, const CVec2 &startPos, const CVec2 &endPos,
         CFontFace *pDefaultFontFace, CColor defaultColor, CColor borderColor,
-        EHoriAlign hAlign = eHA_LEFT, EVertAlign vAlign = eVA_MIDDLE, float fFontSize = 1.0f);
+        EHoriAlign hAlign = eHA_LEFT, EVertAlign vAlign = eVA_MIDDLE, float fFontSize = 1.0f, bool bNumberStyle = true);
 
-    TStyledTextSegmentList Parse();
+    void Parse(TStyledTextSegmentList& segmentList, bool bParseMark);
 
-    static const SMarkInfo *ParseMark(const TString &strMark);
+    void ParseMark(const TString &strMark);
+
+    float GetAdaptiveHeight() const;
+
+    float GetAdaptiveWidth() const;
 
 private:
     void Clear();
-    bool CollectCharacter();
+    bool CollectCharacter(const TCHAR** ppText, CFontFace * fontFace, float fSize);
     void AppendCharacter(TCHAR c);
-    void AppendCharacter(const TCHAR *pChars, size_t num);
-    void BuildSegment();
+    void AppendCharacter(const TCHAR *pChars, uint32_t num);
+    void BuildSegment(CFontFace * fontFace, CColor color, float fTextSize);
     bool NewLine();
 
-    void HandleMark(const SMarkInfo *pMarkInfo);
     void HandleEscaping();
     void HandleHoriAlign();
     void HandleVertAlign();
 
-    std::vector<CFontFace *> m_fontStack;
-    std::vector<CColor> m_colorStack;
-#ifdef _DEBUG
-    std::vector<SMarkInfo::EMarkType> m_markTypeStack;
-#endif
+    void ParseMark(SMarkInfo& asrkInfo, const TString &strMark);
+
+    size_t CutString(const TString& orginString, TString& frontString, TString& backString);
+
+    bool IsNumber( TCHAR szChar );
+
+private:
 
     TStyledTextSegmentList *m_pTextSegList;
-
-    bool m_bInMark;
-    TString m_mark;
-
-    static const size_t BUF_LEN = 1024;
-    TCHAR m_bufLiteral[BUF_LEN];
-    size_t m_bufIndex;
+    TString m_strCache;
 
     CVec2 m_currPos;
     CVec2 m_currStartPos;
     CVec2 m_startPos;
     CVec2 m_endPos;
     CColor m_borderColor;
-    float m_fFontSize;
-    float m_lineHeight;
+    
+    std::vector<SMarkInfo> m_Stack;
+
+    float m_fLineHeight;
     EHoriAlign m_hAlign;
     EVertAlign m_vAlign;
-    size_t m_currLineStartIndex;
+    uint32_t m_currLineStartIndex;
     float m_currLineWidth;
-
     const TCHAR *m_pText;
+    float m_fCurrentTextHeight;
+    bool m_bNumberStyle = false;
+    bool m_bNextSegmentIsNewLine = false;
 };
 
 #endif

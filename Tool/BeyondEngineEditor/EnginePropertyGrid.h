@@ -2,17 +2,20 @@
 #define BEYOND_ENGINE_EDITOR_WXUICONTROL_WXPROPERTY_ENGINEPROPERTYGRID_H__INCLUDE
 
 #include <wx/propgrid/propgrid.h>
-
+class CEnginePropertyGridManager;
 class CEnginePropertyGrid : public wxPropertyGrid
 {
 public:
     CEnginePropertyGrid();
     virtual ~CEnginePropertyGrid();
     void FreeEditorCtrl();
-    void SetManager(wxPropertyGridManager* pManager);
-    wxPropertyGridManager* GetManager() const;
+    void SetManager(CEnginePropertyGridManager* pManager);
+    void OnScrollEvent(wxScrollWinEvent &event);
+    CEnginePropertyGridManager* GetManager() const;
+
 private:
-    wxPropertyGridManager* m_pManager;
+    CEnginePropertyGridManager* m_pManager;
+    DECLARE_EVENT_TABLE()
 };
 
 

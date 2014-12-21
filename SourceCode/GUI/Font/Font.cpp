@@ -1,38 +1,38 @@
 ﻿#include "stdafx.h"
 #include "Font.h"
 #include "Utility/BeatsUtility/StringHelper.h"
-
+#include "Utility/BeatsUtility/FilePathTool.h"
 FT_Library CFont::m_library = nullptr;
 int CFont::m_nLibRefCount = 0;
 
 CFont::CFont()
-    : m_pFace(nullptr)
 {
 }
 
 CFont::~CFont()
 {
-
+    if (IsInitialized())
+    {
+        Uninitialize();
+    }
 }
 
 bool CFont::Load()
 {
     BEATS_ASSERT(!IsLoaded(), _T("Can't Load a font which is already loaded!"));
-    m_pData = new CSerializer(GetFilePath().c_str());
+    FT_Error err = 0;
     if(m_nLibRefCount++ == 0)
     {
-        FT_Error err = FT_Init_FreeType(&m_library);
-        err;
-        BEATS_ASSERT(!err);
+        err = FT_Init_FreeType(&m_library);
+        BEATS_ASSERT(!err, "call FT_Init_FreeType failed!");
     }
-    BEATS_ASSERT(m_pData->GetWritePos() != 0, _T("load font file %s failed!"), GetFilePath().c_str());
-    // TODO: Figure out why not use FT_New_Face
-    FT_Error err = FT_New_Memory_Face(m_library, m_pData->GetBuffer(), (FT_Long)m_pData->GetWritePos(), 0 ,&m_pFace);
-    BEATS_ASSERT(!err);
-    BEATS_PRINT(_T("Load Font %s, glyph count: %d char map count %d\n"), GetFilePath().c_str(), m_pFace->num_glyphs, m_pFace->num_charmaps);
+    BEATS_ASSERT(CFilePathTool::GetInstance()->Exists(GetFilePath().c_str()), _T("Font file %s doesn't exits!"), GetFilePath().c_str());
+    err = FT_New_Face(m_library, GetFilePath().c_str(), 0, &m_pFace);
+    BEATS_ASSERT(!err, "Call FT_New_Face failed of file %s Error code: %d", GetFilePath().c_str(), err);
+    BEATS_PRINT(_T("Load Font %s, glyph count: %d char map count %d\n"), GetFilePath().c_str(), (int32_t)m_pFace->num_glyphs, m_pFace->num_charmaps);
 
     err = FT_Select_Charmap(m_pFace, FT_ENCODING_UNICODE);
-    BEATS_ASSERT(!err);
+    BEATS_ASSERT(!err, "FT_Select_Charmap failed! Error code:%d", err);
 
     super::Load();
     return !err;
@@ -47,13 +47,9 @@ bool CFont::Unload()
 
     if(--m_nLibRefCount == 0)
     {
-        FT_Error err = FT_Done_FreeType(m_library);
-        err;
+        err = FT_Done_FreeType(m_library);
         BEATS_ASSERT(!err);
     }
-
-    BEATS_SAFE_DELETE(m_pData);
-
     super::Unload();
     return !err;
 }

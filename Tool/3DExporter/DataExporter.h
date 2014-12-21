@@ -1,9 +1,10 @@
 #ifndef _DADAEXPORTER_H_
 #define  _DADAEXPORTER_H_
-#include "IGame\IGame.h"
-#include "IGame\IGameModifier.h"
+#include "IGame/IGame.h"
+#include "IGame/IGameModifier.h"
 #include "impexp.h"
 #include "decomp.h"
+#include <set>
 
 struct stKeyValue 
 {
@@ -14,7 +15,7 @@ struct stKeyValue
 struct SWeightData
 {
     SWeightData()
-        : type(eSBT_Null)
+        : uboneIndex(0xFF)
         , fWeight(0)
     {
     }
@@ -22,7 +23,7 @@ struct SWeightData
     {
         return fWeight < ref.fWeight;
     }
-    ESkeletonBoneType type;
+    uint8_t uboneIndex;
     float fWeight;
 };
 
@@ -30,7 +31,7 @@ struct SSkinMeshData
 {
     std::vector<Point3> m_vecPos;
     std::vector<Point3> m_vecUV;
-    std::vector<SWeightData> m_vecWeightData;
+    std::vector<std::vector<SWeightData>> m_vecWeightData;
     std::vector<std::string> m_vMaterialName;
     std::vector<int>  m_indices;
 };
@@ -38,44 +39,41 @@ struct SSkinMeshData
 class CDataExporter
 {
 public:
-	CDataExporter();
-	virtual ~CDataExporter();
+    CDataExporter();
+    virtual ~CDataExporter();
 
-	void    ExportSkeletonAnimation();
+    bool ExportSkeletonAnimation();
 
-	void    ExportSkeleton();
-	BOOL    CollectBoneNode(Tab<IGameNode*>& res, IGameNode* pNode);
-	BOOL    ExportSkeletonNode(IGameNode* pNode, CSerializer& serializer);
-    BOOL	ExportAnimationNode(IGameNode* pNode, CSerializer& serializer);
+    void ExportSkeleton(CSerializer& modelData);
+    BOOL CollectBoneNode(Tab<IGameNode*>& res, IGameNode* pNode);
+    BOOL ExportSkeletonNode(IGameNode* pNode, CSerializer& serializer);
+    BOOL ExportAnimationNode(IGameNode* pNode, CSerializer& serializer);
 
-	void    ExportMesh();
-    void    GetSkinInfo();
-	void	ExportSkinnedMesh();
+    void ExportMesh(CSerializer& modelData);
+    void GetSkinInfo();
+    void ExportAnimation(CSerializer& modelData);
+    void InitAminiationSegment();
 
-	void	ExportAnimation();
-    void    InitAminiationSegment();
-
-    void    InitNodeBones();
-    void    InitFrameInfo();
+    void InitNodeBones();
+    void InitFrameInfo();
 
     void SetExportFileName(const TString& strFileName);
+    uint8_t GetBoneIndex(const TString& strBoneName);
 
 private:
+    bool FilterVertexData(const Point3& ptPos, const Point3& ptUv);
+    void MergeKeyFrame(std::set<int>& outList, const IGameKeyTab& keyList);
 
-    void    GetMaterialInfo(IGameNode* pNode);
-    bool    FilterVertexData(const Point3& ptPos, const Point3& ptUv);
-
+private:
     std::string   m_strFileName;
-
     IGameScene* m_pIGameScene;
-
     int     m_nBoneCount;
     int     m_nStartFrame;
     int     m_nEndFrame;
-    size_t  m_uFPS;
+    uint8_t  m_uFPS;
     Tab<IGameNode*> m_listBones;
-
-    std::vector<stKeyValue> m_vKeys;
+    std::set<TString> m_boneNameCheck;
+    std::vector<stKeyValue> m_animationSegment;
 
     std::vector<SSkinMeshData> m_skinMeshDataList;
     std::vector<Point3> m_vecPos;

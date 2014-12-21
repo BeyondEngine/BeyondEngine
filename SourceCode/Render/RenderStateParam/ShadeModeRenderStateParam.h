@@ -20,11 +20,11 @@ public:
 
     virtual void Apply() override;
 
-    virtual ERenderState GetRenderStateType() const;
+    virtual ERenderStateParamType GetRenderStateType() const override;
 
-    virtual bool operator==( const CRenderStateParamBase& other ) const;
+    virtual bool operator==(const CRenderStateParamBase& other) const override;
 
-    virtual bool operator!=( const CRenderStateParamBase& other ) const;
+    virtual bool operator!=(const CRenderStateParamBase& other) const override;
 
     void SetValue( EShadeModeType value );
     EShadeModeType GetValue() const;

@@ -4,14 +4,16 @@
 #include "Utility/BeatsUtility/StringHelper.h"
 #include "EngineEditor.h"
 #include "EngineProperGridManager.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentInstance.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxy.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxyManager.h"
+#include "Component/Component/ComponentInstance.h"
+#include "Component/Component/ComponentProxy.h"
+#include "Component/Component/ComponentProxyManager.h"
+#include "Component/ComponentPublic.h"
 
 #define POINTER_SPLIT_SYMBOL _T("@")
 
 CPtrPropertyDescription::CPtrPropertyDescription(CSerializer* pSerializer)
     : super(eRPT_Ptr)
+    , m_bCanBeCloned(true)
     , m_uComponentGuid(0)
     , m_uDerivedGuid(0)
     , m_pInstance(NULL)
@@ -27,6 +29,7 @@ CPtrPropertyDescription::CPtrPropertyDescription(CSerializer* pSerializer)
 
 CPtrPropertyDescription::CPtrPropertyDescription(const CPtrPropertyDescription& rRef)
     : super(rRef)
+    , m_bCanBeCloned(rRef.m_bCanBeCloned)
     , m_uComponentGuid(rRef.m_uComponentGuid)
     , m_uDerivedGuid(rRef.m_uDerivedGuid)
     , m_pInstance(NULL)
@@ -38,13 +41,13 @@ CPtrPropertyDescription::CPtrPropertyDescription(const CPtrPropertyDescription& 
 
 CPtrPropertyDescription::~CPtrPropertyDescription()
 {
+    DestroyInstance();
     DestroyValue<TString>();
-    DestroyInstance(false);
 }
 
 bool CPtrPropertyDescription::AnalyseUIParameterImpl( const std::vector<TString>& paramUnit)
 {
-    for (size_t i = 0; i < paramUnit.size(); ++i)
+    for (uint32_t i = 0; i < paramUnit.size(); ++i)
     {
         TString parameter = paramUnit[i];
         std::vector<TString> result;
@@ -53,8 +56,12 @@ bool CPtrPropertyDescription::AnalyseUIParameterImpl( const std::vector<TString>
         if (_tcsicmp(result[0].c_str(), UIParameterAttrStr[eUIPAT_DefaultValue]) == 0)
         {
             parameter = result[1].c_str();
+            m_bHasInstance = parameter[0] == _T('+');
         }
-        m_bHasInstance = parameter[0] == _T('+');
+        else if (_tcsicmp(result[0].c_str(), UIParameterAttrStr[eUIPAT_CloneAble]) == 0)
+        {
+            m_bCanBeCloned = _tcsicmp(result[1].c_str(), _T("true")) == 0;
+        }
     }
     return true;
 }
@@ -91,17 +98,22 @@ bool CPtrPropertyDescription::CopyValue(void* pSourceValue, void* pTargetValue)
     return bRet;
 }
 
-size_t CPtrPropertyDescription::GetPtrGuid()
+uint32_t CPtrPropertyDescription::GetPtrGuid() const
 {
     return m_uComponentGuid;
 }
 
-void CPtrPropertyDescription::SetDerivedGuid(size_t uDerivedGuid)
+void CPtrPropertyDescription::SetPtrGuid(uint32_t uGuid)
+{
+    m_uComponentGuid = uGuid;
+}
+
+void CPtrPropertyDescription::SetDerivedGuid(uint32_t uDerivedGuid)
 {
     m_uDerivedGuid = uDerivedGuid;
 }
 
-size_t CPtrPropertyDescription::GetDerivedGuid() const
+uint32_t CPtrPropertyDescription::GetDerivedGuid() const
 {
     return m_uDerivedGuid;
 }
@@ -116,13 +128,14 @@ bool CPtrPropertyDescription::CreateInstance(bool bCallInitFunc/* = true*/)
     bool bRet = false;
     if ( m_pInstance == NULL)
     {
-        size_t uInstanceGuid = m_uDerivedGuid == 0 ? m_uComponentGuid : m_uDerivedGuid;
+        uint32_t uInstanceGuid = m_uDerivedGuid == 0 ? m_uComponentGuid : m_uDerivedGuid;
         m_pInstance = static_cast<CComponentProxy*>(CComponentProxyManager::GetInstance()->CreateComponent(uInstanceGuid, false, true, 0xFFFFFFFF, true, NULL, bCallInitFunc));
+        m_pInstance->SetPtrPropertyOwner(this);
         const std::vector<CPropertyDescriptionBase*>* propertyPool = m_pInstance->GetPropertyPool();
-        m_bHasInstance = m_pInstance != NULL;
-        for (size_t i = 0; i < propertyPool->size(); ++i)
+        m_bHasInstance = true;
+        for (uint32_t i = 0; i < propertyPool->size(); ++i)
         {
-            AddChild((*propertyPool)[i]);
+            InsertChild((*propertyPool)[i]);
         }
         UpdateDisplayString(uInstanceGuid);
         bRet = true;
@@ -131,26 +144,38 @@ bool CPtrPropertyDescription::CreateInstance(bool bCallInitFunc/* = true*/)
     return bRet;
 }
 
-bool CPtrPropertyDescription::DestroyInstance(bool bDeleteHostComponent)
+bool CPtrPropertyDescription::DestroyInstance()
 {
     bool bRet = false;
     m_bHasInstance = false;
     if (m_pInstance != NULL)
     {
-        if (bDeleteHostComponent)
+        CComponentInstance* pHost = m_pInstance->GetHostComponent();
+        if (pHost != nullptr)
         {
-            CComponentInstance* pHost = m_pInstance->GetHostComponent();
-            if (pHost != NULL)
+            BEATS_ASSERT(pHost->GetProxyComponent() == m_pInstance);
+            if (pHost->IsInitialized())
             {
-                BEATS_ASSERT(pHost->GetProxyComponent() == m_pInstance);
                 pHost->Uninitialize();
-                BEATS_SAFE_DELETE(pHost);//m_pInstance is deleted here!
-                m_pInstance = NULL;
             }
+#ifdef _DEBUG
+            pHost->m_bReflectPropertyCheck = true;
+#endif
+            BEATS_ASSERT(m_pInstance->GetPtrPropertyOwner() == this);
+            BEATS_SAFE_DELETE(pHost);//m_pInstance is deleted here!
+            m_pInstance = NULL;
+        }
+        else
+        {
+            if (m_pInstance->IsInitialized())
+            {
+                m_pInstance->Uninitialize();
+            }
+            BEATS_SAFE_DELETE(m_pInstance);
         }
         m_pChildren->clear();
         SetDerivedGuid(0);
-        if (bDeleteHostComponent)
+        if (IsInitialized())
         {
             UpdateDisplayString(m_uComponentGuid);
         }
@@ -173,7 +198,7 @@ bool CPtrPropertyDescription::IsDataSame( bool bWithDefaultOrXML )
     return bRet;
 }
 
-void CPtrPropertyDescription::LoadFromXML( TiXmlElement* pNode )
+void CPtrPropertyDescription::LoadFromXML(rapidxml::xml_node<>* pNode)
 {
     super::LoadFromXML(pNode);
     TString* pStrValue = (TString*)m_valueArray[eVT_CurrentValue];
@@ -185,20 +210,16 @@ void CPtrPropertyDescription::LoadFromXML( TiXmlElement* pNode )
         TCHAR* pEndChar = NULL;
         int nRadix = 16;
         _set_errno(0);
-        size_t uDerivedValue = _tcstoul(pszValueString, &pEndChar, nRadix);
+        uint32_t uDerivedValue = _tcstoul(pszValueString, &pEndChar, nRadix);
         BEATS_ASSERT(_tcslen(pEndChar) == 0, _T("Read uint from string %s error, stop at %s"), pszValueString, pEndChar);
         BEATS_ASSERT(errno == 0, _T("Call _tcstoul failed! string %s radix: %d"), pszValueString, nRadix);
         if (uDerivedValue != m_uComponentGuid)
         {
             m_uDerivedGuid = uDerivedValue;
         }
-        if (this->CreateInstance(false))
+        if (CreateInstance(false))
         {
-            this->GetInstanceComponent()->LoadFromXML(pNode);
-            // Update host component with the data from XML.
-            this->GetInstanceComponent()->UpdateHostComponent();
-            // Force sync this property instance to the variable of host component,because we have already load the value in super::LoadFromXML(pNode);.
-            SetValueWithType(pStrValue, eVT_CurrentValue, true);
+            GetInstanceComponent()->LoadFromXML(pNode);
         }
     }
 }
@@ -206,7 +227,7 @@ void CPtrPropertyDescription::LoadFromXML( TiXmlElement* pNode )
 void CPtrPropertyDescription::GetValueAsChar( EValueType type, char* pOut ) const
 {
     const TCHAR* pValue = ((TString*)m_valueArray[type])->c_str();
-    CStringHelper::GetInstance()->ConvertToCHAR(pValue, pOut, 10240);
+    _tcscpy(pOut, pValue);
 }
 
 bool CPtrPropertyDescription::GetValueByTChar(const TCHAR* pIn, void* pOutValue)
@@ -217,14 +238,21 @@ bool CPtrPropertyDescription::GetValueByTChar(const TCHAR* pIn, void* pOutValue)
 
 CPropertyDescriptionBase* CPtrPropertyDescription::Clone(bool bCloneValue)
 {
+    // Notice: Should m_bCanBeCloned work in CComponentProxy? That's a question, For now, we only make it work in CComponentInstance, since designers will copy + paste components in editor.
+    // They want all ptr property can be cloned.
+    //if (CComponentInstanceManager::GetInstance()->IsInClonePhase())
+    //{
+    //    bCloneValue = m_bCanBeCloned;
+    //}
     CPtrPropertyDescription* pNewProperty = static_cast<CPtrPropertyDescription*>(super::Clone(bCloneValue));
     if (m_pInstance != NULL && bCloneValue)
     {
         pNewProperty->m_pInstance = static_cast<CComponentProxy*>(m_pInstance->Clone(true, NULL, 0xFFFFFFFF));
-        for (size_t i = 0; i < m_pInstance->GetPropertyPool()->size(); ++i)
+        pNewProperty->m_pInstance->SetPtrPropertyOwner(pNewProperty);
+        const std::vector<CPropertyDescriptionBase*>* pNewPropertyPool = pNewProperty->m_pInstance->GetPropertyPool();
+        for (uint32_t i = 0; i < pNewPropertyPool->size(); ++i)
         {
-            CPropertyDescriptionBase* pProperty = (*m_pInstance->GetPropertyPool())[i];
-            pNewProperty->AddChild(pProperty->Clone(true));
+            pNewProperty->InsertChild(pNewPropertyPool->at(i));
         }
     }
     return pNewProperty;
@@ -239,29 +267,54 @@ CPropertyDescriptionBase* CPtrPropertyDescription::CreateNewInstance()
 void CPtrPropertyDescription::Serialize(CSerializer& serializer, EValueType eValueType /*= eVT_SavedValue*/)
 {
     serializer << (bool)(m_pInstance != NULL);
+    serializer << m_bCanBeCloned;
     if (m_pInstance != NULL)
     {
-        m_pInstance->Serialize(serializer, eValueType);
+        if (CComponentProxyManager::GetInstance()->GetCurrUpdateProxy() != nullptr || CComponentProxyManager::GetInstance()->GetCurrReflectProperty() != nullptr)
+        {
+            BEATS_ASSERT(!CComponentProxyManager::GetInstance()->IsExporting());
+            serializer << (uint32_t)(m_pInstance->GetHostComponent());
+        }
+        else
+        {
+            m_pInstance->ExportDataToHost(serializer, eValueType);
+        }
     }
 }
 
 void CPtrPropertyDescription::Deserialize(CSerializer& serializer, EValueType /*eValueType*/ /*= eVT_CurrentValue*/)
 {
+    BEATS_ASSERT(CComponentProxyManager::GetInstance()->GetCurrUpdateProxy() == nullptr, "This will never happen!");
     bool bHasInstance = false;
     serializer >> bHasInstance;
+    serializer >> m_bCanBeCloned;
     if (bHasInstance)
     {
         if (m_pInstance == NULL)
         {
-            CreateInstance();
+            uint32_t uHostComponent;
+            serializer >> uHostComponent;
+            CComponentProxy* pProxy = ((CComponentInstance*)(uHostComponent))->GetProxyComponent();
+            m_pInstance = down_cast<CComponentProxy*>(pProxy->Clone(true, nullptr, 0xFFFFFFFF));
+            m_pInstance->SetPtrPropertyOwner(this);
+            const std::vector<CPropertyDescriptionBase*>* propertyPool = m_pInstance->GetPropertyPool();
+            for (uint32_t i = 0; i < propertyPool->size(); ++i)
+            {
+                InsertChild((*propertyPool)[i]);
+            }
+            m_bHasInstance = true;
+            UpdateDisplayString(m_pInstance->GetGuid(), false);
         }
-        m_pInstance->Deserialize(serializer);
+        else
+        {
+            BEATS_ASSERT(false, "Never reach here! I can't image why we can reach here, what for?");
+        }
     }
     else
     {
         if (m_pInstance != NULL)
         {
-            DestroyInstance(true);
+            DestroyInstance();
         }
     }
 }
@@ -274,31 +327,65 @@ void CPtrPropertyDescription::Initialize()
     TString* pDefaultValue = (TString*)m_valueArray[eVT_DefaultValue];
     if (pDefaultValue->length() == 0)
     {
-        UpdateDisplayString(m_uComponentGuid);
+        UpdateDisplayString(m_uComponentGuid, false); //Don't trigger the reflect logic since it doesn't make sense.
     }
     if (m_pInstance != NULL)
     {
-        m_pInstance->Initialize();
-        if (m_pInstance->GetHostComponent() != NULL)
+        // Different ptr property may share same instance, so we should check if the instance is already initialized.
+        if (!m_pInstance->IsInitialized())
         {
-            m_pInstance->GetHostComponent()->Initialize();
+            m_pInstance->Initialize();
         }
     }
 }
 
 void CPtrPropertyDescription::Uninitialize()
 {
+    if (m_pInstance != nullptr && m_pInstance->IsInitialized())
+    {
+        m_pInstance->Uninitialize();
+    }
     super::Uninitialize();
 }
 
-void CPtrPropertyDescription::UpdateDisplayString(size_t uComponentGuid)
+uint32_t CPtrPropertyDescription::HACK_GetPtrReflectGuid() const
 {
+    uint32_t uRet = GetDerivedGuid();
+    if (uRet == 0)
+    {
+        uRet = GetPtrGuid();
+    }
+    return uRet;
+}
+
+void CPtrPropertyDescription::HACK_InformPtrPropertyToDeleteInstance()
+{
+    if (m_pInstance)
+    {
+        m_pInstance->SetHostComponent(nullptr);
+        DestroyInstance();
+    }
+}
+
+void CPtrPropertyDescription::UpdateDisplayString(uint32_t uComponentGuid, bool bUpdateHostComponent/* = true*/)
+{
+    EReflectOperationType reflectOperateType = EReflectOperationType::ChangeValue;
+    CPropertyDescriptionBase* pCurrReflectProperty = CComponentProxyManager::GetInstance()->GetCurrReflectProperty(&reflectOperateType);
+    CComponentProxyManager::GetInstance()->SetCurrReflectProperty(nullptr, EReflectOperationType::ChangeValue);
     TString strComponentName = CComponentProxyManager::GetInstance()->QueryComponentName(uComponentGuid);
     BEATS_ASSERT(strComponentName.length() > 0, _T("Can't Find the component name of GUID: 0x%x"), uComponentGuid);
     wxString value = wxString::Format(_T("%s%s%s0x%x"), m_bHasInstance ? _T("+") : _T(""), strComponentName.c_str(), POINTER_SPLIT_SYMBOL, uComponentGuid);
     TString valueStr(value);
-    for (size_t i = eVT_DefaultValue; i < eVT_Count; ++i)
+    for (uint32_t i = eVT_DefaultValue; i < eVT_Count; ++i)
     {
-        SetValueWithType(&valueStr, (EValueType)i);
+        if (bUpdateHostComponent)
+        {
+            SetValueWithType(&valueStr, (EValueType)i);
+        }
+        else
+        {
+            CopyValue(&valueStr, m_valueArray[(EValueType)i]);
+        }
     }
+    CComponentProxyManager::GetInstance()->SetCurrReflectProperty(pCurrReflectProperty, reflectOperateType); // Restore.
 }

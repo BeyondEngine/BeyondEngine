@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "EventSubscription.h"
 #include "EventDispatcher.h"
 

@@ -5,3 +5,8 @@ CRenderStateParamBase::CRenderStateParamBase()
 {
 
 }
+
+CRenderStateParamBase::~CRenderStateParamBase()
+{
+
+}

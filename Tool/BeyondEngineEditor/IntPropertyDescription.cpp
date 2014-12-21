@@ -2,6 +2,7 @@
 #include "IntPropertyDescription.h"
 #include "Utility/BeatsUtility/StringHelper.h"
 #include "Utility/BeatsUtility/Serializer.h"
+#include "Component/ComponentPublic.h"
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
 
@@ -37,7 +38,7 @@ CIntPropertyDescription::~CIntPropertyDescription()
 bool CIntPropertyDescription::AnalyseUIParameterImpl(const std::vector<TString>& result)
 {
     std::vector<TString> cache;
-    for (size_t i = 0; i < result.size(); ++i)
+    for (uint32_t i = 0; i < result.size(); ++i)
     {
         cache.clear();
         _set_errno(0);

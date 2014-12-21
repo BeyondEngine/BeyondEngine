@@ -1,7 +1,7 @@
 #ifndef BEYOND_ENGINE_EVENT_GESTURESTATE_H__INCLUDE
 #define BEYOND_ENGINE_EVENT_GESTURESTATE_H__INCLUDE
 
-enum class EGestureState
+enum EGestureState
 {
     eGS_POSSIBLE,
     eGS_BEGAN,

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,13 +19,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -52,16 +52,16 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MY3DEXPORTER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MY3DEXPORTER_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../../Lib/3dmaxlib/INCLUDE;../../SourceCode;..\..\SourceCode\Utility\BeatsUtility\Platform;..\..\SourceCode\Utility\BeatsUtility\Platform\Win32;..\..\SourceCode\Utility\BeatsUtility;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../Lib/3dmaxlib/INCLUDE;../../SourceCode;..\..\SourceCode\Utility\BeatsUtility\Platform;..\..\SourceCode\Utility\BeatsUtility\Platform\Win32;..\..\SourceCode\Utility\BeatsUtility;..\..\SourceCode\Platform;..\..\SourceCode\Platform\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\Lib\3dmaxlib;..\..\Include\Beats\Prebuilt\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>geom.lib;maxutil.lib;core.lib;igame.lib;Utility_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>geom.lib;maxutil.lib;core.lib;igame.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>maxplugin.def</ModuleDefinitionFile>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -74,7 +74,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MY3DEXPORTER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MY3DEXPORTER_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../Lib/3dmaxlib/INCLUDE;../../SourceCode;..\..\SourceCode\Utility\BeatsUtility\Platform;..\..\SourceCode\Utility\BeatsUtility\Platform\Win32;..\..\SourceCode\Utility\BeatsUtility;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -85,8 +85,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>geom.lib;maxutil.lib;core.lib;igame.lib;Utility_r.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\Lib\3dmaxlib;..\..\Include\Beats\Prebuilt\win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>geom.lib;maxutil.lib;core.lib;igame.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\Lib\3dmaxlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -101,6 +101,11 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\SourceCode\Utility\BeatsUtility\FilePathTool.cpp" />
+    <ClCompile Include="..\..\SourceCode\Utility\BeatsUtility\Platform\win32\FilePathTool_Win32.cpp" />
+    <ClCompile Include="..\..\SourceCode\Utility\BeatsUtility\Serializer.cpp" />
+    <ClCompile Include="..\..\SourceCode\Utility\BeatsUtility\StringHelper.cpp" />
+    <ClCompile Include="..\..\SourceCode\Utility\Memory\MemoryAnalyzer.cpp" />
     <ClCompile Include="3DSceneExport.cpp" />
     <ClCompile Include="ClassDescFactor.cpp" />
     <ClCompile Include="DataExporter.cpp" />

@@ -12,19 +12,18 @@ public:
     CTextureFrag(const TString &name, SharePtr<CTextureAtlas> pAtlas, CVec2 origin, CVec2 size);
     ~CTextureFrag();
 
-    TString Name() const;
-
-    const CQuadT &Quad() const;
-
-    SharePtr<CTextureAtlas> Atlas() const;
-
-    SharePtr<CTexture> Texture() const;
-
-    const CVec2& Origin() const;
-
-    const CVec2& Size() const;
-
-    void Initialize();
+    const TString& GetName() const;
+    const CQuadT &GetQuadT() const;
+    SharePtr<CTextureAtlas> GetAtlas() const;
+    SharePtr<CTexture> GetTexture() const;
+    const CVec2& GetOrigin() const;
+    const CVec2& GetSize() const;
+    CVec2 ConvertToRealUV(const CVec2& localUV) const;
+#ifdef EDITOR_MODE
+    bool m_bTrimmed = false;
+    CVec2 m_originSize;
+    CVec2 m_originOffset;
+#endif
 
 private:
     TString m_name;

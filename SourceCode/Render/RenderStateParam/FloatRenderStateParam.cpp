@@ -23,16 +23,6 @@ void CFloatRenderStateParam::Apply()
     case eFSP_ClearDepth:
         pRender->ClearDepth(m_fValue);
         break;
-    case eFSP_DepthFar:
-#ifndef GL_ES_VERSION_2_0
-        pRender->DepthRange(pRender->GetCurrentState()->GetDepthNear(), m_fValue);
-#endif
-        break;
-    case eFSP_DepthNear:
-#ifndef GL_ES_VERSION_2_0
-        pRender->DepthRange(m_fValue, pRender->GetCurrentState()->GetDepthFar());
-#endif
-        break;
     case eFSP_LineWidth:
         pRender->LineWidth(m_fValue);
         break;
@@ -47,9 +37,9 @@ void CFloatRenderStateParam::Apply()
     }
 }
 
-ERenderState CFloatRenderStateParam::GetRenderStateType() const
+ERenderStateParamType CFloatRenderStateParam::GetRenderStateType() const
 {
-    return eRS_FloatMode;
+    return eRSPT_FloatMode;
 }
 
 CFloatRenderStateParam::EFloatStateParam CFloatRenderStateParam::GetFloatParamType() const
@@ -74,14 +64,14 @@ float CFloatRenderStateParam::GetValue() const
 
 bool CFloatRenderStateParam::operator==( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_FloatMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_FloatMode );
     CFloatRenderStateParam* pOther = ( CFloatRenderStateParam* )&other;
     return ( m_fValue == pOther->m_fValue && m_type == pOther->m_type );
 }
 
 bool CFloatRenderStateParam::operator!=( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_FloatMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_FloatMode );
     CFloatRenderStateParam* pOther = ( CFloatRenderStateParam* )&other;
     return ( m_fValue != pOther->m_fValue || m_type != pOther->m_type );
 }

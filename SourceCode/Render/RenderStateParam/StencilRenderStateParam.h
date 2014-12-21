@@ -26,15 +26,15 @@ public:
     virtual ~CStencilRenderStateParam();
 
     virtual void Apply() override;
-    virtual ERenderState GetRenderStateType() const;
+    virtual ERenderStateParamType GetRenderStateType() const override;
 
     void SetValue( EStencilType fail, EStencilType zFali, EStencilType zPass );
 
     void GetValue( EStencilType& fail, EStencilType& zFali, EStencilType& zPass ) const;
 
-    virtual bool operator==( const CRenderStateParamBase& other ) const;
+    virtual bool operator==(const CRenderStateParamBase& other) const override;
 
-    virtual bool operator!=( const CRenderStateParamBase& other ) const;
+    virtual bool operator!=(const CRenderStateParamBase& other) const override;
 
     virtual CRenderStateParamBase* Clone() override;
 private:

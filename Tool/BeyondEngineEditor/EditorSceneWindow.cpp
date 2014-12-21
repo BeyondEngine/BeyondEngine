@@ -1,34 +1,35 @@
 #include "stdafx.h"
 #include "EditorSceneWindow.h"
 #include "EditorMainFrame.h"
-#include "Render\GridRenderObject.h"
-#include "Render\Camera.h"
-#include "Render\RenderGroupManager.h"
-#include "Render\RenderManager.h"
+#include "Render/GridRenderObject.h"
+#include "Render/Camera.h"
+#include "Render/RenderGroupManager.h"
+#include "Render/RenderManager.h"
 #include "BeyondEngineEditorComponentWindow.h"
 #include "WxGLRenderWindow.h"
-#include "PerformDetector\PerformDetector.h"
-#include "Scene\SceneManager.h"
-#include "Framework\Application.h"
+#include "PerformDetector/PerformDetector.h"
+#include "Scene/SceneManager.h"
+#include "Framework/Application.h"
 #include "EditPerformanceDialog.h"
-#include "Scene\Scene.h"
+#include "Scene/Scene.h"
+#include "ViewAgentBase.h"
+#include "ParticleSystem/ParticleManager.h"
 
 BEGIN_EVENT_TABLE(CEditorSceneWindow, CBeyondEngineEditorGLWindow)
     EVT_SIZE(CEditorSceneWindow::OnSize)
 END_EVENT_TABLE()
-
 
 CEditorSceneWindow::CEditorSceneWindow(wxWindow *parent, wxGLContext* pContext, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
     : CBeyondEngineEditorGLWindow(parent, pContext, id, pos, size, style, name)
     , m_pNodeGrid(NULL)
     , m_pDefault3DCamera(NULL)
     , m_pDefault2DCamera(NULL)
+    , m_pWxView(nullptr)
 {
-    BEATS_ASSERT(CRenderGroupManager::GetInstance()->GetDefault3DCamera() == NULL);
     m_pNodeGrid = new CGridRenderObject;
     m_pNodeGrid->Activate();
     m_pNodeGrid->SetName(_T("GridRenderObject"));
-    m_pNodeGrid->SetPosition(0.0f, -0.1f, 0.0f );
+    m_pNodeGrid->SetPosition(CVec3(0.0f, -0.1f, 0.0f));
     m_pNodeGrid->SetLineColor(0x999999FF);
     m_pNodeGrid->Initialize();
 
@@ -36,8 +37,8 @@ CEditorSceneWindow::CEditorSceneWindow(wxWindow *parent, wxGLContext* pContext, 
     m_pDefault3DCamera->SetNear(0.01f);
     m_pDefault3DCamera->SetFar(1000.0f);
     m_pDefault3DCamera->SetFOV(25.0f);
-    m_pDefault3DCamera->SetViewPos(0,100,0);
-    m_pDefault3DCamera->SetRotation(-90, 0, 0);
+    m_pDefault3DCamera->SetViewPos(CVec3(0,100,0));
+    m_pDefault3DCamera->SetRotation(CVec3(-90, 0, 0));
     m_pDefault2DCamera = new CCamera(CCamera::eCT_2D);
 }
 
@@ -47,8 +48,6 @@ CEditorSceneWindow::~CEditorSceneWindow()
     BEATS_SAFE_DELETE(m_pNodeGrid);
     BEATS_SAFE_DELETE(m_pDefault3DCamera);
     BEATS_SAFE_DELETE(m_pDefault2DCamera);
-    CRenderGroupManager::GetInstance()->SetDefault3DCamera(NULL);
-    CRenderGroupManager::GetInstance()->SetDefault2DCamera(NULL);
 }
 
 CGridRenderObject* CEditorSceneWindow::GetGrid() const
@@ -63,16 +62,27 @@ void CEditorSceneWindow::Update()
         BEYONDENGINE_PERFORMDETECT_START(ePNT_RenderSceneWindow)
 
         BEYONDENGINE_PERFORMDETECT_START(ePNT_EngineCenterUpdate)
-        CApplication::GetInstance()->Update();
-
         CRenderManager::GetInstance()->SetCurrentRenderTarget(m_pRenderWindow);
-        CScene* pCurScene = GetScene();
-        CSceneManager::GetInstance()->SetCurrentScene(pCurScene);
-        CRenderGroupManager::GetInstance()->SetDefault3DCamera(pCurScene == NULL ? m_pDefault3DCamera : pCurScene->GetCamera(CCamera::eCT_3D));
-        CRenderGroupManager::GetInstance()->SetDefault2DCamera(pCurScene == NULL ? m_pDefault2DCamera : pCurScene->GetCamera(CCamera::eCT_2D));
-        BEYONDENGINE_PERFORMDETECT_START(ePNT_UpdateCamera)
-        UpdateCamera();
-        BEYONDENGINE_PERFORMDETECT_STOP(ePNT_UpdateCamera)
+        float dt = CApplication::GetInstance()->Update();
+        BEATS_ASSERT(m_pWxView);
+        m_pWxView->Update(dt);
+        CScene* pCurScene = CSceneManager::GetInstance()->GetCurrentScene();
+        if (pCurScene == nullptr)
+        {
+            // If pCurScene is nullptr, it means:
+            // 1. We load no scene, we use editor's camera.
+            // 2. We're switching scene async, don't do anything else.
+            if (!CSceneManager::GetInstance()->GetSwitchSceneState())
+            {
+                CRenderManager::GetInstance()->GetCamera(CCamera::eCT_2D)->SetCameraData(m_pDefault2DCamera->GetCameraData());
+                CRenderManager::GetInstance()->GetCamera(CCamera::eCT_3D)->SetCameraData(m_pDefault3DCamera->GetCameraData());
+            }
+        }
+        else
+        {
+            CRenderManager::GetInstance()->GetCamera(CCamera::eCT_2D)->SetCameraData(pCurScene->GetCamera(CCamera::eCT_2D)->GetCameraData());
+            CRenderManager::GetInstance()->GetCamera(CCamera::eCT_3D)->SetCameraData(pCurScene->GetCamera(CCamera::eCT_3D)->GetCameraData());
+        }
 
         m_pNodeGrid->Render();
         CApplication::GetInstance()->Render();
@@ -87,12 +97,28 @@ void CEditorSceneWindow::Update()
         BEYONDENGINE_PERFORMDETECT_STOP(ePNT_PerformDetector)
 
         BEYONDENGINE_PERFORMDETECT_STOP(ePNT_RenderSceneWindow)
+
+        if (!CEngineCenter::GetInstance()->m_bDelaySync)
+        {
+            for (auto property : CEngineCenter::GetInstance()->m_editorPropertyGridSyncList)
+            {
+                m_pMainFrame->GetPropGridManager()->RefreshPropertyInGrid(property);
+            }
+            CEngineCenter::GetInstance()->m_editorPropertyGridSyncList.clear();
+        }
+#ifdef DEVELOP_VERSION
+        for (auto iter = CParticleManager::GetInstance()->m_particleDetailMap.begin(); iter != CParticleManager::GetInstance()->m_particleDetailMap.end(); ++iter)
+        {
+            CParticleManager::GetInstance()->m_particleDataPool.push_back(iter->second);
+        }
+        CParticleManager::GetInstance()->m_particleDetailMap.clear();
+#endif
     }
 }
 
 CCamera* CEditorSceneWindow::GetCamera()
 {
-    CScene *pScene = GetScene();
+    CScene *pScene = CSceneManager::GetInstance()->GetCurrentScene();
     return pScene ? pScene->GetCamera(CCamera::eCT_3D) : m_pDefault3DCamera;
 }
 
@@ -107,15 +133,15 @@ void CEditorSceneWindow::SetContextToCurrent()
 void CEditorSceneWindow::OnSize(wxSizeEvent& event)
 {
     wxSize size = event.GetSize();
-    size_t uWidth = static_cast<size_t>(size.GetWidth());
-    size_t uHeight = static_cast<size_t>(size.GetHeight());
+    uint32_t uWidth = static_cast<uint32_t>(size.GetWidth());
+    uint32_t uHeight = static_cast<uint32_t>(size.GetHeight());
     if ( IsShownOnScreen() )
     {
         CRenderManager::GetInstance()->SetCurrentRenderTarget(m_pRenderWindow);
     }
     if (m_pMainFrame->GetAuiToolBarPerformPtr()->GetToolToggled(ID_ViewAllBtn))
     {
-        size_t uSimulateWidth, uSimulateHeight;
+        uint32_t uSimulateWidth, uSimulateHeight;
         CRenderManager::GetInstance()->GetSimulateSize(uSimulateWidth, uSimulateHeight);
         if (uWidth > uSimulateWidth)
         {
@@ -134,12 +160,17 @@ void CEditorSceneWindow::OnSize(wxSizeEvent& event)
             uHeight = uWidth * uSimulateHeight / uSimulateWidth;
         }
         m_pRenderWindow->SetFBOViewPort(uWidth, uHeight);
-        m_pRenderWindow->SetDeviceResolution(uSimulateWidth, uSimulateHeight);
+        m_pRenderWindow->SetDeviceSize(uSimulateWidth, uSimulateHeight);
         m_pMainFrame->GetSplitter()->SetSashPosition(uHeight, true);
         m_pMainFrame->GetComponentWindow()->SendSizeEvent();
     }
     else
     {
-        m_pRenderWindow->SetDeviceResolution(uWidth, uHeight);
+        m_pRenderWindow->SetDeviceSize(uWidth, uHeight);
     }
+}
+
+void CEditorSceneWindow::SetViewAgent(CViewAgentBase* pWxView)
+{
+    m_pWxView = pWxView;
 }

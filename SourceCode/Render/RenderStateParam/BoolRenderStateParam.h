@@ -13,7 +13,6 @@ public:
         eBSP_DepthTest = 0x0B71,//GL_DEPTH_TEST
         eBSP_CullFace = 0xB44,//GL_CULL_FACE
         eBSP_StencilTest = 0x0B90,//GL_STENCIL_TEST
-        eBSP_ScissorTest = 0x0C11,//GL_SCISSOR_TEST
 
         eBSP_Count = 5,
         eBSP_Force32Bit = 0xFFFFFFFF
@@ -31,11 +30,11 @@ public:
 
     virtual void Apply() override;
 
-    virtual ERenderState GetRenderStateType() const;
+    virtual ERenderStateParamType GetRenderStateType() const override;
 
-    virtual bool operator==( const CRenderStateParamBase& other ) const;
+    virtual bool operator==(const CRenderStateParamBase& other) const override;
 
-    virtual bool operator!=( const CRenderStateParamBase& other ) const;
+    virtual bool operator!=(const CRenderStateParamBase& other) const override;
 
     virtual CRenderStateParamBase* Clone() override;
 private:

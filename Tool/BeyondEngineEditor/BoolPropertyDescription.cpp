@@ -2,6 +2,7 @@
 #include "BoolPropertyDescription.h"
 #include "Utility/BeatsUtility/StringHelper.h"
 #include "Utility/BeatsUtility/Serializer.h"
+#include "Component/ComponentPublic.h"
 #include <wx/propgrid/propgrid.h>
 
 CBoolPropertyDescription::CBoolPropertyDescription(CSerializer* pSerializer)
@@ -30,7 +31,7 @@ bool CBoolPropertyDescription::AnalyseUIParameterImpl(const std::vector<TString>
 {
     BEATS_ASSERT(result.size() <= 1);
     std::vector<TString> cache;
-    for (size_t i = 0; i < result.size(); ++i)
+    for (uint32_t i = 0; i < result.size(); ++i)
     {
         cache.clear();
         CStringHelper::GetInstance()->SplitString(result[i].c_str(), PROPERTY_KEYWORD_SPLIT_STR, cache);
@@ -102,7 +103,7 @@ bool CBoolPropertyDescription::GetValueByTChar(const TCHAR* pIn, void* pOutValue
 {
     BEATS_ASSERT(pOutValue != NULL);
     bool bRet = false;
-    if (_tcsicmp(pIn, _T("true")) == 0)
+    if (_tcsicmp(pIn, _T("true")) == 0 || _tcsicmp(pIn, _T("1")) == 0)
     {
         *(bool*)pOutValue = true;
         bRet = true;
@@ -110,7 +111,7 @@ bool CBoolPropertyDescription::GetValueByTChar(const TCHAR* pIn, void* pOutValue
     else
     {
         *(bool*)pOutValue = false;
-        bRet = _tcsicmp(pIn, _T("false")) == 0;
+        bRet = _tcsicmp(pIn, _T("false")) == 0 || _tcsicmp(pIn, _T("0")) == 0;
         BEATS_ASSERT(bRet, _T("Unknown value for bool property %s"), pIn);
     }
     return bRet;

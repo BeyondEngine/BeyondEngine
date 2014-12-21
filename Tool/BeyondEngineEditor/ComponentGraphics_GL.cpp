@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "ComponentGraphics_GL.h"
-#include "Utility/BeatsUtility/ComponentSystem/Component/ComponentProxy.h"
-#include "Utility/BeatsUtility/ComponentSystem/Dependency/DependencyDescription.h"
-#include "Utility/BeatsUtility/ComponentSystem/Dependency/DependencyDescriptionLine.h"
+#include "Component/Component/ComponentProxy.h"
+#include "Component/Component/DependencyDescription.h"
+#include "Component/Component/DependencyDescriptionLine.h"
 #include "utility/BeatsUtility/Serializer.h"
 #include "Render/Texture.h"
 #include "Render/TextureFrag.h"
@@ -20,7 +20,7 @@
 #include "Render/RenderBatch.h"
 #include "Utility/PerformDetector/PerformDetector.h"
 #include "Render/TextureAtlas.h"
-#include "Utf8String.h"
+
 #include <shlobj.h>
 
 static const float Font_Render_X_Offset = 8.0f;
@@ -29,7 +29,7 @@ static const float DefaultCellSize = 15.0f;
 CFontFace* CComponentGraphic_GL::m_pFont = NULL;
 SharePtr<CMaterial> CComponentGraphic_GL::m_pMaterial;
 SharePtr<CTextureAtlas> CComponentGraphic_GL::m_pAtlas;
-CTextureFrag* CComponentGraphic_GL::m_pFrags[eCT_Count] = {0};
+SharePtr<CTextureFrag> CComponentGraphic_GL::m_pFrags[eCT_Count];
 CRenderBatch* CComponentGraphic_GL::m_pRenderBatch = NULL;
 
 enum ERenderLayer
@@ -45,9 +45,8 @@ enum ERenderLayer
 
 CComponentGraphic_GL::CComponentGraphic_GL()
 {
-    // Base class is dx implemented.
-    m_gridPosZ *= -1;
-    ++m_gridPosZ;
+    // HACK: make sure this graphics's depth value is less than the grid.
+    m_gridPosZ = -90;
 }
 
 CComponentGraphic_GL::~CComponentGraphic_GL()
@@ -59,65 +58,70 @@ void CComponentGraphic_GL::CreateMaterials()
 {
     if (m_pFont == NULL)
     {
-        m_pFont = CFontManager::GetInstance()->GetFace(_T("ComponentGraphicFont"));
-        if (m_pFont == NULL)
+        TString strFontPath = CResourceManager::GetInstance()->GetResourcePath(eRT_Font);
+        strFontPath.append("/msyh.ttf");
+        if (!CFilePathTool::GetInstance()->Exists(strFontPath.c_str()))
         {
-            char szBuf[MAX_PATH] = {0};
-            SHGetSpecialFolderPath(NULL , szBuf , CSIDL_FONTS , FALSE);
-            TString strFontPath = szBuf;
+            char szBuf[MAX_PATH] = { 0 };
+            SHGetSpecialFolderPath(NULL, szBuf, CSIDL_FONTS, FALSE);
+            strFontPath = szBuf;
             BEATS_ASSERT(!strFontPath.empty(), _T("Get font directory failed!"));
             strFontPath.append(_T("\\msyh.ttf"));
-
-            m_pFont = CFontManager::GetInstance()->CreateFreetypeFontFace(_T("ComponentGraphicFont"), strFontPath, 12, 0, false);
-            BEATS_ASSERT(m_pFont != NULL, _T("You need to install msyh.ttf in your OS!"));
-            down_cast<CFreetypeFontFace *>(m_pFont)->SetRelatedRenderTarget(CRenderManager::GetInstance()->GetCurrentRenderTarget());
+            BEATS_ASSERT(CFilePathTool::GetInstance()->Exists(strFontPath.c_str()), "Get file msyh.ttf falied!");
         }
+        m_pFont = CFontManager::GetInstance()->CreateFreetypeFontFace(_T("ComponentGraphicFont"), strFontPath, 12, 0, false);
+        BEATS_ASSERT(m_pFont != NULL, _T("You need to install msyh.ttf in your OS!"));
+        down_cast<CFreetypeFontFace *>(m_pFont)->SetRelatedRenderTarget(CRenderManager::GetInstance()->GetCurrentRenderTarget());
     }
     BEATS_ASSERT(m_pFont != NULL);
 
     if (m_pFrags[eCT_RectBG] == NULL)
     {
-        m_pAtlas = CResourceManager::GetInstance()->GetResource<CTextureAtlas>(_T("Component.xml"));
-        m_pMaterial = CreateMaterial(_T("Component.png"));
+        m_pAtlas = CResourceManager::GetInstance()->GetResource<CTextureAtlas>(_T("component.xml"));
+        m_pMaterial = CreateMaterial();
         m_pMaterial->Initialize();
-        m_pFrags[eCT_RectBG] = m_pAtlas->GetTextureFrag(_T("RectBG"));
-        m_pFrags[eCT_RefRectBG] = m_pAtlas->GetTextureFrag(_T("RefRectBG"));
-        m_pFrags[eCT_ConnectRect] = m_pAtlas->GetTextureFrag(_T("ConnectRect"));
-        m_pFrags[eCT_SelectedRectBG] = m_pAtlas->GetTextureFrag(_T("SelectedRect"));
-        m_pFrags[eCT_NormalLine] = m_pAtlas->GetTextureFrag(_T("NormalLine"));
-        m_pFrags[eCT_SelectedLine] = m_pAtlas->GetTextureFrag(_T("SelectedLine"));
-        m_pFrags[eCT_NormalArrow] = m_pAtlas->GetTextureFrag(_T("NormalArrow"));
-        m_pFrags[eCT_SelectedArrow] = m_pAtlas->GetTextureFrag(_T("SelectedArrow"));
-        m_pFrags[eCT_ConnectedDependency] = m_pAtlas->GetTextureFrag(_T("ConnectedDependency"));
-        m_pFrags[eCT_ConnectedDependencyList] = m_pAtlas->GetTextureFrag(_T("ConnectedDependencyList"));
-        m_pFrags[eCT_WeakDependency] = m_pAtlas->GetTextureFrag(_T("WeakDependency"));
-        m_pFrags[eCT_WeakDependencyList] = m_pAtlas->GetTextureFrag(_T("WeakDependencyList"));
-        m_pFrags[eCT_StrongDependency] = m_pAtlas->GetTextureFrag(_T("StrongDependency"));
-        m_pFrags[eCT_StrongDependencyList] = m_pAtlas->GetTextureFrag(_T("StrongDependencyList"));
-        CRenderGroup *renderGroup = CRenderGroupManager::GetInstance()->GetRenderGroup(CRenderGroupManager::LAYER_2D);
-        BEATS_ASSERT(renderGroup);
-        m_pRenderBatch = renderGroup->GetRenderBatch(VERTEX_FORMAT(CVertexPT), m_pMaterial, GL_TRIANGLES, true);
+        m_pFrags[eCT_RectBG] = m_pAtlas->GetTextureFrag(_T("rectbg"));
+        m_pFrags[eCT_RefRectBG] = m_pAtlas->GetTextureFrag(_T("refrectbg"));
+        m_pFrags[eCT_ConnectRect] = m_pAtlas->GetTextureFrag(_T("connectrect"));
+        m_pFrags[eCT_SelectedRectBG] = m_pAtlas->GetTextureFrag(_T("selectedrect"));
+        m_pFrags[eCT_NormalLine] = m_pAtlas->GetTextureFrag(_T("normalline"));
+        m_pFrags[eCT_SelectedLine] = m_pAtlas->GetTextureFrag(_T("selectedline"));
+        m_pFrags[eCT_NormalArrow] = m_pAtlas->GetTextureFrag(_T("normalarrow"));
+        m_pFrags[eCT_SelectedArrow] = m_pAtlas->GetTextureFrag(_T("selectedarrow"));
+        m_pFrags[eCT_ConnectedDependency] = m_pAtlas->GetTextureFrag(_T("connecteddependency"));
+        m_pFrags[eCT_ConnectedDependencyList] = m_pAtlas->GetTextureFrag(_T("connecteddependencylist"));
+        m_pFrags[eCT_WeakDependency] = m_pAtlas->GetTextureFrag(_T("weakdependency"));
+        m_pFrags[eCT_WeakDependencyList] = m_pAtlas->GetTextureFrag(_T("weakdependencylist"));
+        m_pFrags[eCT_StrongDependency] = m_pAtlas->GetTextureFrag(_T("strongdependency"));
+        m_pFrags[eCT_StrongDependencyList] = m_pAtlas->GetTextureFrag(_T("strongdependencylist"));
+#ifdef _DEBUG
+        for (int i = eCT_RectBG; i < eCT_Count; ++i)
+        {
+            BEATS_ASSERT(m_pFrags[i] != nullptr);
+        }
+#endif
+        m_pRenderBatch = new CRenderBatch(VERTEX_FORMAT(CVertexPT), m_pMaterial, GL_TRIANGLES, true, nullptr);
     }
+    SharePtr<CTexture> texture = CResourceManager::GetInstance()->GetResource<CTexture>(_T("Component.png"));
+    BEATS_ASSERT(texture, _T("Create Component Texture Failed!"));
+    m_pRenderBatch->SetTexture(0, texture);
 }
 
-SharePtr<CMaterial> CComponentGraphic_GL::CreateMaterial(const TString &textureFileName)
+SharePtr<CMaterial> CComponentGraphic_GL::CreateMaterial()
 {
     SharePtr<CMaterial> material = new CMaterial();
-    material->GetRenderState()->SetBoolState(CBoolRenderStateParam::eBSP_DepthTest, true);
-    material->GetRenderState()->SetBoolState((CBoolRenderStateParam::EBoolStateParam)GL_ALPHA_TEST, true);
-    material->GetRenderState()->SetAlphaFunc(GL_GREATER);
-    material->GetRenderState()->SetAlphaRef(0);
-    material->GetRenderState()->SetBoolState(CBoolRenderStateParam::eBSP_Blend, true);
-    material->GetRenderState()->SetBlendFuncSrcFactor(GL_SRC_ALPHA);
-    material->GetRenderState()->SetBlendFuncTargetFactor(GL_ONE_MINUS_SRC_ALPHA);
-    material->SetSharders( _T("PointTexShader.vs"), _T("PointTexShader.ps"));
-    SharePtr<CTexture> texture = CResourceManager::GetInstance()->GetResource<CTexture>(textureFileName);
-    BEATS_ASSERT(texture, _T("Create Component Texture Failed!"));
-    material->SetTexture(0, texture);
+    material->SetDepthTestEnable(true);
+    material->SetBlendEnable(true);
+    material->SetAlphaTest(true);
+    material->SetAlphaFunc(GL_GREATER);
+    material->SetAlphaRef(0);
+    material->SetBlendSource(GL_SRC_ALPHA);
+    material->SetBlendDest(GL_ONE_MINUS_SRC_ALPHA);
+    material->SetSharders( _T("pointtexshader.vs"), _T("pointtexshader.ps"));
     return material;
 }
 
-void CComponentGraphic_GL::GetDependencyPosition(size_t uDependencyIndex, int* pOutX, int* pOutY)
+void CComponentGraphic_GL::GetDependencyPosition(uint32_t uDependencyIndex, int* pOutX, int* pOutY)
 {
     BEATS_ASSERT(m_pOwner->GetDependency(uDependencyIndex) != NULL);
     *pOutX = m_gridPosX + MIN_WIDTH;
@@ -146,64 +150,59 @@ void CComponentGraphic_GL::DrawHead(float cellSize)
 
     BEYONDENGINE_PERFORMDETECT_START(ePNT_ComponentWindow_InstanceHead_2_2)
 
-    EComponentTexture BGTexture = m_bIsReference ? eCT_RefRectBG : eCT_RectBG;
     CQuadPT head;
-    head.tl.position.x = (m_gridPosX + CONNECTION_WIDTH) * cellSize;// Left top
-    head.tl.position.y = m_gridPosY * cellSize;
-    head.tl.position.z = (float)m_gridPosZ;
-    head.tl.tex = m_pFrags[BGTexture]->Quad().tl;
+    head.tl.position.X() = (m_gridPosX + CONNECTION_WIDTH) * cellSize;// Left top
+    head.tl.position.Y() = m_gridPosY * cellSize;
+    head.tl.position.Z() = (float)m_gridPosZ;
+    head.tl.tex = m_pFrags[eCT_RectBG]->GetQuadT().tl;
 
-    head.bl.position.x = (m_gridPosX + CONNECTION_WIDTH) * cellSize;// Left down
-    head.bl.position.y = (m_gridPosY + HEADER_HEIGHT) * cellSize;
-    head.bl.position.z = (float)m_gridPosZ;
-    head.bl.tex = m_pFrags[BGTexture]->Quad().bl;
+    head.bl.position.X() = (m_gridPosX + CONNECTION_WIDTH) * cellSize;// Left down
+    head.bl.position.Y() = (m_gridPosY + HEADER_HEIGHT) * cellSize;
+    head.bl.position.Z() = (float)m_gridPosZ;
+    head.bl.tex = m_pFrags[eCT_RectBG]->GetQuadT().bl;
 
-    head.tr.position.x = (m_gridPosX + CONNECTION_WIDTH + MIN_WIDTH) * cellSize;    // Right top
-    head.tr.position.y = m_gridPosY * cellSize;
-    head.tr.position.z = (float)m_gridPosZ;
-    head.tr.tex = m_pFrags[BGTexture]->Quad().tr;
+    head.tr.position.X() = (m_gridPosX + CONNECTION_WIDTH + MIN_WIDTH) * cellSize;    // Right top
+    head.tr.position.Y() = m_gridPosY * cellSize;
+    head.tr.position.Z() = (float)m_gridPosZ;
+    head.tr.tex = m_pFrags[eCT_RectBG]->GetQuadT().tr;
 
-    head.br.position.x = (m_gridPosX + CONNECTION_WIDTH + MIN_WIDTH) * cellSize;    // Right down
-    head.br.position.y = (m_gridPosY + HEADER_HEIGHT) * cellSize;
-    head.br.position.z = (float)m_gridPosZ;
-    head.br.tex = m_pFrags[BGTexture]->Quad().br;
+    head.br.position.X() = (m_gridPosX + CONNECTION_WIDTH + MIN_WIDTH) * cellSize;    // Right down
+    head.br.position.Y() = (m_gridPosY + HEADER_HEIGHT) * cellSize;
+    head.br.position.Z() = (float)m_gridPosZ;
+    head.br.tex = m_pFrags[eCT_RectBG]->GetQuadT().br;
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_ComponentWindow_InstanceHead_2_2)
-    BEYONDENGINE_PERFORMDETECT_START(ePNT_ComponentWindow_InstanceHead_2_3)
-
-    BEYONDENGINE_PERFORMDETECT_STOP(ePNT_ComponentWindow_InstanceHead_2_3)
     m_pRenderBatch->AddQuad(&head);
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_ComponentWindow_InstanceHead_2)
 
     BEYONDENGINE_PERFORMDETECT_START(ePNT_ComponentWindow_InstanceHead_3)
-
     // 2. Draw title text.
     const TString& strDisplayString = m_pOwner->GetUserDefineDisplayName().empty() ? m_pOwner->GetDisplayName() : m_pOwner->GetUserDefineDisplayName();
-    m_pFont->RenderText(TStringToUtf8(strDisplayString), head.tl.position.x + Font_Render_X_Offset * cellSize / DefaultCellSize, head.tl.position.y + Font_Render_Y_Offset * cellSize / DefaultCellSize, 1.0f, 0xFFFFFFFF, 0, nullptr, false);
+    m_pFont->RenderText(strDisplayString, head.tl.position.X() + Font_Render_X_Offset * cellSize / DefaultCellSize, head.tl.position.Y() + Font_Render_Y_Offset * cellSize / DefaultCellSize,  LAYER_GUI_EDITOR, 1.0f, 0x000000FF, 0, nullptr, false);
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_ComponentWindow_InstanceHead_3)
 
     BEYONDENGINE_PERFORMDETECT_START(ePNT_ComponentWindow_InstanceHead_4)
     // 3. Draw Connect rect.
     CQuadPT connectRect;
 
-    connectRect.tl.position.x = m_gridPosX * cellSize;    // Left top
-    connectRect.tl.position.y = m_gridPosY * cellSize;
-    connectRect.tl.position.z = (float)m_gridPosZ;
-    connectRect.tl.tex = m_pFrags[eCT_ConnectRect]->Quad().tl;
+    connectRect.tl.position.X() = m_gridPosX * cellSize;    // Left top
+    connectRect.tl.position.Y() = m_gridPosY * cellSize;
+    connectRect.tl.position.Z() = (float)m_gridPosZ;
+    connectRect.tl.tex = m_pFrags[eCT_ConnectRect]->GetQuadT().tl;
 
-    connectRect.bl.position.x = m_gridPosX * cellSize;    // Left down
-    connectRect.bl.position.y = (m_gridPosY + HEADER_HEIGHT) * cellSize;
-    connectRect.bl.position.z = (float)m_gridPosZ;
-    connectRect.bl.tex = m_pFrags[eCT_ConnectRect]->Quad().bl;
+    connectRect.bl.position.X() = m_gridPosX * cellSize;    // Left down
+    connectRect.bl.position.Y() = (m_gridPosY + HEADER_HEIGHT) * cellSize;
+    connectRect.bl.position.Z() = (float)m_gridPosZ;
+    connectRect.bl.tex = m_pFrags[eCT_ConnectRect]->GetQuadT().bl;
 
-    connectRect.tr.position.x = (m_gridPosX + CONNECTION_WIDTH) * cellSize;    // Right top
-    connectRect.tr.position.y = m_gridPosY * cellSize;
-    connectRect.tr.position.z = (float)m_gridPosZ;    
-    connectRect.tr.tex = m_pFrags[eCT_ConnectRect]->Quad().tr;
+    connectRect.tr.position.X() = (m_gridPosX + CONNECTION_WIDTH) * cellSize;    // Right top
+    connectRect.tr.position.Y() = m_gridPosY * cellSize;
+    connectRect.tr.position.Z() = (float)m_gridPosZ;    
+    connectRect.tr.tex = m_pFrags[eCT_ConnectRect]->GetQuadT().tr;
 
-    connectRect.br.position.x = (m_gridPosX + CONNECTION_WIDTH) * cellSize;    // Right down
-    connectRect.br.position.y = (m_gridPosY + HEADER_HEIGHT) * cellSize;
-    connectRect.br.position.z = (float)m_gridPosZ;    
-    connectRect.br.tex = m_pFrags[eCT_ConnectRect]->Quad().br;
+    connectRect.br.position.X() = (m_gridPosX + CONNECTION_WIDTH) * cellSize;    // Right down
+    connectRect.br.position.Y() = (m_gridPosY + HEADER_HEIGHT) * cellSize;
+    connectRect.br.position.Z() = (float)m_gridPosZ;    
+    connectRect.br.tex = m_pFrags[eCT_ConnectRect]->GetQuadT().br;
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_ComponentWindow_InstanceHead_4)
 
     BEYONDENGINE_PERFORMDETECT_START(ePNT_ComponentWindow_InstanceHead_5)
@@ -218,88 +217,85 @@ void CComponentGraphic_GL::DrawDependencies( float cellSize )
     BEYONDENGINE_PERFORMDETECT_START(ePNT_ComponentWindow_Dependency)
     CreateMaterials();
 
-    if (!m_bIsReference)
+    const std::vector<CDependencyDescription*>* pDependencies = m_pOwner->GetDependencies();
+    BEATS_ASSERT(pDependencies != NULL);
+    uint32_t uDependencyCount = pDependencies->size();
+    for (int i = 0; i < (int)uDependencyCount; ++i)
     {
-        const std::vector<CDependencyDescription*>* pDependencies = m_pOwner->GetDependencies();
-        BEATS_ASSERT( pDependencies != NULL);
-        size_t uDependencyCount = pDependencies->size();
-        for (int i = 0; i < (int)uDependencyCount; ++i)
+        // 1. Draw background.
+        CQuadPT dependencyPoint;
+        dependencyPoint.tl.position.X() = m_gridPosX * cellSize;    // Left top
+        dependencyPoint.tl.position.Y() = (m_gridPosY + HEADER_HEIGHT + i * DEPENDENCY_HEIGHT) * cellSize;
+        dependencyPoint.tl.position.Z() = (float)m_gridPosZ;
+        dependencyPoint.tl.tex = m_pFrags[eCT_RectBG]->GetQuadT().tl;
+
+        dependencyPoint.bl.position.X() = m_gridPosX * cellSize;    // Left down
+        dependencyPoint.bl.position.Y() = (m_gridPosY + HEADER_HEIGHT + (i + 1) * DEPENDENCY_HEIGHT) * cellSize;
+        dependencyPoint.bl.position.Z() = (float)m_gridPosZ;
+        dependencyPoint.bl.tex = m_pFrags[eCT_RectBG]->GetQuadT().bl;
+
+        dependencyPoint.tr.position.X() = (m_gridPosX + MIN_WIDTH) * cellSize;    // Right top
+        dependencyPoint.tr.position.Y() = (m_gridPosY + HEADER_HEIGHT + i * DEPENDENCY_HEIGHT) * cellSize;
+        dependencyPoint.tr.position.Z() = (float)m_gridPosZ;
+        dependencyPoint.tr.tex = m_pFrags[eCT_RectBG]->GetQuadT().tr;
+
+        dependencyPoint.br.position.X() = (m_gridPosX + MIN_WIDTH) * cellSize;    // Right down
+        dependencyPoint.br.position.Y() = (m_gridPosY + HEADER_HEIGHT + (i + 1) * DEPENDENCY_HEIGHT) * cellSize;
+        dependencyPoint.br.position.Z() = (float)m_gridPosZ;
+        dependencyPoint.br.tex = m_pFrags[eCT_RectBG]->GetQuadT().br;
+        m_pRenderBatch->AddQuad(&dependencyPoint);
+
+        // 2. Draw dependency name.
+        m_pFont->RenderText(m_pOwner->GetDependency(i)->GetDisplayName(), dependencyPoint.tl.position.X() + Font_Render_X_Offset * cellSize / DefaultCellSize, dependencyPoint.tl.position.Y() + Font_Render_Y_Offset * cellSize / DefaultCellSize, LAYER_GUI_EDITOR, 1.0f, 0x000000FF, 0, nullptr, false);
+
+        // 3. Draw Connect rect.
+        CDependencyDescription* pDescription = m_pOwner->GetDependency(i);
+        BEATS_ASSERT(pDescription != NULL);
+        bool bConnected = pDescription->GetDependencyLineCount() > 0;
+        EComponentTexture textureType = eCT_Count;
+        EDependencyType descriptionType = pDescription->GetType();
+        bool bIsList = pDescription->IsListType();
+        if (bConnected)
         {
-            // 1. Draw background.
-            CQuadPT dependencyPoint;
-            dependencyPoint.tl.position.x = m_gridPosX * cellSize;    // Left top
-            dependencyPoint.tl.position.y = (m_gridPosY + HEADER_HEIGHT + i * DEPENDENCY_HEIGHT) * cellSize;
-            dependencyPoint.tl.position.z = (float)m_gridPosZ;
-            dependencyPoint.tl.tex = m_pFrags[eCT_RectBG]->Quad().tl;
-
-            dependencyPoint.bl.position.x = m_gridPosX * cellSize;    // Left down
-            dependencyPoint.bl.position.y = (m_gridPosY + HEADER_HEIGHT + (i + 1) * DEPENDENCY_HEIGHT) * cellSize;
-            dependencyPoint.bl.position.z = (float)m_gridPosZ;
-            dependencyPoint.bl.tex = m_pFrags[eCT_RectBG]->Quad().bl;
-
-            dependencyPoint.tr.position.x = (m_gridPosX + MIN_WIDTH) * cellSize;    // Right top
-            dependencyPoint.tr.position.y = (m_gridPosY + HEADER_HEIGHT + i * DEPENDENCY_HEIGHT) * cellSize ;
-            dependencyPoint.tr.position.z = (float)m_gridPosZ;
-            dependencyPoint.tr.tex = m_pFrags[eCT_RectBG]->Quad().tr;
-
-            dependencyPoint.br.position.x = (m_gridPosX + MIN_WIDTH) * cellSize;    // Right down
-            dependencyPoint.br.position.y = (m_gridPosY + HEADER_HEIGHT + (i + 1) * DEPENDENCY_HEIGHT) * cellSize;
-            dependencyPoint.br.position.z = (float)m_gridPosZ;
-            dependencyPoint.br.tex = m_pFrags[eCT_RectBG]->Quad().br;
-            m_pRenderBatch->AddQuad(&dependencyPoint);
-
-            // 2. Draw dependency name.
-            m_pFont->RenderText(TStringToUtf8(m_pOwner->GetDependency(i)->GetDisplayName()), dependencyPoint.tl.position.x + Font_Render_X_Offset * cellSize / DefaultCellSize, dependencyPoint.tl.position.y + Font_Render_Y_Offset * cellSize / DefaultCellSize, 1.0f, 0xFFFFFFFF, 0, nullptr, false);
-
-            // 3. Draw Connect rect.
-            CDependencyDescription* pDescription = m_pOwner->GetDependency(i);
-            BEATS_ASSERT(pDescription != NULL);
-            bool bConnected = pDescription->GetDependencyLineCount() > 0;
-            EComponentTexture textureType = eCT_Count;
-            EDependencyType descriptionType = pDescription->GetType();
-            bool bIsList = pDescription->IsListType();
-            if (bConnected)
+            textureType = bIsList ? eCT_ConnectedDependencyList : eCT_ConnectedDependency;
+        }
+        else
+        {
+            if (bIsList)
             {
-                textureType = bIsList ? eCT_ConnectedDependencyList : eCT_ConnectedDependency;
+                textureType = descriptionType == eDT_Strong ? eCT_StrongDependencyList : eCT_WeakDependencyList;
             }
             else
             {
-                if (bIsList)
-                {
-                    textureType = descriptionType == eDT_Strong ? eCT_StrongDependencyList : eCT_WeakDependencyList;
-                }
-                else
-                {
-                    textureType = descriptionType == eDT_Strong ? eCT_StrongDependency : eCT_WeakDependency;
-                }
+                textureType = descriptionType == eDT_Strong ? eCT_StrongDependency : eCT_WeakDependency;
             }
-            BEATS_ASSERT(textureType != eCT_Count);
-
-            dependencyPoint.tl.position.x = (m_gridPosX + MIN_WIDTH) * cellSize;    // Left top
-            dependencyPoint.tl.position.y = (m_gridPosY + HEADER_HEIGHT + i * DEPENDENCY_HEIGHT) * cellSize;
-            dependencyPoint.tl.position.z = (float)m_gridPosZ;
-            dependencyPoint.tl.tex = m_pFrags[textureType]->Quad().tl;
-
-            dependencyPoint.bl.position.x = (m_gridPosX + MIN_WIDTH) * cellSize;    // Left down
-            dependencyPoint.bl.position.y = (m_gridPosY + HEADER_HEIGHT + (i + 1) * DEPENDENCY_HEIGHT) * cellSize;
-            dependencyPoint.bl.position.z = (float)m_gridPosZ;
-            dependencyPoint.bl.tex = m_pFrags[textureType]->Quad().bl;
-
-            dependencyPoint.tr.position.x = (m_gridPosX + MIN_WIDTH + CONNECTION_WIDTH) * cellSize;    // Right top
-            dependencyPoint.tr.position.y = (m_gridPosY + HEADER_HEIGHT + i * DEPENDENCY_HEIGHT) * cellSize;
-            dependencyPoint.tr.position.z = (float)m_gridPosZ;
-            dependencyPoint.tr.tex = m_pFrags[textureType]->Quad().tr;
-
-            dependencyPoint.br.position.x = (m_gridPosX + MIN_WIDTH + CONNECTION_WIDTH) * cellSize;    // Right down
-            dependencyPoint.br.position.y = (m_gridPosY + HEADER_HEIGHT + (i + 1) * DEPENDENCY_HEIGHT) * cellSize;
-            dependencyPoint.br.position.z = (float)m_gridPosZ;
-            dependencyPoint.br.tex = m_pFrags[textureType]->Quad().br;
-
-            m_pRenderBatch->AddQuad(&dependencyPoint);
-
-            // 4. Draw the line.
-            DrawDependencyLine(cellSize, m_pOwner->GetDependency(i));
         }
+        BEATS_ASSERT(textureType != eCT_Count);
+
+        dependencyPoint.tl.position.X() = (m_gridPosX + MIN_WIDTH) * cellSize;    // Left top
+        dependencyPoint.tl.position.Y() = (m_gridPosY + HEADER_HEIGHT + i * DEPENDENCY_HEIGHT) * cellSize;
+        dependencyPoint.tl.position.Z() = (float)m_gridPosZ;
+        dependencyPoint.tl.tex = m_pFrags[textureType]->GetQuadT().tl;
+
+        dependencyPoint.bl.position.X() = (m_gridPosX + MIN_WIDTH) * cellSize;    // Left down
+        dependencyPoint.bl.position.Y() = (m_gridPosY + HEADER_HEIGHT + (i + 1) * DEPENDENCY_HEIGHT) * cellSize;
+        dependencyPoint.bl.position.Z() = (float)m_gridPosZ;
+        dependencyPoint.bl.tex = m_pFrags[textureType]->GetQuadT().bl;
+
+        dependencyPoint.tr.position.X() = (m_gridPosX + MIN_WIDTH + CONNECTION_WIDTH) * cellSize;    // Right top
+        dependencyPoint.tr.position.Y() = (m_gridPosY + HEADER_HEIGHT + i * DEPENDENCY_HEIGHT) * cellSize;
+        dependencyPoint.tr.position.Z() = (float)m_gridPosZ;
+        dependencyPoint.tr.tex = m_pFrags[textureType]->GetQuadT().tr;
+
+        dependencyPoint.br.position.X() = (m_gridPosX + MIN_WIDTH + CONNECTION_WIDTH) * cellSize;    // Right down
+        dependencyPoint.br.position.Y() = (m_gridPosY + HEADER_HEIGHT + (i + 1) * DEPENDENCY_HEIGHT) * cellSize;
+        dependencyPoint.br.position.Z() = (float)m_gridPosZ;
+        dependencyPoint.br.tex = m_pFrags[textureType]->GetQuadT().br;
+
+        m_pRenderBatch->AddQuad(&dependencyPoint);
+
+        // 4. Draw the line.
+        DrawDependencyLine(cellSize, m_pOwner->GetDependency(i));
     }
 
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_ComponentWindow_Dependency)
@@ -314,104 +310,104 @@ void CComponentGraphic_GL::DrawDependencyLine( float /*cellSize*/, const CDepend
     BEATS_ASSERT(pDependency != NULL);
     if (pDependency->IsVisible())
     {
-        size_t uDependencyLineCount = pDependency->GetDependencyLineCount();
-        for (size_t i = 0; i < uDependencyLineCount; ++i)
+        uint32_t uDependencyLineCount = pDependency->GetDependencyLineCount();
+        for (uint32_t i = 0; i < uDependencyLineCount; ++i)
         {
             CDependencyDescriptionLine* pDependencyLine = pDependency->GetDependencyLine(i);
             EComponentTexture textureLine = pDependencyLine->IsSelected() ? eCT_SelectedLine : eCT_NormalLine;
             EComponentTexture textureArrow = pDependencyLine->IsSelected() ? eCT_SelectedArrow : eCT_NormalArrow;
             const SVertex* pData = pDependencyLine->GetRectArray();
-            static const size_t SVERTEX_SIZE = 24;
+            static const uint32_t SVERTEX_SIZE = 24;
             CSerializer serializer(SVERTEX_SIZE * 4, (void*)pData);
             DWORD tmpColor = 0;
             CQuadPT dependencyLine;
-            serializer >> dependencyLine.br.position.x;
-            serializer >> dependencyLine.br.position.y;
-            serializer >> dependencyLine.br.position.z;
-            dependencyLine.br.position.z = -1.0f;
+            serializer >> dependencyLine.br.position.X();
+            serializer >> dependencyLine.br.position.Y();
+            serializer >> dependencyLine.br.position.Z();
+            dependencyLine.br.position.Z() = -1.0f;
             serializer >> tmpColor;
             serializer >> dependencyLine.br.tex.u;
             serializer >> dependencyLine.br.tex.v;
-            dependencyLine.br.tex = m_pFrags[textureLine]->Quad().br;
+            dependencyLine.br.tex = m_pFrags[textureLine]->GetQuadT().br;
 
-            serializer >> dependencyLine.bl.position.x;
-            serializer >> dependencyLine.bl.position.y;
-            serializer >> dependencyLine.bl.position.z;
-            dependencyLine.bl.position.z = -1.0f;
+            serializer >> dependencyLine.bl.position.X();
+            serializer >> dependencyLine.bl.position.Y();
+            serializer >> dependencyLine.bl.position.Z();
+            dependencyLine.bl.position.Z() = -1.0f;
             serializer >> tmpColor;
             serializer >> dependencyLine.bl.tex.u;
             serializer >> dependencyLine.bl.tex.v;
-            dependencyLine.bl.tex = m_pFrags[textureLine]->Quad().bl;
+            dependencyLine.bl.tex = m_pFrags[textureLine]->GetQuadT().bl;
 
-            serializer >> dependencyLine.tr.position.x;
-            serializer >> dependencyLine.tr.position.y;
-            serializer >> dependencyLine.tr.position.z;
-            dependencyLine.tr.position.z = -1.0f;
+            serializer >> dependencyLine.tr.position.X();
+            serializer >> dependencyLine.tr.position.Y();
+            serializer >> dependencyLine.tr.position.Z();
+            dependencyLine.tr.position.Z() = -1.0f;
             serializer >> tmpColor;
             serializer >> dependencyLine.tr.tex.u;
             serializer >> dependencyLine.tr.tex.v;
-            dependencyLine.tr.tex = m_pFrags[textureLine]->Quad().tr;
+            dependencyLine.tr.tex = m_pFrags[textureLine]->GetQuadT().tr;
 
-            serializer >> dependencyLine.tl.position.x;
-            serializer >> dependencyLine.tl.position.y;
-            serializer >> dependencyLine.tl.position.z;
-            dependencyLine.tl.position.z = -1.0f;
+            serializer >> dependencyLine.tl.position.X();
+            serializer >> dependencyLine.tl.position.Y();
+            serializer >> dependencyLine.tl.position.Z();
+            dependencyLine.tl.position.Z() = -1.0f;
             serializer >> tmpColor;
             serializer >> dependencyLine.tl.tex.u;
             serializer >> dependencyLine.tl.tex.v;
-            dependencyLine.tl.tex = m_pFrags[textureLine]->Quad().tl;
+            dependencyLine.tl.tex = m_pFrags[textureLine]->GetQuadT().tl;
 
             m_pRenderBatch->AddQuad(&dependencyLine);
 
             const SVertex* pArrowData = pDependencyLine->GetArrowRectArray();
             CSerializer serializerArrow(SVERTEX_SIZE * 4, (void*)pArrowData);
             CQuadPT arrow;
-            serializerArrow >> arrow.br.position.x;
-            serializerArrow >> arrow.br.position.y;
-            serializerArrow >> arrow.br.position.z;
+            serializerArrow >> arrow.br.position.X();
+            serializerArrow >> arrow.br.position.Y();
+            serializerArrow >> arrow.br.position.Z();
             serializerArrow >> tmpColor;
             serializerArrow >> arrow.br.tex.u;
             serializerArrow >> arrow.br.tex.v;
-            arrow.br.tex = m_pFrags[textureArrow]->Quad().br;
+            arrow.br.tex = m_pFrags[textureArrow]->GetQuadT().br;
 
-            serializerArrow >> arrow.bl.position.x;
-            serializerArrow >> arrow.bl.position.y;
-            serializerArrow >> arrow.bl.position.z;
+            serializerArrow >> arrow.bl.position.X();
+            serializerArrow >> arrow.bl.position.Y();
+            serializerArrow >> arrow.bl.position.Z();
             serializerArrow >> tmpColor;
             serializerArrow >> arrow.bl.tex.u;
             serializerArrow >> arrow.bl.tex.v;
-            arrow.bl.tex = m_pFrags[textureArrow]->Quad().bl;
+            arrow.bl.tex = m_pFrags[textureArrow]->GetQuadT().bl;
 
-            serializerArrow >> arrow.tr.position.x;
-            serializerArrow >> arrow.tr.position.y;
-            serializerArrow >> arrow.tr.position.z;
+            serializerArrow >> arrow.tr.position.X();
+            serializerArrow >> arrow.tr.position.Y();
+            serializerArrow >> arrow.tr.position.Z();
             serializerArrow >> tmpColor;
             serializerArrow >> arrow.tr.tex.u;
             serializerArrow >> arrow.tr.tex.v;
-            arrow.tr.tex = m_pFrags[textureArrow]->Quad().tr;
+            arrow.tr.tex = m_pFrags[textureArrow]->GetQuadT().tr;
 
-            serializerArrow >> arrow.tl.position.x;
-            serializerArrow >> arrow.tl.position.y;
-            serializerArrow >> arrow.tl.position.z;
+            serializerArrow >> arrow.tl.position.X();
+            serializerArrow >> arrow.tl.position.Y();
+            serializerArrow >> arrow.tl.position.Z();
             serializerArrow >> tmpColor;
             serializerArrow >> arrow.tl.tex.u;
             serializerArrow >> arrow.tl.tex.v;
-            arrow.tl.tex = m_pFrags[textureArrow]->Quad().tl;
+            arrow.tl.tex = m_pFrags[textureArrow]->GetQuadT().tl;
 
             m_pRenderBatch->AddQuad(&arrow);
 
             //Render index number for dependency list.
             if (pDependency->IsListType())
             {
-                kmVec3 deltaDirection;
-                kmVec3Subtract(&deltaDirection, &dependencyLine.tr.position, &dependencyLine.tl.position);
-                float fXPos = (dependencyLine.tl.position.x + deltaDirection.x * 0.15f);
+                CVec3 deltaDirection;
+                deltaDirection = dependencyLine.tr.position - dependencyLine.tl.position;
+                float fXPos = (dependencyLine.tl.position.X() + deltaDirection.X() * 0.15f);
                 static const float fHardCodeOffset = 8;
-                float fYPos = (dependencyLine.tl.position.y + deltaDirection.y * 0.15f - fHardCodeOffset);
+                float fYPos = (dependencyLine.tl.position.Y() + deltaDirection.Y() * 0.15f - fHardCodeOffset);
 
                 TCHAR szIndex[8];
                 _stprintf(szIndex, _T("%d"), pDependencyLine->GetIndex());
-                m_pFont->RenderText(szIndex, fXPos, fYPos, 1.0f, 0xffff00ff, 0, nullptr, false);
+                m_pFont->RenderText(szIndex, fXPos, fYPos, LAYER_GUI_EDITOR, 1.0f, 0xffff00ff, 0, nullptr, false);
             }
         }
     }
@@ -429,25 +425,25 @@ void CComponentGraphic_GL::DrawSelectedRect(float fCellSize)
     GetPosition(&x, &y);
     CQuadPT rect;
     // left top
-    rect.tl.position.x = x * fCellSize;
-    rect.tl.position.y = y * fCellSize;
-    rect.tl.position.z = (float)m_gridPosZ + eRL_SelectRect;
-    rect.tl.tex = m_pFrags[eCT_SelectedRectBG]->Quad().tl;
+    rect.tl.position.X() = x * fCellSize;
+    rect.tl.position.Y() = y * fCellSize;
+    rect.tl.position.Z() = (float)m_gridPosZ + eRL_SelectRect;
+    rect.tl.tex = m_pFrags[eCT_SelectedRectBG]->GetQuadT().tl;
     // left down
-    rect.bl.position.x = x * fCellSize;
-    rect.bl.position.y = y * fCellSize + fHeight;
-    rect.bl.position.z = (float)m_gridPosZ + eRL_SelectRect;
-    rect.bl.tex = m_pFrags[eCT_SelectedRectBG]->Quad().bl;
+    rect.bl.position.X() = x * fCellSize;
+    rect.bl.position.Y() = y * fCellSize + fHeight;
+    rect.bl.position.Z() = (float)m_gridPosZ + eRL_SelectRect;
+    rect.bl.tex = m_pFrags[eCT_SelectedRectBG]->GetQuadT().bl;
     // right top
-    rect.tr.position.x = x * fCellSize + fWidth;
-    rect.tr.position.y = y * fCellSize;
-    rect.tr.position.z = (float)m_gridPosZ + eRL_SelectRect;
-    rect.tr.tex = m_pFrags[eCT_SelectedRectBG]->Quad().tr;
+    rect.tr.position.X() = x * fCellSize + fWidth;
+    rect.tr.position.Y() = y * fCellSize;
+    rect.tr.position.Z() = (float)m_gridPosZ + eRL_SelectRect;
+    rect.tr.tex = m_pFrags[eCT_SelectedRectBG]->GetQuadT().tr;
     // right down
-    rect.br.position.x = x * fCellSize + fWidth;
-    rect.br.position.y = y * fCellSize + fHeight;
-    rect.br.position.z = (float)m_gridPosZ + eRL_SelectRect;
-    rect.br.tex = m_pFrags[eCT_SelectedRectBG]->Quad().br;
+    rect.br.position.X() = x * fCellSize + fWidth;
+    rect.br.position.Y() = y * fCellSize + fHeight;
+    rect.br.position.Z() = (float)m_gridPosZ + eRL_SelectRect;
+    rect.br.tex = m_pFrags[eCT_SelectedRectBG]->GetQuadT().br;
 
     m_pRenderBatch->AddQuad(&rect);
     BEYONDENGINE_PERFORMDETECT_STOP(ePNT_ComponentWindow_SelectRect)

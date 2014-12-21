@@ -2,14 +2,12 @@
 #define BEYOND_ENGINE_EDITOR_WXUICONTROL_TIMEFRAMEBAR_TIMELINEBARCONTAINER_H_INCLUDE
 
 #include "wx/wx.h"
-#include "timebaritem.h"
 
-class CDataViewCtrl;
 class CTimeBarFrame;
 class CTimeBarScale;
-class CTimeBarItem;
+class CTimeBarFrameData;
 
-struct SSelectCtrl
+struct SSelection
 {
     int m_iSelectRowBegin;
     int m_iSelectRowEnd;
@@ -25,31 +23,41 @@ public:
     virtual ~CTimeBarItemContainer();
 
     virtual void        ScrollWindow(int x, int y, const wxRect *rect = NULL);
-    void                SyncWith(CDataViewCtrl* pDataViewCtrl, CTimeBarScale* pScaleBarCtrl);
-    void                AddItem(CTimeBarItem* pitem);
-    void                RefreshItems();
-    void                SelectItems();
-    void                DeleteItem(int index);
+    void                SyncWith(wxWindow* pDataViewCtrl, CTimeBarScale* pScaleBarCtrl);
+    void                AddItem(CTimeBarFrameData* pitem);
+    void                RemoveItem(int index);
     void                SetCellWidth(int width);
+    void                SetCellHeight(int height);
     void                SetTimeBarFrameWindow(CTimeBarFrame* pSplitterWindow);
     int                 GetCellWidth() const;
     int                 GetItemCount();
-    SSelectCtrl&        GetCurrentSelect();
-    CTimeBarItem*       GetItem(int nIndex);
+    int                 GetItemIndex(CTimeBarFrameData* pItem);
+    SSelection&        GetCurrentSelect();
+    CTimeBarFrameData*  GetItem(int nIndex);
     CTimeBarFrame*      GetTimeBarFrameWindow();
     void ResetScrollBar();
+    void Clear();
+    void AddKey(CTimeBarFrameData* pData, int nFrameIndex);
+    void RemoveKey(CTimeBarFrameData* pData, int nFrameIndex);
 
 private:
+    void                OnMouseCaptureLost(wxMouseCaptureLostEvent& event);
+    void                OnMouse(wxMouseEvent& event);
+    void                OnPaint(wxPaintEvent& event);
+    void                DrawItem(wxDC& ScaleDC);
+    void                DrawSelection(wxDC& ScaleDC);
+    int                         m_nDraggingFrameIndex;
     int                         m_iCellWidth;
+    int                         m_iCellHeight;
     int                         m_iCursorPositionX;
     wxBoxSizer*                 m_pMainSizer;
-    CDataViewCtrl*              m_pSyncWnd;
     CTimeBarScale*              m_pSyncScale;
     CTimeBarFrame*              m_pTimeBarFrame;
-    std::vector<CTimeBarItem*>  m_items;
-    SSelectCtrl                 m_currentSelect;
-    SSelectCtrl                 m_lastSelect;
+    std::vector<CTimeBarFrameData*>  m_items;
+    SSelection                 m_currentSelect;
+    SSelection                 m_lastSelect;
 
+    DECLARE_EVENT_TABLE()
     wxDECLARE_NO_COPY_CLASS(CTimeBarItemContainer);
 };
 

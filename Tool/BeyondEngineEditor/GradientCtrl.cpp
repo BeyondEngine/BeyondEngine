@@ -2,7 +2,7 @@
 #include "GradientCtrl.h"
 #include "GradientColorBoard.h"
 #include "GradientCursor.h"
-#include "PublicDef.h"
+#include "EnginePublic/PublicDef.h"
 #include "TransparentText.h"
 
 #include <algorithm>
@@ -41,17 +41,7 @@ CGradientCtrl::CGradientCtrl(wxWindow *pParent, wxWindowID id , const wxPoint& p
 
 CGradientCtrl::~CGradientCtrl()
 {
-    for ( auto iter : m_colorCursorList )
-    {
-        BEATS_SAFE_DELETE( iter );
-    }
-    for ( auto iter : m_maskCursorList )
-    {
-        BEATS_SAFE_DELETE( iter );
-    }
-
-    m_colorCursorList.clear();
-    m_maskCursorList.clear();
+    Reset();
 }
 
 void CGradientCtrl::InitCtrl()
@@ -59,38 +49,29 @@ void CGradientCtrl::InitCtrl()
     wxBoxSizer* pSizer = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer* pCtrlSizer = new wxBoxSizer(wxHORIZONTAL);
     m_pGradientColorBoard = new CGradientColorBoard(this, wxID_ANY, wxDefaultPosition, wxSize(DefaultBoardSize, DefaultBoardSize));
-    m_pCtrlPanel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(300, 60));
+    m_pCtrlPanel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(300, 40));
 
     CTransparentText* pStaticText = new CTransparentText(m_pCtrlPanel, wxID_ANY, wxT("%"));
     m_pSetPosButton = new wxButton(m_pCtrlPanel, wxID_ANY, wxT("Set Pos"));
     m_pColoutPicker = new wxColourPickerCtrl(m_pCtrlPanel, wxID_ANY);
-    m_pMaskSlider = new wxSlider(m_pCtrlPanel, wxID_ANY, 255, 0, 255, wxDefaultPosition, wxDefaultSize, wxSL_VALUE_LABEL);
+    m_pAlphaSlider = new wxSlider(m_pCtrlPanel, wxID_ANY, 255, 0, 255, wxDefaultPosition, wxDefaultSize, wxSL_VALUE_LABEL);
     m_pPosEdit = new wxTextCtrl(m_pCtrlPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, 20), wxTE_PROCESS_ENTER);
     m_pPosEdit->SetMaxLength(MaxPosTextLength);
 
     pCtrlSizer->Add(m_pColoutPicker, 0, wxALIGN_CENTER|wxALL, 0);
-    pCtrlSizer->Add(m_pMaskSlider, 0, wxALIGN_CENTER|wxALL, 0);
+    pCtrlSizer->Add(m_pAlphaSlider, 0, wxALIGN_CENTER|wxALL, 0);
     pCtrlSizer->AddStretchSpacer(1);
-    pCtrlSizer->Add(m_pSetPosButton, 0, wxALIGN_CENTER|wxALL, 5);
-    pCtrlSizer->Add(m_pPosEdit, 0, wxALIGN_CENTER|wxALL, 5);
+    pCtrlSizer->Add(m_pSetPosButton, 0, wxALIGN_CENTER|wxLEFT|wxRIGHT, 5);
+    pCtrlSizer->Add(m_pPosEdit, 0, wxALIGN_CENTER | wxLEFT | wxRIGHT, 5);
     pCtrlSizer->Add(pStaticText, 0, wxALIGN_CENTER|wxALL, 0);
 
-    pSizer->AddStretchSpacer(1);
-    pSizer->Add(m_pGradientColorBoard, 0, wxGROW|wxALL, 20);
-    pSizer->Add(m_pCtrlPanel, 0, wxGROW|wxALL, 20);
-    pSizer->AddStretchSpacer(1);
+    pSizer->Add(m_pGradientColorBoard, 0, wxGROW|wxALL, 15);
+    pSizer->Add(m_pCtrlPanel, 0, wxGROW|wxALL, 0);
     m_pCtrlPanel->SetSizer(pCtrlSizer);
     SetSizer(pSizer);
 
     m_pColoutPicker->Hide();
-    m_pMaskSlider->Hide();
-    wxColor cWhite = *wxWHITE;
-    wxColor c2 = *wxYELLOW;
-    wxColor c3 = *wxBLACK;
-    m_colorCursorList.push_back(new CGradientCursor(0.0, cWhite, eCT_Color));
-    m_colorCursorList.push_back(new CGradientCursor(1.0, c2, eCT_Color));
-    m_maskCursorList.push_back(new CGradientCursor(0.0, cWhite, eCT_Alpha));
-    m_maskCursorList.push_back(new CGradientCursor(1.0, c3, eCT_Alpha));
+    m_pAlphaSlider->Hide();
 }
 
 void CGradientCtrl::AddCursor(CGradientCursor* pCursor)
@@ -104,8 +85,8 @@ void CGradientCtrl::AddCursor(CGradientCursor* pCursor)
     }
     else if (eType == eCT_Alpha)
     {
-        m_maskCursorList.push_back(pCursor);
-        std::sort(m_maskCursorList.begin(), m_maskCursorList.end(), lessmark);
+        m_alphaCursorList.push_back(pCursor);
+        std::sort(m_alphaCursorList.begin(), m_alphaCursorList.end(), lessmark);
     }
     
     Refresh(true);
@@ -121,7 +102,7 @@ void CGradientCtrl::DeleteCursor(CGradientCursor* pCursor)
     }
     else if (eType == eCT_Alpha)
     {
-        plist = &m_maskCursorList;
+        plist = &m_alphaCursorList;
     }
 
     BEATS_ASSERT(plist != NULL);
@@ -141,46 +122,57 @@ void CGradientCtrl::DrawColorBoard()
 {
     wxSize boardSize = m_pGradientColorBoard->GetSize();
     wxBitmap colorBmp(boardSize);
-    wxBitmap maskBmp(boardSize);
+    wxBitmap alphaBmp(boardSize);
     
     DrawCursorDataToBmp(m_colorCursorList, colorBmp);
-    DrawCursorDataToBmp(m_maskCursorList, maskBmp);
+    DrawCursorDataToBmp(m_alphaCursorList, alphaBmp);
 
-    m_pGradientColorBoard->SetBmp(colorBmp, maskBmp);
+    m_pGradientColorBoard->SetBmp(colorBmp, alphaBmp);
     m_pGradientColorBoard->Refresh(false);
 }
 
 void CGradientCtrl::DrawCursorDataToBmp(std::vector<CGradientCursor*>& list, wxBitmap& bmp)
 {
-    CGradientCursor* pPreCursor = *list.begin();
-    CGradientCursor* pLastCursor = *list.rbegin();
-    wxSize size = bmp.GetSize();
-    BEATS_ASSERT(pPreCursor != nullptr);
-    BEATS_ASSERT(pLastCursor != nullptr);
-
+    if (list.size() > 0)
     {
+        CGradientCursor* pPreCursor = *list.begin();
+        wxSize size = bmp.GetSize();
+        BEATS_ASSERT(pPreCursor != nullptr);
         wxMemoryDC dc(bmp);
         int nWidth = INVALID_DATA;
         for (auto itr : list)
         {
-            if (pPreCursor == itr)
+            int nCurrentPos = itr->GetPosPercent() * size.x;
+            if (*list.begin() == itr)
             {
                 nWidth = itr->GetPosPercent() * size.x;
+                if (nWidth < 1)
+                {
+                    nWidth = 1;
+                }
                 dc.SetBrush(wxBrush(itr->GetColor()));
                 dc.SetPen(wxPen(itr->GetColor()));
-                dc.DrawRectangle(wxRect(0, 0, nWidth + 1 , size.y));
+                dc.DrawRectangle(wxRect(0, 0, nWidth, size.y));
             }
-            else if (pLastCursor == itr)
+            else
             {
-                nWidth = (1.0 - itr->GetPosPercent()) * size.x;
+                nWidth = nCurrentPos - pPreCursor->GetPosPercent() * size.x;
+                wxRect rect = wxRect(pPreCursor->GetPosPercent() * size.x, 0, nWidth + 1, size.y);
+                dc.GradientFillLinear(rect, pPreCursor->GetColor(), itr->GetColor());
+                pPreCursor = itr;
+            }
+
+            if (*list.rbegin() == itr)
+            {
+                nWidth = size.x - nCurrentPos;
+                if (nWidth < 1)
+                {
+                    nWidth = 1;
+                }
                 dc.SetBrush(wxBrush(itr->GetColor()));
                 dc.SetPen(wxPen(itr->GetColor()));
-                dc.DrawRectangle(wxRect(itr->GetPosPercent() * size.x, 0, nWidth + 1 , size.y));
+                dc.DrawRectangle(wxRect(nCurrentPos - 1, 0, nWidth + 1, size.y));
             }
-            nWidth = (itr->GetPosPercent() - pPreCursor->GetPosPercent()) * size.x;
-            wxRect rect = wxRect(pPreCursor->GetPosPercent() * size.x, 0, nWidth + 1 , size.y);
-            dc.GradientFillLinear(rect, pPreCursor->GetColor(), itr->GetColor());
-            pPreCursor = itr;
         }
     }
 }
@@ -189,7 +181,7 @@ void CGradientCtrl::DrawCursorIcons()
 {
     wxRect rect = m_pGradientColorBoard->GetRect();
     m_colorIconRect = wxRect(rect.x - nHalfIconSize, rect.GetBottom(), rect.width + CursorIconSize, CursorIconSize);
-    m_maskIconRect = wxRect(rect.x - nHalfIconSize, rect.GetTop() - CursorIconSize, rect.width + CursorIconSize,  CursorIconSize);
+    m_alphaIconRect = wxRect(rect.x - nHalfIconSize, rect.GetTop() - CursorIconSize, rect.width + CursorIconSize,  CursorIconSize);
     wxPaintDC dc(this);
 //     //show mouse click response range
 //     dc.DrawRectangle(m_colorIconRect);
@@ -206,7 +198,7 @@ void CGradientCtrl::DrawCursorIcons()
         dc.DrawRectangle(nPositionX, rect.GetBottom() + PositionYAdjust, CursorIconSize, CursorIconSize);
     }
 
-    for (auto itr : m_maskCursorList)
+    for (auto itr : m_alphaCursorList)
     {
         brush.SetColour(itr->GetColor());
         dc.SetBrush(brush);
@@ -243,7 +235,7 @@ void CGradientCtrl::OnMouse(wxMouseEvent& event)
             }
             else
             {
-                m_pMaskSlider->SetValue(m_pSelectedCursor->GetColor().Red());
+                m_pAlphaSlider->SetValue(m_pSelectedCursor->GetColor().Red());
             }
             m_pSelectedCursor->Select(true);
         }
@@ -276,10 +268,10 @@ void CGradientCtrl::OnMouse(wxMouseEvent& event)
             {
                 DeleteCursor(m_pSelectedCursor);
                 m_pSelectedCursor = NULL;
+                ShowCtrl(eCT_Invalid);
             }
         }
     }
-    
 }
 
 CGradientCursor* CGradientCtrl::GetGradientCursor(wxPoint point)
@@ -293,10 +285,10 @@ CGradientCursor* CGradientCtrl::GetGradientCursor(wxPoint point)
         eType = eCT_Color;
         pList = &m_colorCursorList;
     }
-    if (m_maskIconRect.Contains(point))
+    if (m_alphaIconRect.Contains(point))
     {
         eType = eCT_Alpha;
-        pList = &m_maskCursorList;
+        pList = &m_alphaCursorList;
     }
     if (eType != eCT_Invalid)
     {
@@ -337,6 +329,8 @@ void CGradientCtrl::SetSelectedCursorPos(wxPoint point)
     {
         float fPos = CalCursorPos(point);
         m_pSelectedCursor->SetPos(fPos);
+        std::vector<CGradientCursor*>* list = m_pSelectedCursor->GetType() == eCT_Alpha ? &m_alphaCursorList : &m_colorCursorList;
+        std::sort(list->begin(), list->end(), lessmark);
     }
 }
 
@@ -362,7 +356,7 @@ void CGradientCtrl::ShowCtrl(ECursorType eType)
         bShowSlider = true;
     }
     m_pColoutPicker->Show(bShowPicker);
-    m_pMaskSlider->Show(bShowSlider);
+    m_pAlphaSlider->Show(bShowSlider);
     m_pCtrlPanel->GetSizer()->RecalcSizes();
 }
 
@@ -429,7 +423,7 @@ float CGradientCtrl::GetNearestCursorPos(CGradientCursor* pCursor)
     }
     else
     {
-        pList = &m_maskCursorList;
+        pList = &m_alphaCursorList;
     }
 
     for (auto itr : *pList)
@@ -446,14 +440,44 @@ float CGradientCtrl::GetNearestCursorPos(CGradientCursor* pCursor)
     return fRet;
 }
 
-std::vector<CGradientCursor*>& CGradientCtrl::GetColorList()
+const std::vector<CGradientCursor*>& CGradientCtrl::GetColorList() const
 {
     return m_colorCursorList;
 }
 
-std::vector<CGradientCursor*>& CGradientCtrl::GetMaskList()
+const std::vector<CGradientCursor*>& CGradientCtrl::GetAlphaList() const
 {
-    return m_maskCursorList;
+    return m_alphaCursorList;
+}
+
+void CGradientCtrl::Reset(bool bAddDefaultColorCursor, bool bAddDefaultAlphaCursor)
+{
+    for (auto iter : m_colorCursorList)
+    {
+        BEATS_SAFE_DELETE(iter);
+    }
+    for (auto iter : m_alphaCursorList)
+    {
+        BEATS_SAFE_DELETE(iter);
+    }
+
+    m_colorCursorList.clear();
+    m_alphaCursorList.clear();
+    if (bAddDefaultColorCursor)
+    {
+        m_colorCursorList.push_back(new CGradientCursor(0.0, *wxWHITE, eCT_Color));
+        m_colorCursorList.push_back(new CGradientCursor(1.0, *wxWHITE, eCT_Color));
+    }
+    if (bAddDefaultAlphaCursor)
+    {
+        m_alphaCursorList.push_back(new CGradientCursor(0.0, *wxWHITE, eCT_Alpha));
+        m_alphaCursorList.push_back(new CGradientCursor(1.0, *wxWHITE, eCT_Alpha));
+    }
+}
+
+const wxImage& CGradientCtrl::GetImage() const
+{
+    return m_pGradientColorBoard->GetImage();
 }
 
 wxColor CGradientCtrl::GetColorByPos(float fPos)

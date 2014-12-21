@@ -5,15 +5,6 @@
 class CPolygonModeRenderStateParam : public CRenderStateParamBase
 {
 public:
-    enum EPolygonModeStateParam
-    {
-        ePMSP_PolyFrontMode = 0x0404,//GL_FRONT
-        ePMSP_PolyBackMode,
-
-        eSMSP_Count,
-        eSMSP_Force32Bit = 0xFFFFFFFF,
-    };
-
     enum EPolygonModeType
     {
         ePMT_POINTS = 0x1B00, //GL_POINT
@@ -30,18 +21,18 @@ public:
 
     virtual void Apply() override;
 
-    virtual ERenderState GetRenderStateType() const;
+    virtual ERenderStateParamType GetRenderStateType() const override;
 
-    virtual bool operator==( const CRenderStateParamBase& other ) const;
+    virtual bool operator==(const CRenderStateParamBase& other) const override;
 
-    virtual bool operator!=( const CRenderStateParamBase& other ) const;
+    virtual bool operator!=(const CRenderStateParamBase& other) const override;
 
-    void SetValue( EPolygonModeStateParam type, EPolygonModeType value );
-    void GetValue( EPolygonModeStateParam& type, EPolygonModeType& value ) const;
+    void SetValue(EPolygonModeType frontType, EPolygonModeType backType);
+    void GetValue(EPolygonModeType& frontType, EPolygonModeType& backType) const;
 
     virtual CRenderStateParamBase* Clone() override;
 private:
-    EPolygonModeStateParam m_type;
-    EPolygonModeType m_nValue;
+    EPolygonModeType m_frontValue;
+    EPolygonModeType m_backValue;
 };
 #endif

@@ -3,87 +3,62 @@
 #include "Utility/BeatsUtility/Serializer.h"
 #include "Utility/BeatsUtility/StringHelper.h"
 #include <wx/srchctrl.h>
-#include "Resource/ResourcePathManager.h"
-#include "Utf8String.h"
+#include "Resource/ResourceManager.h"
+
+#include "Utility/BeatsUtility/FilePathTool.h"
+#include "wx/grid.h"
+#include "Utility/BeatsUtility/EnumStrGenerator.h"
+#include "EditorMainFrame.h"
+#include "EngineEditor.h"
+#include "RapidXML/rapidxml_print.hpp"
+#include "Utility/BeatsUtility/md5.h"
 
 BEGIN_EVENT_TABLE(CEditLanguageDialog, CEditDialogBase)
     EVT_BUTTON(ID_BUTTON_ADD, CEditLanguageDialog::OnButtonAdd)
     EVT_BUTTON(ID_BUTTON_EXPORT, CEditLanguageDialog::OnButtonExport)
-    EVT_BUTTON(ID_BUTTON_CLEAR, CEditLanguageDialog::OnButtonClear)
+    EVT_BUTTON(ID_BUTTON_IMPORT, CEditLanguageDialog::OnButtonImport)
+    EVT_BUTTON(ID_BUTTON_SAVE, CEditLanguageDialog::OnButtonSave)
     EVT_SEARCHCTRL_SEARCH_BTN(ID_SERACH_LANGUAGE, CEditLanguageDialog::OnSearchLanguage)
     EVT_TEXT_ENTER(ID_SERACH_LANGUAGE,CEditLanguageDialog::OnSearchEnterLanguange)
     EVT_SEARCHCTRL_CANCEL_BTN(ID_SERACH_LANGUAGE, CEditLanguageDialog::OnCancleSrch)
     EVT_TEXT(ID_SERACH_LANGUAGE, CEditLanguageDialog::OnSrchUpdate)
-    EVT_TEXT(ID_TEXT_ENUM, CEditLanguageDialog::OnEnumTextUpdate)
     EVT_IDLE(CEditLanguageDialog::OnSrchIdle)
-    EVT_DATAVIEW_SELECTION_CHANGED(ID_DATAVIEW_LANGUAGE, CEditLanguageDialog::OnSelectDataView)
-    EVT_DATAVIEW_ITEM_CONTEXT_MENU(ID_DATAVIEW_LANGUAGE, CEditLanguageDialog::OnContextMenu)
-    EVT_MENU(wxID_ANY, CEditLanguageDialog::OnMenuEvent)
+    EVT_GRID_CELL_CHANGED(CEditLanguageDialog::OnGridDataChanged)
+    EVT_GRID_LABEL_RIGHT_CLICK(CEditLanguageDialog::OnRightClickOnGridLabel)
 END_EVENT_TABLE()
 
 CEditLanguageDialog::CEditLanguageDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos, const wxSize &size, long style, const wxString &name)
     : CEditDialogBase(parent, id, title, pos, size, style, name)
-    , m_selectRow(-1)
     , m_uLastEnumSearchTextUpdateTime(0)
     , m_bEnumSearchTextUpdate(false)
-    , m_strChangeEnum(_T(""))
-    , m_tmpBeforeStr(_T(""))
-    , m_bAddSaveSuc(false)
-    , m_bIsChange(false)
-    , m_bISLanguageSwitch(false)
-    , m_bIsSave(false)
 {
     wxBoxSizer* pSizer = new wxBoxSizer(wxVERTICAL);
     SetSizer(pSizer);
 
     wxBoxSizer* pTopSizer = new wxBoxSizer(wxVERTICAL);
-    wxBoxSizer* pBottomSizer = new wxBoxSizer(wxVERTICAL);
-    wxBoxSizer* pLeftChildeSizer1 = new wxBoxSizer(wxHORIZONTAL);
-    wxBoxSizer* pLeftChildeSizer2 = new wxBoxSizer(wxHORIZONTAL);
-    wxBoxSizer* pLeftChildeSizer3 = new wxBoxSizer(wxHORIZONTAL);
-    wxBoxSizer* pLeftChildeSizer4 = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer* pBottomSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    m_pDataViewListLanguage = new wxDataViewListCtrl(this, ID_DATAVIEW_LANGUAGE);
-    m_pButtonClear = new wxButton(this, ID_BUTTON_CLEAR, _T("Clear"), wxDefaultPosition,wxSize(60,30));
+    m_pLanguageGrid = new wxGrid(this, ID_LANGUAGE_GRID);
+    m_pLanguageGrid->SetDefaultCellOverflow(false);
+    m_pButtonSave = new wxButton(this, ID_BUTTON_SAVE, _T("Save"), wxDefaultPosition,wxSize(60,30));
     m_pButtonAdd = new wxButton(this, ID_BUTTON_ADD, _T("Add"), wxDefaultPosition,wxSize(60,30));
-    m_pButtonExport = new wxButton(this, ID_BUTTON_EXPORT, _T("Export"), wxDefaultPosition,wxSize(60,30));
-    m_pTextEnum = new wxTextCtrl(this, ID_TEXT_ENUM, _T("eL_"));
-    m_pTextChinese = new wxTextCtrl(this, ID_TEXT_CHINESE);
-    m_pTextEnglish = new wxTextCtrl(this, ID_TEXT_ENGLISH);
-    m_pStaticTextEnum = new wxStaticText(this, wxID_ANY, _T("  Enum "));
-    m_pStaticTextChinese = new wxStaticText(this, wxID_ANY, _T("Chinese"));
-    m_pStaticTextEnglish = new wxStaticText(this, wxID_ANY, _T(" English"));
+    m_pButtonExport = new wxButton(this, ID_BUTTON_EXPORT, _T("Export"), wxDefaultPosition, wxSize(60, 30));
+    m_pButtonImport = new wxButton(this, ID_BUTTON_IMPORT, _T("导入"), wxDefaultPosition, wxSize(60, 30));
     m_pSrchCtrl = new wxSearchCtrl(this, ID_SERACH_LANGUAGE, _T(""),wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-    m_pSrchText = new wxStaticText(this, wxID_ANY, _T("枚举搜索："));
 
-    pSizer->Add(pTopSizer, 0.5, wxGROW|wxALL, 5);
-    pSizer->Add(pBottomSizer, 1, wxGROW|wxALL, 5);
+    pSizer->Add(pTopSizer, 1, wxGROW|wxALL, 5);
+    pSizer->Add(pBottomSizer, 0, wxGROW|wxALL, 5);
+    pTopSizer->Add(m_pLanguageGrid, 1, wxGROW | wxALL, 5);
 
-    pTopSizer->Add(pLeftChildeSizer1, 1, wxGROW|wxALL, 20);
-    pTopSizer->Add(pLeftChildeSizer2, 1, wxGROW|wxALL, 20);
-    pTopSizer->Add(pLeftChildeSizer3, 1, wxGROW|wxALL, 20);
-    pTopSizer->Add(pLeftChildeSizer4, 1, wxGROW|wxALL, 10);
-
-    pLeftChildeSizer1->Add(m_pStaticTextEnum, 0, wxGROW|wxALL, 5);
-    pLeftChildeSizer1->Add(m_pTextEnum, 1, wxGROW|wxALL, 5);
-    pLeftChildeSizer2->Add(m_pStaticTextChinese, 0, wxGROW|wxALL, 5);
-    pLeftChildeSizer2->Add(m_pTextChinese, 1, wxGROW|wxALL, 5);
-    pLeftChildeSizer3->Add(m_pStaticTextEnglish, 0, wxGROW|wxALL, 5);
-    pLeftChildeSizer3->Add(m_pTextEnglish, 1, wxGROW|wxALL, 5);
-    pLeftChildeSizer4->AddStretchSpacer(1);
-    pLeftChildeSizer4->Add(m_pButtonClear, 0, wxGROW|wxALL, 10);
-    pLeftChildeSizer4->Add(m_pButtonAdd, 0, wxGROW|wxALL, 10);
-    pLeftChildeSizer4->Add(m_pButtonExport, 0, wxGROW|wxALL, 10);
-    pLeftChildeSizer4->AddStretchSpacer(1);
-
-    pBottomSizer->Add(m_pDataViewListLanguage, 1, wxGROW|wxALL, 5);
-    pBottomSizer->Add(m_pSrchText, 0, wxGROW|wxALL, 5);
-    pBottomSizer->Add(m_pSrchCtrl, 0, wxGROW|wxALL, 5);
+    pBottomSizer->Add(m_pSrchCtrl, 1, wxGROW | wxALL, 5);
+    pBottomSizer->Add(m_pButtonSave, 0, wxALL, 5);
+    pBottomSizer->Add(m_pButtonAdd, 0, wxALL, 5);
+    pBottomSizer->Add(m_pButtonExport, 0, wxALL, 5);
+    pBottomSizer->Add(m_pButtonImport, 0, wxALL, 5);
 
     m_pSrchCtrl->ShowCancelButton(true);
-    InitLanguageMap();
-    InitDataViewListCtrl();
-    SetTextCtrlEnum();
+    m_pLanguageGrid->CreateGrid(0, eLT_Count + 1);
+    InitLanguageGrid();
 }
 
 CEditLanguageDialog::~CEditLanguageDialog()
@@ -91,186 +66,251 @@ CEditLanguageDialog::~CEditLanguageDialog()
 
 }
 
-void CEditLanguageDialog::InitLanguageMap()
+void CEditLanguageDialog::InitLanguageGrid()
 {
-    TString filePath = CResourcePathManager::GetInstance()->GetResourcePath(CResourcePathManager::eRPT_Language);
-    filePath.append(_T("/Language.bin"));
-    int count = 0;
-    CSerializer tmp(filePath.c_str());
-    tmp >> count;
-    for (int i = 0; i < count; i++)
+    std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+    std::map<TString, TString>& languageTagMap = CLanguageManager::GetInstance()->GetLanguageTagMap();
+    for (int i = eLT_Chinese; i < eLT_Count; ++i)
     {
-        TString tmpstrEnum;
-        tmp >> tmpstrEnum;
-        std::string tmpstrChinese;
-        tmp >> tmpstrChinese;
-        std::string tmpstrEnglish;
-        tmp >> tmpstrEnglish;
-        std::vector<TString> mLanguageVector;
-        mLanguageVector.push_back(Utf8ToTString(tmpstrChinese));
-        mLanguageVector.push_back(Utf8ToTString(tmpstrEnglish));
-        m_languageMap.emplace(tmpstrEnum, std::move(mLanguageVector));
+        m_pLanguageGrid->SetColLabelValue(i, pszLanguageTypeString[i]);
     }
-}
-
-void CEditLanguageDialog::InitDataViewListCtrl()
-{
-    m_pDataViewListLanguage->AppendTextColumn("枚举", wxDATAVIEW_CELL_INERT, 130);
-    m_pDataViewListLanguage->AppendTextColumn("中文", wxDATAVIEW_CELL_INERT, 130);
-    m_pDataViewListLanguage->AppendTextColumn("英文", wxDATAVIEW_CELL_INERT, 130);
-    AppendDataViewListCtrl();
+    m_pLanguageGrid->SetColLabelValue(eLT_Count, "Tag");
+    m_pLanguageGrid->InsertRows(0, languageMap.size(), false);
+    uint32_t uRowCounter = 0;
+    for (auto iter = languageMap.begin(); iter != languageMap.end(); ++iter)
+    {
+        for (auto subIter = iter->second.begin(); subIter != iter->second.end(); ++subIter)
+        {
+            m_pLanguageGrid->SetCellValue(uRowCounter, subIter->first, wxString::FromUTF8(subIter->second.c_str()));
+        }
+        m_pLanguageGrid->SetRowLabelValue(uRowCounter, wxString::FromUTF8(iter->first.c_str()));
+        if (languageTagMap.find(iter->first) != languageTagMap.end())
+        {
+            m_pLanguageGrid->SetCellValue(uRowCounter, eLT_Count, wxString::FromUTF8(languageTagMap[iter->first].c_str()));
+        }
+        ++uRowCounter;
+    }
+    m_pLanguageGrid->SetRowLabelSize(wxGRID_AUTOSIZE);
 }
 
 void CEditLanguageDialog::OnButtonAdd( wxCommandEvent& /*event*/ )
 {
-    if (m_pButtonAdd->GetLabel() == _T("Add") ||
-        m_pButtonAdd->GetLabel() == L10N_T(eL_Add))
+    wxString strEnum = wxGetTextFromUser(_T("Input enum string"), _T("Enum string"), _T("eLTT_"));
+    AddNewLanguageText((TString)strEnum);
+}
+
+void ReadServerErrCodeFile(std::map<uint32_t, std::map<ELanguageType, TString> >& languageServerErrCodeMap)
+{
+    TString filePath = CResourceManager::GetInstance()->GetResourcePath(eRT_Language);
+    filePath.append(_T("\\")).append("networkError.xml");
+    if (CFilePathTool::GetInstance()->Exists(filePath.c_str()))
     {
-        AddSaveButtonPrompt();
-        if (m_bAddSaveSuc)
+        rapidxml::file<> fdoc(filePath.c_str());
+        rapidxml::xml_document<> errCodeXML;
+        try
         {
-            AddLanguage();
-            AppendDataViewListCtrl();
-            ClearTextCtrl();
-            m_pSrchCtrl->SetValue(_T(""));
+            errCodeXML.parse<rapidxml::parse_default>(fdoc.data());
         }
-        m_bAddSaveSuc = false;
+        catch (rapidxml::parse_error err)
+        {
+            BEATS_ASSERT(false, _T("Load config file %s faled!/n%s/n"), "errno.xml", err.what());
+        }
+        rapidxml::xml_node<>* pRootElement = errCodeXML.first_node("config");
+        if (pRootElement)
+        {
+            for (auto element = pRootElement->first_node(); element; element = element->next_sibling())
+            {
+                std::map<ELanguageType, TString> curMap;
+                curMap[eLT_Chinese] = element->first_attribute("lang_zhCN")->value();
+                curMap[eLT_English] = element->first_attribute("lang_enUS")->value();
+                languageServerErrCodeMap[_tstoi(element->first_attribute("code")->value())] = curMap;
+            }
+        }
     }
-    else if (m_pButtonAdd->GetLabel() == _T("Save") ||
-        m_pButtonAdd->GetLabel() == L10N_T(eL_Save))
+}
+
+void ExportLanguage()
+{
+    std::map<uint32_t, std::map<ELanguageType, TString> > languageServerErrCodeMap;
+    ReadServerErrCodeFile(languageServerErrCodeMap);
+    std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+    // 1. Export Bin File.
+    CSerializer fileData;
+    for (int i = 0; i < eLT_Count; ++i)
     {
-        AddSaveButtonPrompt();
-        if (m_bAddSaveSuc)
+        fileData << languageMap.size();
+        for (auto iter = languageMap.begin(); iter != languageMap.end(); ++iter)
         {
-            m_pButtonAdd->SetLabel(m_bISLanguageSwitch ? L10N_T(eL_Add) : _T("Add"));
-            DleLanguage();
-            AddLanguage();
-            AppendDataViewListCtrl();
-            ClearTextCtrl();
-            m_pSrchCtrl->SetValue(_T(""));
+            auto subIter = iter->second.find((ELanguageType)i);
+            if (subIter != iter->second.end())
+            {
+                fileData << subIter->second;
+            }
+            else
+            {
+                fileData << iter->first;
+            }
         }
-        m_bAddSaveSuc = false;
-        m_bIsChange = false;
-        m_bIsSave = false;
+        bool bRet = false;
+        for (auto iter : languageServerErrCodeMap)
+        {
+            auto subIter = iter.second.find((ELanguageType)i);
+            if (subIter != iter.second.end())
+            {
+                if (!bRet)
+                {
+                    fileData << languageServerErrCodeMap.size();
+                    bRet = true;
+                }
+                fileData << iter.first;
+                fileData << iter.second[(ELanguageType)i];
+            }
+        }
+        TString strFilePath = CResourceManager::GetInstance()->GetResourcePath(eRT_Language);
+        strFilePath.append(_T("/")).append(pszLanguageTypeString[i]).append(_T(".bin"));
+        fileData.Deserialize(strFilePath.c_str(), _T("wb+"));
+        fileData.Reset();
     }
+    //2. Export enum file.
+    std::string content;
+    content.append("#ifndef BEYONDENGINEEDITOR_LANGUAGEENUM_H__INCLUDE\n#define BEYONDENGINEEDITOR_LANGUAGEENUM_H__INCLUDE\n").append("\nenum ELanguageTextType\n{\n");
+    for (auto iter = languageMap.begin(); iter != languageMap.end(); iter++)
+    {
+        content.append("    ").append(iter->first.c_str()).append(",\n");
+    }
+    content.append("\n    eL_Count,\n").append("    eL_Force32Bit = 0xFFFFFFFF\n};\n");
+    content.append("#define LUA_LANGUAGE_MAP(LM)\\\n");
+    int32_t nCounter = 0;
+    for (auto iter = languageMap.begin(); iter != languageMap.end(); ++iter)
+    {
+        TCHAR szValueBuffer[32];
+        _stprintf(szValueBuffer, "%d", nCounter++);
+        content.append("    ").append("LM(").append(iter->first.c_str()).append(",").append(szValueBuffer).append(")\\\n");
+    }
+    content.append("\n#endif");
+    fileData.Reset();
+    fileData << content;
+    fileData.SetWritePos(fileData.GetWritePos() - 1);// back scape the 0 in the string end.
+    bool bFileTheSame = false;
+    const TString strHeaderFilePath = CResourceManager::GetInstance()->GetResourcePath(eRT_SourceCode) + _T("/Language/Language.h");
+    if (CFilePathTool::GetInstance()->Exists(strHeaderFilePath.c_str()))
+    {
+        CSerializer tmpData(strHeaderFilePath.c_str(), "rb");
+        if (tmpData.GetWritePos() == fileData.GetWritePos())
+        {
+            CMD5 tmpMD5(tmpData.GetBuffer(), tmpData.GetWritePos());
+            CMD5 currentMD5(fileData.GetBuffer(), fileData.GetWritePos());
+            bFileTheSame = tmpMD5 == currentMD5;
+        }
+    }
+    if (!bFileTheSame)
+    {
+        fileData.Deserialize(strHeaderFilePath.c_str(), _T("wb+"));
+    }
+
+    //3. Export txt file.
+    for (int i = 0; i < eLT_Count; ++i)
+    {
+        bool bHasData = false;
+        fileData.Reset();
+        for (auto iter = languageMap.begin(); iter != languageMap.end(); ++iter)
+        {
+            auto subIter = iter->second.find((ELanguageType)i);
+            if (subIter != iter->second.end())
+            {
+                TString strData = (TString)(wxString::FromUTF8(subIter->second.c_str()));
+                if (!bHasData && !strData.empty())
+                {
+                    bHasData = true;
+                }
+                fileData << strData;
+                fileData.SetWritePos(fileData.GetWritePos() - 1);
+            }
+            fileData << "\n";
+            fileData.SetWritePos(fileData.GetWritePos() - 1);
+        }
+        if (bHasData)
+        {
+            TString strFilePath = CResourceManager::GetInstance()->GetResourcePath(eRT_Resource);
+            strFilePath.append(_T("/")).append(pszLanguageTypeString[i]).append(_T(".txt"));
+            fileData.Deserialize(strFilePath.c_str(), _T("wt+"));
+        }
+    }
+    fileData.Reset();
+    const std::map<TString, TString>& languageTagMap = CLanguageManager::GetInstance()->GetLanguageTagMap();
+    for (auto iter = languageTagMap.begin(); iter != languageTagMap.end(); ++iter)
+    {
+        TString strData = (TString)(wxString::FromUTF8(iter->second.c_str()));
+        fileData << strData;
+        fileData.SetWritePos(fileData.GetWritePos() - 1);
+        fileData << "\n";
+        fileData.SetWritePos(fileData.GetWritePos() - 1);
+    }
+    TString strFilePath = CResourceManager::GetInstance()->GetResourcePath(eRT_Resource);
+    strFilePath.append(_T("/")).append("Tag").append(_T(".txt"));
+    fileData.Deserialize(strFilePath.c_str(), _T("wt+"));
+
+    fileData.Reset();
+    for (auto iter = languageMap.begin(); iter != languageMap.end(); ++iter)
+    {
+        TString strData = (TString)(wxString::FromUTF8(iter->first.c_str()));
+        fileData << strData;
+        fileData.SetWritePos(fileData.GetWritePos() - 1);
+        fileData << "\n";
+        fileData.SetWritePos(fileData.GetWritePos() - 1);
+    }
+    strFilePath = CResourceManager::GetInstance()->GetResourcePath(eRT_Resource);
+    strFilePath.append(_T("/")).append(_T("Enum.txt"));
+    fileData.Deserialize(strFilePath.c_str(), _T("wt+"));
 }
 
 void CEditLanguageDialog::OnButtonExport( wxCommandEvent& /*event*/ )
 {
-    // 1. Export Bin File.
-    bool bExportBin = false;
-    int count = m_languageMap.size();
-    CSerializer tmp;
-    tmp << count;
-    for (auto iter = m_languageMap.begin(); iter != m_languageMap.end(); iter++)
-    {
-        tmp << iter->first;
-        tmp << TStringToUtf8(iter->second[0]);
-        tmp << TStringToUtf8(iter->second[1]);
-    }
-    TString FilePath = CResourcePathManager::GetInstance()->GetResourcePath(CResourcePathManager::eRPT_Language) + _T("/Language.bin");
-    bExportBin = tmp.Deserialize(FilePath.c_str());
-
-    //2. Export enum file.
-    bool bExporthead;
-    std::string content;
-    content.append("#ifndef BEYONDENGINEEDITOR_LANGUAGEENUM_H__INCLUDE\n#define BEYONDENGINEEDITOR_LANGUAGEENUM_H__INCLUDE\n").append("\nenum EText\n{\n");
-    char szBuffer[128];
-    for (auto iter = m_languageMap.begin(); iter != m_languageMap.end(); iter++)
-    {
-        CStringHelper::GetInstance()->ConvertToCHAR(iter->first.c_str(), szBuffer, 128);
-        content.append("    ").append(szBuffer).append(",\n");
-    }
-    content.append("\n    eL_Count,\n").append("    eL_Force32Bit = 0xFFFFFFFF\n};\n");
-    content.append("\n#endif");
-    tmp.Reset();
-    tmp << content;
-    FilePath = CResourcePathManager::GetInstance()->GetResourcePath(CResourcePathManager::eRPT_SourceCode) + _T("/Language.h");
-    bExporthead = tmp.Deserialize(FilePath.c_str(), _T("wt+"));
-
-    //Export hint.
-    TString strMessage;
-    if (bExportBin && bExporthead)
-    {
-        strMessage = _T("Export Bin File and enum file are succeed.");
-    }
-    else
-    {
-        strMessage = _T("Export Bin File or enum file are failed.");
-    }
-    wxMessageDialog* pMessageDlg = new wxMessageDialog(this, strMessage, _T("Edit Language"), wxOK|wxCENTRE|wxICON_NONE);
-    pMessageDlg->ShowModal();
+    ExportLanguage();
+    wxMessageBox(_T("Export Bin File and enum file are succeed."), _T("Edit Language"), wxOK | wxCENTRE | wxICON_NONE, this);
 }
 
 void CEditLanguageDialog::OnSearchLanguage( wxCommandEvent& event )
 {
-    TString strEnum = event.GetString();
+    TString strEnum = event.GetString().Lower();
     SearchEnum(strEnum);
 }
 
 void CEditLanguageDialog::OnSearchEnterLanguange( wxCommandEvent& event )
 {
-    TString strEnum = event.GetString();
+    TString strEnum = event.GetString().Lower();
     SearchEnum(strEnum);
 }
 
-void CEditLanguageDialog::AppendDataViewListCtrl()
+void CEditLanguageDialog::OnButtonSave( wxCommandEvent& /*event*/ )
 {
-    m_pDataViewListLanguage->DeleteAllItems();
-    wxVector<wxVariant> data;
-    for (auto iter = m_languageMap.begin(); iter != m_languageMap.end(); iter++)
-    {
-        data.clear();
-        data.push_back( iter->first );
-        data.push_back( iter->second[0] );
-        data.push_back( iter->second[1] );
+    CLanguageManager::GetInstance()->SaveLanguageListToFile();
 
-        m_pDataViewListLanguage->AppendItem( data );
-    }
-}
-
-void CEditLanguageDialog::OnButtonClear( wxCommandEvent& /*event*/ )
-{
-    m_bIsSave = false;
-    ClearTextCtrl();
-    m_pButtonAdd->SetLabel(m_bISLanguageSwitch ? L10N_T(eL_Add) : _T("Add"));
-}
-
-void CEditLanguageDialog::OnSelectDataView( wxDataViewEvent& /*event*/ )
-{
-    m_selectRow = m_pDataViewListLanguage->GetSelectedRow();
-    if (m_selectRow == -1)
-    {
-        return;
-    }
-    wxString strEnum = m_pDataViewListLanguage->GetTextValue(m_selectRow, 0);
-    m_strChangeEnum = strEnum;
-}
-
-void CEditLanguageDialog::ClearTextCtrl()
-{
-    m_pTextEnum->SetValue(_T("eL_"));
-    m_pTextChinese->Clear();
-    m_pTextEnglish->Clear();
+    down_cast<CEditorMainFrame*>(GetParent())->LanguageSwitch(CLanguageManager::GetInstance()->GetCurrentLanguage(), true);
+    wxMessageBox(_T("保存成功"));
 }
 
 void CEditLanguageDialog::OnCancleSrch( wxCommandEvent& /*event*/ )
 {
-    AppendDataViewListCtrl();
 }
 
 void CEditLanguageDialog::SearchEnum( TString str )
 {
-    for (auto iter = m_languageMap.begin(); iter != m_languageMap.end(); iter++)
+    std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+    for (auto iter = languageMap.begin(); iter != languageMap.end(); iter++)
     {
         if (iter->first == str)
         {
-            m_pDataViewListLanguage->DeleteAllItems();
             wxVector<wxVariant> data;
             data.push_back( iter->first );
-            data.push_back( iter->second[0] );
-            data.push_back( iter->second[1] );
-            m_pDataViewListLanguage->AppendItem( data );
+            for (int i = 0; i < eLT_Count; ++i)
+            {
+                auto subIter = iter->second.find((ELanguageType)i);
+                if (subIter != iter->second.end())
+                {
+                    data.push_back(wxString::FromUTF8(subIter->second.c_str()));
+                }
+            }
         }
     }
 }
@@ -281,182 +321,263 @@ void CEditLanguageDialog::OnSrchUpdate( wxCommandEvent& /*event*/ )
     m_bEnumSearchTextUpdate = true;
 }
 
-void CEditLanguageDialog::OnEnumTextUpdate( wxCommandEvent& /*event*/ )
-{
-    wxString tmpNowStr;
-    tmpNowStr = m_pTextEnum->GetValue();
-    size_t uStrLen = _tcslen(_T("eL_"));
-    if (tmpNowStr.Left(uStrLen) != wxT("eL_"))
-    {
-         wxString tmpStr = _T("eL_");
-         if (tmpNowStr.size() < uStrLen)
-         {
-             m_pTextEnum->SetValue(tmpStr);
-         }
-         else if (tmpNowStr.AfterFirst(wxUniChar('_')) != wxT(""))
-         {
-             m_pTextEnum->SetValue(tmpStr + tmpNowStr.AfterFirst(wxUniChar('_')));
-         }
-         else
-         {
-             m_pTextEnum->SetValue(m_tmpBeforeStr);
-         }
-         m_pTextEnum->SetInsertionPointEnd();
-    }
-    m_tmpBeforeStr = m_pTextEnum->GetValue();
-}
-
 void CEditLanguageDialog::OnSrchIdle( wxIdleEvent& /*event*/ )
 {
     if (m_bEnumSearchTextUpdate && GetTickCount() - m_uLastEnumSearchTextUpdateTime > 700)
     {
         m_bEnumSearchTextUpdate = false;
-        wxString szText = m_pSrchCtrl->GetValue();
-        m_pDataViewListLanguage->DeleteAllItems();
-        for (auto iter = m_languageMap.begin(); iter != m_languageMap.end(); ++iter)
+        wxString szText = m_pSrchCtrl->GetValue().Lower();
+        std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+        int row = 0;
+        for (auto iter = languageMap.begin(); iter != languageMap.end(); iter++)
         {
-            wxString lableText = iter->first;
-            bool bMatch = lableText.Find(szText) != -1;
+            wxString strEnum = iter->first;
+            bool bMatch = strEnum.Lower().find(szText.utf8_str()) != -1;
             if (bMatch)
             {
-                wxVector<wxVariant> data;
-                data.push_back( iter->first );
-                data.push_back( iter->second[0] );
-                data.push_back( iter->second[1] );
-                m_pDataViewListLanguage->AppendItem( data );
+                m_pLanguageGrid->ShowRow(row);
             }
+            else
+            {
+                bool bMatchSub = false;
+                for (auto subIter = iter->second.begin(); subIter != iter->second.end(); subIter++)
+                {
+                    wxString strEnum = subIter->second;
+                    bMatchSub = strEnum.Lower().find(szText.utf8_str()) != -1;
+                    if (bMatchSub)
+                    {
+                        break;
+                    }
+                }
+                if (bMatchSub)
+                {
+                    m_pLanguageGrid->ShowRow(row);
+                }
+                else
+                {
+                    m_pLanguageGrid->HideRow(row);
+                }
+            }
+            row++;
         }
     }
 }
 
-void CEditLanguageDialog::OnContextMenu( wxDataViewEvent& /*event*/ )
+void CEditLanguageDialog::OnGridDataChanged(wxGridEvent& event)
 {
-    wxMenu menu;
-    menu.Append( ID_POPMENU_CHANGE, m_bISLanguageSwitch ? L10N_T(eL_Change) : _T("Change"));
-    menu.Append( ID_POPMENU_DLE, m_bISLanguageSwitch ? L10N_T(eL_Delete) : _T("Delete"));
-    m_pDataViewListLanguage->PopupMenu(&menu);
-}
-
-void CEditLanguageDialog::OnMenuEvent( wxCommandEvent& event )
-{
-    int id = event.GetId();
-    if (id == ID_POPMENU_CHANGE)
+    std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+    std::map<TString, TString>& languageTagMap = CLanguageManager::GetInstance()->GetLanguageTagMap();
+    int nRow = event.GetRow();
+    int nCol = event.GetCol();
+    wxString strValue = m_pLanguageGrid->GetCellValue(nRow, nCol);
+    TString strEnumStr = m_pLanguageGrid->GetRowLabelValue(nRow);
+    auto languageIter = languageMap.find(strEnumStr);
+    BEATS_ASSERT(languageIter != languageMap.end());
+    if (nCol == eLT_Count)
     {
-        if (m_selectRow != -1)
+        if (strValue.empty())
         {
-            m_pButtonAdd->SetLabel(m_bISLanguageSwitch ? L10N_T(eL_Save) : _T("Save"));
-            ChangeLanguage();
-            m_bIsChange = true;
-            m_bIsSave = true;
+            languageTagMap.erase(strEnumStr);
         }
-    }
-    else if (id == ID_POPMENU_DLE)
-    {
-        DleLanguage();
-        AppendDataViewListCtrl();
-    }
-}
-
-void CEditLanguageDialog::ChangeLanguage()
-{
-    TString strDataviewEnum = m_pDataViewListLanguage->GetTextValue(m_selectRow, 0);
-    if (m_languageMap.find(strDataviewEnum) != m_languageMap.end())
-    {
-         m_pTextEnum->SetValue(m_languageMap.find(strDataviewEnum)->first);
-         m_pTextChinese->SetValue(m_languageMap.find(strDataviewEnum)->second[0]);
-         m_pTextEnglish->SetValue(m_languageMap.find(strDataviewEnum)->second[1]);
-    }
-}
-
-void CEditLanguageDialog::AddLanguage()
-{
-    TString strInputEnum = m_pTextEnum->GetValue();
-    TString strInputChinese = m_pTextChinese->GetValue();
-    TString strInputEnglish = m_pTextEnglish->GetValue();
-    if (strInputEnum == _T("eL_") || strInputChinese == _T("") || strInputChinese == _T("") )
-    {
-        return;
-    }
-    std::vector<TString> mLanguageVector;
-    mLanguageVector.push_back(strInputChinese);
-    mLanguageVector.push_back(strInputEnglish);
-    m_languageMap.insert(std::map<TString, std::vector<TString>>::value_type(strInputEnum,mLanguageVector));
-}
-
-void CEditLanguageDialog::DleLanguage()
-{
-    std::map<TString, std::vector<TString>>::iterator iter;
-    iter = m_languageMap.find(m_strChangeEnum);
-    if (iter != m_languageMap.end())
-    {
-        m_languageMap.erase(iter);
-    }
-    m_strChangeEnum = _T("");
-}
-
-void CEditLanguageDialog::AddSaveButtonPrompt()
-{
-    TString strMessage;
-    TString strInputEnum = m_pTextEnum->GetValue();
-    if (strInputEnum.size() == 3)
-    {
-        strMessage = _T("Enum not only as 'eL_'!");
-    }
-    else if (m_languageMap.find(strInputEnum) != m_languageMap.end() && m_bIsChange == false)
-    {
-        strMessage = _T("Enum has been exist!");
-    }
-    else if (m_pTextChinese->GetValue() == _T(""))
-    {
-        strMessage = _T("Chinese is empty!");
-    }
-    else if(m_pTextEnglish->GetValue() == _T(""))
-    {
-        strMessage = _T("English is empty!");
+        else
+        {
+            languageTagMap[strEnumStr] = strValue.ToUTF8();
+        }
     }
     else
     {
-        strMessage = _T("Added and saved successfully!");
-        m_bAddSaveSuc = true;
+        languageIter->second[(ELanguageType)nCol] = strValue.ToUTF8();
     }
-    wxMessageDialog* pMessageDlg = new wxMessageDialog(this, strMessage, _T("Edit Language"), wxOK|wxCENTRE|wxICON_NONE);
-    pMessageDlg->ShowModal();
 }
 
-void CEditLanguageDialog::SetTextCtrlEnum()
+void CEditLanguageDialog::OnRightClickOnGridLabel(wxGridEvent& event)
 {
-    wxArrayString includeList; 
-    TCHAR szBuffer;
-    for (int i = 65; i <= 90; ++i)
+    int nRow = event.GetRow();
+    int nCol = event.GetCol();
+    if (nCol == -1)
     {
-        szBuffer = i;
-        includeList.Add(szBuffer);
+        if (nRow == -1)
+        {
+        }
+        else
+        {
+            wxMenu menu;
+            menu.Append(0, _T("ChangeName"));
+            menu.Append(1, _T("Delete"));
+            int nRet = GetPopupMenuSelectionFromUser(menu, wxDefaultPosition);
+            TString strOldLabel = m_pLanguageGrid->GetRowLabelValue(nRow);
+            switch (nRet)
+            {
+            case 0:
+            {
+                  TString strNewName = wxGetTextFromUser(_T("Input the new name please："), wxGetTextFromUserPromptStr, strOldLabel);
+                  if (!strNewName.empty() && strOldLabel != strNewName)
+                  {
+                      bool bAddSuccess = ExamLanguageText(strNewName, true);
+                      if (bAddSuccess)
+                      {
+                          m_pLanguageGrid->SetRowLabelValue(nRow, strNewName);
+                          std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+                          languageMap[strNewName] = languageMap[strOldLabel];
+                          languageMap.erase(strOldLabel);
+                          wxMessageBox(_T("更名成功"));
+                      }
+                  }
+            }
+                break;
+            case 1:
+                RemoveLanguageText(strOldLabel, nRow);
+                break;
+            case wxID_NONE:
+                break;
+            default:
+                BEATS_ASSERT(false, _T("Never reach here!"));
+                break;
+            }
+
+        }
     }
-    for (int i = 97; i <= 122; ++i)
+}
+
+bool CEditLanguageDialog::AddNewLanguageText(const TString& strEnum)
+{
+    bool bRet = ExamLanguageText(strEnum, true);
+    if (bRet)
     {
-        szBuffer = i;
-        includeList.Add(szBuffer);
+        std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+        m_pLanguageGrid->AppendRows(1);
+        m_pLanguageGrid->SetRowLabelValue(m_pLanguageGrid->GetRows() - 1, strEnum);
+        languageMap[strEnum] = std::map<ELanguageType, TString>();
+        m_pLanguageGrid->SetRowLabelSize(wxGRID_AUTOSIZE);
+        m_pLanguageGrid->Refresh();
     }
-    for (int i = 48; i <= 57; ++i)
+    return bRet;
+}
+
+bool CEditLanguageDialog::RemoveLanguageText(const TString& strEnum, int nRow)
+{
+    bool bRet = ExamLanguageText(strEnum, false);
+    BEATS_ASSERT(bRet);
+    if (bRet)
     {
-        szBuffer = i;
-        includeList.Add(szBuffer);
+        BEATS_ASSERT(m_pLanguageGrid->GetRowLabelValue(nRow) == strEnum);
+        std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+        auto iter = languageMap.find(strEnum);
+        if (iter != languageMap.end())
+        {
+            m_pLanguageGrid->DeleteRows(nRow);
+            iter = languageMap.erase(iter);
+            for (int nCurRow = nRow; nCurRow < m_pLanguageGrid->GetRows(); ++nCurRow)
+            {
+                m_pLanguageGrid->SetRowLabelValue(nCurRow, iter->first);
+                ++iter;
+            }
+        }
     }
-    includeList.Add(_T("_"));
-    wxTextValidator textValidator(wxFILTER_INCLUDE_CHAR_LIST);
-    textValidator.SetIncludes(includeList);
-    m_pTextEnum->SetValidator(textValidator);
+    return bRet;
+}
+
+bool CEditLanguageDialog::ExamLanguageText(const TString& strEnum, bool bCheckExist)
+{
+    bool bRet = false;
+    std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+    if (strEnum.empty())
+    {
+        wxMessageBox(_T("enum string Can't be empty!"));
+    }
+    else if (strEnum.find("eLTT_") != 0)
+    {
+        wxMessageBox(_T("enum string should begin with eLTT_"));
+    }
+    else if (!((wxString)strEnum).IsAscii())
+    {
+        wxMessageBox(_T("enum string should be all ascii!"));
+    }
+    else if (strEnum.find(_T(' '), 0) != 0xFFFFFFFF)
+    {
+        wxMessageBox(_T("enum string can't contain space!"));
+    }
+    else if (bCheckExist && languageMap.find(strEnum) != languageMap.end())
+    {
+        wxMessageBox(wxString::Format(_T("enum string %s already exists!"), strEnum.c_str()));
+    }
+    else
+    {
+        bRet = true;
+    }
+    return bRet;
 }
 
 void CEditLanguageDialog::LanguageSwitch()
 {
-    m_bISLanguageSwitch = true;
+    m_pButtonSave->SetLabel(L10N_T(eLTT_Editor_Common_Save));
+    m_pButtonAdd->SetLabel(L10N_T(eLTT_Editor_Common_Add));
+    m_pButtonExport->SetLabel(L10N_T(eLTT_Editor_Common_Export));
+}
 
-    m_pStaticTextEnum->SetLabel(L10N_T(eL_Enum));
-    m_pStaticTextChinese->SetLabel(L10N_T(eL_Chinese));
-    m_pStaticTextEnglish->SetLabel(L10N_T(eL_English));
-    m_pButtonClear->SetLabel(L10N_T(eL_Clear));
-    m_pButtonExport->SetLabel(L10N_T(eL_Export));
-    m_pSrchText->SetLabel(L10N_T(eL_SearchEnum));
-    m_pButtonAdd->SetLabel(L10N_T(m_bIsSave ? eL_Save: eL_Add));
+std::vector<wxString> SplitString(wxString& data, wxString& str)
+{
+    std::vector<wxString> vec = {};
+    int index = 0;
+    while (true)
+    {
+        int start = index;
+        index = data.find(str, index);
+        if (index != wxNOT_FOUND)
+        {
+            vec.push_back(data.SubString(start, index - 1));
+        }
+        else
+        {
+            if (!data.EndsWith(str))
+            {
+                vec.push_back(data.SubString(start, data.Length()));
+            }
+            break;
+        }
+        index += str.Length();
+    }
+    return vec;
+}
+
+void CEditLanguageDialog::OnButtonImport(wxCommandEvent& /*event*/)
+{
+    TString szBinaryPath;
+    CUtilityManager::GetInstance()->AcquireSingleFilePath(false, NULL, szBinaryPath, _T("选择要导入的文件"), _T("excel file(*.csv)\0*.csv\0\0"), NULL);
+    if (szBinaryPath.length() > 0)
+    {
+        wxString data;
+        wxFile file;
+        if (file.Open(szBinaryPath, wxFile::read))
+        {
+            if (file.ReadAll(&data))
+            {
+                wxString rowFlag = _T("\r\n");
+                wxString strFlag = _T(",");
+                std::vector<wxString> rows = SplitString(data, rowFlag);
+                if (rows.size() != 0)
+                {
+                    std::map<TString, std::map<ELanguageType, TString> >& languageMap = CLanguageManager::GetInstance()->GetLanguageMap();
+                    languageMap.clear();
+                    for (size_t i = 0; i < rows.size(); i++)
+                    {
+                        std::vector<wxString> rowStrs = SplitString(rows[i], strFlag);
+                        std::vector<wxString> languageStrs;
+                        languageStrs.assign(++rowStrs.begin(), rowStrs.end());
+
+                        for (size_t i = 0; i < eLT_Count; i++)
+                        {
+                            if (!languageStrs[i].empty())
+                            {
+                                languageMap[rowStrs[0].ToStdString()][(ELanguageType)i] = languageStrs[i].ToUTF8();
+                            }
+                        }
+                    }
+                }
+                m_pLanguageGrid->ClearGrid();
+                InitLanguageGrid();
+                wxMessageBox(wxT("导入成功!"));
+            }
+        }
+    }
 }

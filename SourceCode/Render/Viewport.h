@@ -16,8 +16,6 @@ public:
         CColor clearColor = 0x000000FF, float fClearDepth = 1.0f, int nClearStencil = 0);
     ~CViewport();
 
-    void SetRenderTarget(CRenderTarget *pRenderTarget);
-
     void SetLeft(int nLeft);
     void SetTop(int nTop);
     void SetWidth(int nWidth);
@@ -29,13 +27,13 @@ public:
 
     void SetClearFlag(GLbitfield clearFlag);
     void SetClearColor(CColor color);
+    CColor GetClearColor() const;
     void SetClearDepth(float fClearDepth);
     void SetClearStencil(int nClearStencil);
 
     void Apply() const;
 
 private:
-    CRenderTarget *m_pRenderTarget;
     int m_nLeft;
     int m_nTop;
     int m_nWidth;

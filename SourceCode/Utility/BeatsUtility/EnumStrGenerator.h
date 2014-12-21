@@ -40,25 +40,27 @@ class CEnumStrGenerator
 public:
     void Init(const std::vector<TString>& scanPathList, const TCHAR* pszCacheFileName);
     bool GetEnumValueData(const TCHAR* pEnumType, const std::vector<SEnumData*>*& pResult);
+    void RescanEnum(const TString& strEnumType);
     void SaveCacheFile(const TCHAR* pszCacheFileName);
     bool LoadCacheFile(const TCHAR* pszCacheFileName);
+    bool IsLanguageEnumInvokeInCode(const TString& strEnum) const;
 
 private:
-    bool ScanEnumInFile(const TCHAR* pFileName);
+    bool ScanEnumInFile(const TCHAR* pFileName, const TCHAR* pSpecifyEnumName = NULL);
     bool ScanEnumInDirectory(const TCHAR* pDirectory);
     // This method allows you scan a C++ file, which means it will handle "//" "/*" to filter comments content.
     bool ScanKeyWordInCPlusPlusFile(const char* pKeyWord, CSerializer* fileSerializer);
-    bool FilterCPlusPlusFileComments(const char* text, char* outBuffer, size_t& bufferLenth);
+    bool FilterCPlusPlusFileComments(const char* text, char* outBuffer, uint32_t& bufferLenth);
     bool ScanEnum(const TFileData& data, const TString& fullDirectoryPath);
     // To avoid situation: m_enumValue, you can match "enum" while its not a keyword. The serializer must read to the "enum" string.
     bool IsEnumKeyword(CSerializer* pSerailizer);
 
     SEnumData* AnalyseRawEnumString(const TString& rawEnumStr, int& curValue);
-
+    bool IsValidateCharacterForEnum(char character) const;
 private:
     bool m_bInitFlag;
     std::map<TString, SEnumScanData*> m_enumStrPool;
-
+    std::unordered_set<TString> m_codeInvokeEnumList;
 };
 
 #endif

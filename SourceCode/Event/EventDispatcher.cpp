@@ -1,6 +1,11 @@
 ﻿#include "stdafx.h"
 #include "EventDispatcher.h"
 #include "BaseEvent.h"
+#ifdef EDITOR_MODE
+#include "Scene/SceneManager.h"
+#include "Scene/Node.h"
+#include "TouchEvent.h"
+#endif
 
 CEventDispatcher::CEventDispatcher()
     : m_bEnable(true)
@@ -12,11 +17,9 @@ CEventDispatcher::~CEventDispatcher()
 {
 }
 
-CEventConnection CEventDispatcher::SubscribeEvent( 
-    int type, const CEventSubscription::EventHandler &handlerFunc, EHandlerPriority priority)
+CEventConnection CEventDispatcher::SubscribeEvent(int type, const CEventSubscription::EventHandler &handlerFunc, EHandlerPriority priority)
 {
-    std::shared_ptr<CEventSubscription> pSubscription(new CEventSubscription(
-        priority + m_currSubID++, type, handlerFunc, this));
+    std::shared_ptr<CEventSubscription> pSubscription(new CEventSubscription(priority + m_currSubID++, type, handlerFunc, this));
     m_subscriptions[type].emplace(pSubscription->ID(), pSubscription);
     return pSubscription;
 }
@@ -39,13 +42,38 @@ void CEventDispatcher::DispatchEvent( CBaseEvent *event )
         if(itr != m_subscriptions.end())
         {
             event->SetSource(this);
-            for(auto pSubscription : itr->second)
+            // To avoid clear m_subscriptions in the callback, so we got a bak.
+            EventSubscriptionMap callbackBak = itr->second;
+            for (auto pSubscription : callbackBak)
             {
                 pSubscription.second->Handler()(event);
                 if(event->Stopped())
                     break;
             }
         }
+#ifdef EDITOR_MODE
+        if (!CSceneManager::GetInstance()->GetSwitchSceneState())
+        {
+            const std::map<uint32_t, CComponentProxy*>& componentsInScene = CComponentProxyManager::GetInstance()->GetComponentsInCurScene();
+            for (auto iter = componentsInScene.begin(); iter != componentsInScene.end(); ++iter)
+            {
+                CComponentProxy* pProxy = iter->second;
+                if (pProxy->GetHostComponent() &&
+                    pProxy->GetBeConnectedDependencyLines()->size() == 0)
+                {
+                    CNode* pNode = dynamic_cast<CNode*>(pProxy->GetHostComponent());
+                    if (pNode && pNode->GetParentNode() == NULL)
+                    {
+                        CTouchEvent* touchEvent = dynamic_cast<CTouchEvent*>(event);
+                        if (touchEvent)
+                        {
+                            pNode->OnTouchEvent(touchEvent);
+                        }
+                    }
+                }
+            }
+        }
+#endif
     }
 }
 

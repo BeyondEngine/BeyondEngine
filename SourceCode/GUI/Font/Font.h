@@ -12,16 +12,15 @@ public:
     CFont();
     virtual ~CFont();
 
-    virtual bool Load();
+    virtual bool Load() override;
 
-    virtual bool Unload();
-
+    virtual bool Unload() override;
     FT_Face GetFontFace() const;
 
     static FT_Library GetLibrary();
 
 private:
-    FT_Face m_pFace;
+    FT_Face m_pFace = nullptr;
     static FT_Library m_library;
     static int m_nLibRefCount;
 };

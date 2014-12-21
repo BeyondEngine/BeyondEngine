@@ -1,32 +1,42 @@
 ﻿#include "stdafx.h"
 #include "RenderGroupManager.h"
-#include "RenderGroup.h"
 #include "Render/RenderGroup.h"
-#include "Camera.h"
+#include "RenderBatch.h"
 
 CRenderGroupManager *CRenderGroupManager::m_pInstance = nullptr;
 
 CRenderGroupManager::CRenderGroupManager()
-    : m_pDefault3DCamera(NULL)
-    , m_pDefault2DCamera(NULL)
 {
 }
 
 CRenderGroupManager::~CRenderGroupManager()
 {
+    CRenderBatch::DestroyMatPool();
     for(auto group : m_groupMap)
     {
         BEATS_SAFE_DELETE(group.second);
     }
 }
 
-CRenderGroup *CRenderGroupManager::GetRenderGroup(ERenderGroupID groupID)
+CRenderGroup* CRenderGroupManager::GetRenderGroup()
+{
+    BEATS_ASSERT(m_renderGroupIDStack.size() > 0);
+    ERenderGroupID groupID = LAYER_3D;
+    if (m_renderGroupIDStack.size() > 0)
+    {
+        groupID = m_renderGroupIDStack.back();
+    }
+    CRenderGroup *group = GetRenderGroupByID(groupID);
+    return group;
+}
+
+CRenderGroup* CRenderGroupManager::GetRenderGroupByID(ERenderGroupID renderGroupID)
 {
     CRenderGroup *group = nullptr;
-    auto itr = m_groupMap.find(groupID);
-    if(itr == m_groupMap.end())
+    auto itr = m_groupMap.find(renderGroupID);
+    if (itr == m_groupMap.end())
     {
-        group = createRenderGroup(groupID);
+        group = createRenderGroup(renderGroupID);
     }
     else
     {
@@ -39,11 +49,7 @@ void CRenderGroupManager::Render()
 {
     for(auto group : m_groupMap)
     {
-        if(group.second->PreRender())
-        {
-            group.second->Render();
-            group.second->PostRender();
-        }
+        group.second->Render();
     }
 }
 
@@ -53,46 +59,47 @@ void CRenderGroupManager::Clear()
     {
         group.second->Clear();
     }
+    BEATS_ASSERT(m_renderGroupIDStack.size() == 0);
+    m_renderGroupIDStack.clear();
 }
 
-void CRenderGroupManager::SetDefault3DCamera(CCamera* pDefaultCamera)
+void CRenderGroupManager::PushRenderGroupID(ERenderGroupID renderGroupID)
 {
-    BEATS_ASSERT(pDefaultCamera == NULL || pDefaultCamera->GetType() == CCamera::eCT_3D);
-    m_pDefault3DCamera = pDefaultCamera;
+    BEATS_ASSERT(renderGroupID != LAYER_UNSET);
+    m_renderGroupIDStack.push_back(renderGroupID);
 }
 
-CCamera* CRenderGroupManager::GetDefault3DCamera() const
+ERenderGroupID CRenderGroupManager::PopRenderGroupID()
 {
-    return m_pDefault3DCamera;
+    BEATS_ASSERT(m_renderGroupIDStack.size() > 0);
+    ERenderGroupID ret = m_renderGroupIDStack.back();
+    m_renderGroupIDStack.pop_back();
+    return ret;
 }
 
-void CRenderGroupManager::SetDefault2DCamera(CCamera* pDefaultCamera)
+const std::vector<ERenderGroupID>& CRenderGroupManager::GetRenderGroupIDStack() const
 {
-    BEATS_ASSERT(pDefaultCamera == NULL || pDefaultCamera->GetType() == CCamera::eCT_2D);
-    m_pDefault2DCamera = pDefaultCamera;
+    return m_renderGroupIDStack;
 }
 
-CCamera* CRenderGroupManager::GetDefault2DCamera() const
+void CRenderGroupManager::SyncData()
 {
-    return m_pDefault2DCamera;
+    for (auto group : m_groupMap)
+    {
+        group.second->SyncData();
+    }
 }
 
 CRenderGroup *CRenderGroupManager::createRenderGroup(ERenderGroupID groupID)
 {
-    BEATS_ASSERT(groupID & 0x0000FFFF, _T("Invalid render group ID: %X"), groupID);
-
     CRenderGroup *group = nullptr;
-    if( groupID == LAYER_GUI ||
+    bool bNeedScale = (groupID >= LAYER_GUI_MIN  && groupID <= LAYER_2D_MAX) ||
         groupID == LAYER_GUI_EDITOR ||
-        groupID == LAYER_2D)
-    {
-        bool bShouldScaleContent = !(groupID < LAYER_3D_MAX && groupID > LAYER_3D_MIN);
-        group = new CRenderGroup(groupID, bShouldScaleContent);
-    }
-    else
-    {
-        group = new CRenderGroup(groupID);
-    }
+        groupID == LAYER_2D;
+    bool bNeedClearDepth = groupID == LAYER_3D_BridgeAnimation;
+    BEATS_ASSERT(groupID != LAYER_UNSET);
+    group = new CRenderGroup(groupID, bNeedScale);
+    group->SetClearDepthFlag(bNeedClearDepth);
     m_groupMap[groupID] = group;
     return group;
 }

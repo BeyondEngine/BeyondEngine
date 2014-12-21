@@ -1,199 +1,259 @@
 #include "stdafx.h"
 #include "TexturePreviewDialog.h"
 #include "EngineEditor.h"
-#include "Resource\ResourcePathManager.h"
-#include "wx\filesys.h"
-#include "TinyXML\tinyxml.h"
-#include "Utility\BeatsUtility\StringHelper.h"
-
+#include "Resource/ResourceManager.h"
+#include "wx/filesys.h"
+#include "Utility/BeatsUtility/StringHelper.h"
+#include "wx/dir.h"
+#include "RapidXML/rapidxml.hpp"
+#include "RapidXML/rapidxml_utils.hpp"
+#include "Utility/BeatsUtility/FilePathTool.h"
+#include "Utility/BeatsUtility/Serializer.h"
+#include "Component/ComponentPublic.h"
+#include <wx/srchctrl.h>
 
 enum ECtrlID
 {
-    LIST_CTRL = 2222,
+    IMAGE_LIST_CTRL = 2222,
+    FILE_LIST_CTRL,
     BUTTON_OK,
     BUTTON_CANCEL,
 };
 
 BEGIN_EVENT_TABLE(CTexturePreviewDialog, wxDialog)
-    EVT_SIZE(CTexturePreviewDialog::OnSize)
     EVT_BUTTON(BUTTON_OK, CTexturePreviewDialog::OnOK)
     EVT_BUTTON(BUTTON_CANCEL, CTexturePreviewDialog::OnCancel)
-    EVT_LIST_ITEM_SELECTED(LIST_CTRL, CTexturePreviewDialog::OnSelected)
-    EVT_LIST_ITEM_DESELECTED(LIST_CTRL, CTexturePreviewDialog::OnDeselected)
-    EVT_LIST_ITEM_ACTIVATED(LIST_CTRL, CTexturePreviewDialog::OnActivated)
+    EVT_LIST_ITEM_SELECTED(IMAGE_LIST_CTRL, CTexturePreviewDialog::OnSelectedImage)
+    EVT_LIST_ITEM_DESELECTED(IMAGE_LIST_CTRL, CTexturePreviewDialog::OnDeselectedImage)
+    EVT_LIST_ITEM_ACTIVATED(IMAGE_LIST_CTRL, CTexturePreviewDialog::OnActivated)
+    EVT_IDLE(CTexturePreviewDialog::OnSrchIdle)
 END_EVENT_TABLE()
 
 CTexturePreviewDialog::CTexturePreviewDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos, const wxSize &size, long style, const wxString &name)
     : CEditDialogBase(parent, id, title, pos, size, style, name)
-    , m_bInitialized(false)
-    , m_nCurrentIndex(INVALID_DATA)
-    , m_pListCtrl(NULL)
-    , m_pPanel(NULL)
+    , m_nCurrentSelectImageIndex(INVALID_DATA)
+    , m_pFileListBox(NULL)
+    , m_pImageListCtrl(NULL)
+    , m_pSrchCtrl(NULL)
     , m_nTexturePreviewIconSize(DefaultTexturePreviewIconSize)
 {
-    std::thread thread(std::bind(&CTexturePreviewDialog::InitTexture, this));
-    thread.detach();
-
     SetSizer(new wxBoxSizer(wxVERTICAL));
     m_pTexturePreviewIconList = new wxImageList(m_nTexturePreviewIconSize, m_nTexturePreviewIconSize, true);
     InitCtrls();
+    InitTexture();
+    SetSize(800, 600);
 }
 
 int CTexturePreviewDialog::ShowModal()
 {
-    if (m_bInitialized)
-    {
-        LoadInfo();//check new
-        CenterOnScreen();
-        //TODO:set the last selection, but it may doesn't work
-        m_pListCtrl->SetItemState(m_nCurrentIndex, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
-        if (wxDialog::ShowModal() == wxID_CANCEL)
-        {
-            m_nCurrentIndex = INVALID_DATA;
-        }
-    }
-    else
-    {
-        wxMessageBox(_T("in initialization please wait a moment"));
-    }
-
-    return m_nCurrentIndex;
+    int nRet = wxID_CANCEL;
+    RefreshListCtrl();
+    CenterOnScreen();
+    nRet = wxDialog::ShowModal();
+    return nRet;
 }
 
 CTexturePreviewDialog::~CTexturePreviewDialog()
 {
+    m_pSrchCtrl->Disconnect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CTexturePreviewDialog::OnSrchUpdate), NULL, this);
     BEATS_SAFE_DELETE(m_pTexturePreviewIconList);
+    for (auto iter = m_textureInfoMap.begin(); iter != m_textureInfoMap.end(); ++iter)
+    {
+        for (auto subIter = iter->second.begin(); subIter != iter->second.end(); ++subIter)
+        {
+            BEATS_SAFE_DELETE(subIter->second);
+        }
+    }
 }
 
 void CTexturePreviewDialog::InitTexture()
 {
-    LoadInfo();
-    m_bInitialized = true;
+    CSerializer configData;
+    std::vector<std::string> fileList;
+    TString strWorkingPath = static_cast<CEngineEditor*>(wxApp::GetInstance())->GetWorkingPath();
+    strWorkingPath.append(_T("\\")).append(COMPRESS_TEXTURE_CONFIG_NAME);
+	if (CFilePathTool::GetInstance()->Exists(strWorkingPath.c_str()) && CFilePathTool::GetInstance()->LoadFile(&configData, strWorkingPath.c_str(), "rt") && configData.GetWritePos() > 0)
+    {
+        TCHAR szBuffer[10240];
+        configData.Deserialize(szBuffer, configData.GetWritePos());
+        szBuffer[configData.GetWritePos()] = 0;
+        BEATS_ASSERT(configData.GetReadPos() == configData.GetWritePos());
+        CStringHelper::GetInstance()->SplitString(szBuffer, "\n", fileList, true);
+    }
+    wxString texturePath = CStringHelper::GetInstance()->ToLower(CResourceManager::GetInstance()->GetResourcePath(eRT_Texture));
+    m_textureInfoFiles.clear();
+    wxString fileName;
+    wxDir textureDir(texturePath);
+    bool cont = textureDir.GetFirst(&fileName, _T("*.xml"), wxDIR_FILES);
+    fileName = CStringHelper::GetInstance()->ToLower((TString)fileName);
+    while (cont)
+    {
+        TString strFilePath = texturePath + _T("\\") + fileName;
+        m_textureInfoFiles.push_back(strFilePath);
+        m_pFileListBox->AppendString(fileName);
+        bool bNeedCompress = std::find(fileList.begin(), fileList.end(), fileName) != fileList.end();
+        m_pFileListBox->Check(m_pFileListBox->GetCount() - 1, bNeedCompress);
+        cont = textureDir.GetNext(&fileName);
+        fileName = CStringHelper::GetInstance()->ToLower((TString)fileName);
+    }
 }
 
 void CTexturePreviewDialog::InitCtrls()
 {
     wxBoxSizer* pSizer = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* pFunctionAreaSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer* pInfoSizer = new wxBoxSizer(wxVERTICAL);
+    m_pInfoText = new wxStaticText(this, wxID_ANY, _T("Information :"), wxDefaultPosition, wxSize(0, 90));
+    pInfoSizer->Add(m_pInfoText, 1, wxGROW|wxALL, 0);
+
+    m_pSrchCtrl = new wxSearchCtrl(this, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+    m_pSrchCtrl->ShowCancelButton(true);
+    m_pSrchCtrl->Connect(wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler(CTexturePreviewDialog::OnSrchUpdate), NULL, this);
+    pInfoSizer->Add(m_pSrchCtrl, 0, wxALIGN_CENTER | wxDOWN, 10);
+
+    pFunctionAreaSizer->Add(pInfoSizer, 1,  wxGROW|wxALL, 0);
+
+    wxBoxSizer* pRightSizer = new wxBoxSizer(wxVERTICAL);
+    m_pFileListBox = new wxCheckListBox(this, FILE_LIST_CTRL, wxDefaultPosition, wxDefaultSize, 0, 0, wxLC_SINGLE_SEL);
+    m_pFileListBox->AppendString(_T("All files"));
+    pRightSizer->Add(m_pFileListBox, 1, wxGROW | wxALL, 5);
+
     wxBoxSizer* pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
-    m_pPanel = new wxPanel(this);
-    m_pInfoText = new wxStaticText(m_pPanel, wxID_ANY, _T("Information :"), wxDefaultPosition, wxSize(0, 90));
-    wxButton* pButtonOK = new wxButton(m_pPanel, BUTTON_OK, _T("OK"));
-    wxButton* pButtonCancel = new wxButton(m_pPanel, BUTTON_CANCEL, _T("Cancel"));
-    
-    m_pListCtrl = new wxListCtrl(this, LIST_CTRL, wxDefaultPosition, wxDefaultSize, wxLC_ICON | wxBORDER_THEME);
-    m_pListCtrl->SetImageList(m_pTexturePreviewIconList, wxIMAGE_LIST_NORMAL);
+    wxButton* pButtonOK = new wxButton(this, BUTTON_OK, _T("OK"));
+    wxButton* pButtonCancel = new wxButton(this, BUTTON_CANCEL, _T("Cancel"));
+    pButtonSizer->Add(pButtonOK, 1, wxALL, 5);
+    pButtonSizer->Add(pButtonCancel, 1, wxALL, 5);
+    pRightSizer->Add(pButtonSizer, 0, wxALL, 5);
+
+    pFunctionAreaSizer->Add(pRightSizer, 0,  wxGROW|wxALL, 0);
+
+    m_pImageListCtrl = new wxListCtrl(this, IMAGE_LIST_CTRL, wxDefaultPosition, wxDefaultSize, wxLC_SINGLE_SEL | wxLC_AUTOARRANGE | wxLC_ICON);
+    m_pImageListCtrl->SetImageList(m_pTexturePreviewIconList, wxIMAGE_LIST_NORMAL);
     wxSize size = GetClientSize();
-    wxCoord y = (2*size.y)/3;
-    m_pListCtrl->SetSize(0, 0, size.x, y);
+    wxCoord y = (2 * size.y) / 3;
+    m_pImageListCtrl->SetSize(0, 0, size.x, y);
 
-    pButtonSizer->Add(m_pInfoText, 1, wxGROW|wxALL, 0);
-    pButtonSizer->Add(pButtonOK, 0, wxGROW|wxALL, 0);
-    pButtonSizer->Add(pButtonCancel, 0, wxGROW|wxALL, 0);
-    m_pPanel->SetSizer(pButtonSizer);
-
-    pSizer->Add(m_pListCtrl, 1, wxGROW|wxALL, 0);
-    pSizer->Add(m_pPanel, 0, wxGROW|wxALL, 0);
+    pSizer->Add(m_pImageListCtrl, 1, wxGROW|wxALL, 0);
+    pSizer->Add(pFunctionAreaSizer, 0, wxGROW|wxALL, 0);
     SetSizer(pSizer);
-}
-
-void CTexturePreviewDialog::LoadInfo()
-{
-    wxFileSystem fileSystem;
-    wxString texturePath = CResourcePathManager::GetInstance()->GetResourcePath(CResourcePathManager::eRPT_Texture);
-    fileSystem.ChangePathTo(texturePath, true);
-    std::vector<wxString> files;
-    wxString fileName = fileSystem.FindFirst(_T("*.xml"));
-    while (!fileName.IsNull())
-    {
-        files.push_back(fileSystem.URLToFileName(fileName).GetFullPath());
-        fileName = fileSystem.FindNext();
-    }
-
-    for (auto itr : files)
-    {
-        if (!HasLoaded(itr))
-        {
-            LoadInfoFromFile(itr);
-        }
-    }
+    m_pFileListBox->Connect(wxEVT_COMMAND_LISTBOX_SELECTED, wxListEventHandler(CTexturePreviewDialog::OnFileFilterSelect), NULL, this);
 }
 
 void CTexturePreviewDialog::LoadInfoFromFile(wxString& fileName)
 {
     wxString path, simpleName, ext;
     wxFileName::SplitPath(fileName, &path, &simpleName, &ext);
-    TiXmlDocument doc;
-    doc.LoadFile(fileName);
-    TiXmlElement *root = doc.RootElement();
-    BEATS_ASSERT(root && strcmp(root->Value(), "Imageset") == 0);
-    const char *textureFileName = root->Attribute("Imagefile");
+    rapidxml::file<> fdoc(fileName);
+    rapidxml::xml_document<> doc;
+    try
+    {
+        doc.parse<rapidxml::parse_default>(fdoc.data());
+    }
+    catch (rapidxml::parse_error err)
+    {
+        BEATS_ASSERT(false, _T("Load config file %s faled!/n%s/n"), fileName, err.what());
+    }
+    rapidxml::xml_node<> *root = doc.first_node("Imageset");
+    BEATS_ASSERT(root != nullptr);
+    const char *textureFileName = root->first_attribute("Imagefile")->value();
     BEATS_ASSERT(textureFileName != NULL);
-    path += _T("\\");
+    path += _T("/");
 
     wxBitmap texture;
+    bool bRet = texture.LoadFile(path + textureFileName, wxBITMAP_TYPE_PNG);
+    BEATS_ASSERT(bRet, "Load png file %s failed!", TString(fileName).c_str());
+    if (bRet)
     {
-        //suppress the warning from loading png
-        wxLogNull logNo;
-        texture.LoadFile(path + textureFileName, wxBITMAP_TYPE_PNG);
+        for (rapidxml::xml_node<> *elemImage = root->first_node("Image");
+            elemImage != nullptr; elemImage = elemImage->next_sibling("Image"))
+        {
+            TString strTextureName = CStringHelper::GetInstance()->ToLower(elemImage->first_attribute("Name")->value());
+            BEATS_ASSERT(!strTextureName.empty());
+            CVec2 point = CVec2(0.f, 0.f);
+            CVec2 size = CVec2(0.f, 0.f);
+            point.X() = (float)_tstof(elemImage->first_attribute("XPos")->value());
+            point.Y() = (float)_tstof(elemImage->first_attribute("YPos")->value());
+            size.X() = (float)_tstof(elemImage->first_attribute("Width")->value());
+            size.Y() = (float)_tstof(elemImage->first_attribute("Height")->value());
+
+            wxRect rect(point.X(), point.Y(), size.X(), size.Y());
+            wxIcon icon;
+            BEATS_ASSERT(rect.x + rect.width <= texture.GetWidth() && rect.y + rect.height <= texture.GetHeight());
+            icon.CopyFromBitmap(texture.GetSubBitmap(rect));
+            STexturePreviewInfo* pInfo = new STexturePreviewInfo;
+            wxString strFileName = simpleName + _T(".") + ext;
+            uint32_t uImageIndex = 0xFFFFFFFF;
+            {
+                std::lock_guard<std::mutex> locker(m_insertDataLock);
+                m_pTexturePreviewIconList->Add(icon);
+                uImageIndex = m_pTexturePreviewIconList->GetImageCount() - 1;
+                BEATS_ASSERT(m_textureInfoMap[strFileName].find(strTextureName) == m_textureInfoMap[strFileName].end());
+                m_textureInfoMap[strFileName][strTextureName] = pInfo;
+            }
+            pInfo->fileName = strFileName;
+            BEATS_ASSERT(CStringHelper::GetInstance()->FindFirstString(strFileName.c_str(), " ", false) == TString::npos, "file name should not contain space in %s", strFileName.c_str());
+            pInfo->textureName = strTextureName;
+            BEATS_ASSERT(CStringHelper::GetInstance()->FindFirstString(strTextureName.c_str(), " ", false) == TString::npos, "Texture name should not contain space in %s", strTextureName.c_str());
+            pInfo->m_uWidth = (uint32_t)rect.GetWidth();
+            pInfo->m_uHeight = (uint32_t)rect.GetHeight();
+            pInfo->m_uImageIndex = uImageIndex;
+        }
     }
-
-    for(TiXmlElement *elemImage = root->FirstChildElement("Image");
-        elemImage != nullptr; elemImage = elemImage->NextSiblingElement("Image"))
-    {
-        const char *textureName = elemImage->Attribute("Name");
-        BEATS_ASSERT(textureName);
-        kmVec2 point;
-        kmVec2Fill(&point, 0.f, 0.f);
-        kmVec2 size;
-        kmVec2Fill(&size, 0.f, 0.f);
-        elemImage->QueryFloatAttribute("XPos", &point.x);
-        elemImage->QueryFloatAttribute("YPos", &point.y);
-        elemImage->QueryFloatAttribute("Width", &size.x);
-        elemImage->QueryFloatAttribute("Height", &size.y);
-
-        wxRect rect(point.x, point.y, size.x, size.y);
-        wxIcon icon;
-        icon.CopyFromBitmap(texture.GetSubBitmap(rect));
-        m_pTexturePreviewIconList->Add(icon);
-        TexturePreviewInfo info;
-        info.fileName = simpleName + _T(".") + ext;
-        info.textureName = textureName;
-        info.with.Printf(_T("%d"), rect.GetWidth());
-        info.height.Printf(_T("%d"), rect.GetHeight());
-        m_texturePreviewInfoList.push_back(info);
-    }
-
-    BEATS_ASSERT(m_pTexturePreviewIconList->GetImageCount() == (int)m_texturePreviewInfoList.size());
 }
 
-void CTexturePreviewDialog::OnSelected(wxListEvent& event)
+void CTexturePreviewDialog::OnSelectedImage(wxListEvent& event)
 {
-    m_nCurrentIndex = event.GetIndex();
-    ShowTextureInfo(m_nCurrentIndex);
+    m_nCurrentSelectImageIndex = event.GetImage();
+    ShowTextureInfo(m_nCurrentSelectImageIndex);
 }
 
 void CTexturePreviewDialog::OnActivated(wxListEvent& event)
 {
-    m_nCurrentIndex = event.GetIndex();
+    m_nCurrentSelectImageIndex = event.GetImage();
     EndModal(wxID_OK);
 }
 
 void CTexturePreviewDialog::OnOK(wxCommandEvent& /*event*/)
 {
-    if (m_nCurrentIndex == INVALID_DATA)
+    wxArrayInt checkedItems;
+    m_pFileListBox->GetCheckedItems(checkedItems);
+    TString strWorkingPath = static_cast<CEngineEditor*>(wxApp::GetInstance())->GetWorkingPath();
+    strWorkingPath.append(_T("\\")).append(COMPRESS_TEXTURE_CONFIG_NAME);
+
+    CSerializer configData;
+    for (size_t i = 0; i < checkedItems.size(); ++i)
     {
-        wxMessageBox(_T("no one is selected"));
+        TString strCheckedString = m_pFileListBox->GetString(checkedItems[i]);
+        strCheckedString.append("\n");
+        configData.Serialize((void*)strCheckedString.c_str(), strCheckedString.length());
     }
-    else
-    {
-        EndModal(wxID_OK);
-    }
+    configData.Deserialize(strWorkingPath.c_str(), "wt+");
+    EndModal(wxID_OK);
 }
 
 void CTexturePreviewDialog::OnCancel(wxCommandEvent& /*event*/)
 {
-    m_nCurrentIndex = INVALID_DATA;
     EndModal(wxID_CANCEL);
+}
+
+void CTexturePreviewDialog::OnFileFilterSelect(wxListEvent& /*event*/)
+{
+    m_pSrchCtrl->SetValue(_T(""));
+    m_bEnumSearchTextUpdate = false;
+    m_nCurrentSelectImageIndex = INVALID_DATA;
+    RefreshListCtrl();
+}
+
+void CTexturePreviewDialog::LaunchLoadThread()
+{
+    m_textureLoadingThread1 = std::thread(&CTexturePreviewDialog::LoadingThread, this);
+    m_textureLoadingThread2 = std::thread(&CTexturePreviewDialog::LoadingThread, this);
+    m_textureLoadingThread3 = std::thread(&CTexturePreviewDialog::LoadingThread, this);
+    m_textureLoadingThread4 = std::thread(&CTexturePreviewDialog::LoadingThread, this);
+    m_textureLoadingThread1.join();
+    m_textureLoadingThread2.join();
+    m_textureLoadingThread3.join();
+    m_textureLoadingThread4.join();
 }
 
 void CTexturePreviewDialog::ShowTextureInfo(int nIndex)
@@ -205,65 +265,204 @@ void CTexturePreviewDialog::ShowTextureInfo(int nIndex)
     }
     else
     {
-        BEATS_ASSERT(nIndex < (int)m_texturePreviewInfoList.size());
-        TexturePreviewInfo info = m_texturePreviewInfoList[nIndex];
-        text += wxString::Format(_T("file : %s \n"), info.fileName.c_str());
-        text += wxString::Format(_T("name : %s \n"), info.textureName.c_str());
-        text += wxString::Format(_T("width : %s \n"), info.with.c_str());
-        text += wxString::Format(_T("height : %s \n"), info.height.c_str());
+        const STexturePreviewInfo* pInfo = GetTextureInfo(nIndex);
+        BEATS_ASSERT(pInfo != NULL);
+        text += wxString::Format(_T("file : %s \n"), pInfo->fileName.c_str());
+        text += wxString::Format(_T("name : %s \n"), pInfo->textureName.c_str());
+        text += wxString::Format(_T("width : %d \n"), pInfo->m_uWidth);
+        text += wxString::Format(_T("height : %d \n"), pInfo->m_uHeight);
     }
     m_pInfoText->SetLabelText(text);
+    Layout();
 }
 
-void CTexturePreviewDialog::OnDeselected(wxListEvent& /*event*/)
+void CTexturePreviewDialog::OnDeselectedImage(wxListEvent& /*event*/)
 {
+    m_nCurrentSelectImageIndex = INVALID_DATA;
     ShowTextureInfo(INVALID_DATA);
 }
 
-const TexturePreviewInfo& CTexturePreviewDialog::GetTextureInfo(int nIndwx)
+const STexturePreviewInfo* CTexturePreviewDialog::GetTextureInfo(int nIndex) const
 {
-    return m_texturePreviewInfoList[nIndwx];
-}
-
-void CTexturePreviewDialog::InsertTextureToListCtrl()
-{
-    m_pListCtrl->ClearAll();
-    int nTextureCount = m_pTexturePreviewIconList->GetImageCount();
-    wxString label;
-    for ( int i = 0; i < nTextureCount; i++ )
+    STexturePreviewInfo* pInfo = NULL;
+    int nCount = m_pImageListCtrl->GetItemCount();
+    for (int i = 0; i < nCount; i++)
     {
-        label = m_texturePreviewInfoList[i].textureName;
-        m_pListCtrl->InsertItem(i, label, i);
-    }
-}
-
-bool CTexturePreviewDialog::HasLoaded(wxString fileName)
-{
-    bool bNeedLoad = false;
-    wxString path, simpleName, ext;
-    wxFileName::SplitPath(fileName, &path, &simpleName, &ext);
-    for(auto infoItr : m_texturePreviewInfoList)
-    {
-        if (infoItr.fileName == simpleName + _T(".") + ext)
+        STexturePreviewInfo* pData = (STexturePreviewInfo*)m_pImageListCtrl->GetItemData(i);
+        if ((int)pData->m_uImageIndex == nIndex)
         {
-            bNeedLoad = true;
+            pInfo = pData;
             break;
         }
     }
-    return bNeedLoad;
+    return pInfo;
 }
 
-void CTexturePreviewDialog::OnSize(wxSizeEvent& event)
+const STexturePreviewInfo* CTexturePreviewDialog::GetTextureInfo(const TCHAR* pszFileName, const TCHAR* pszTextureName)
 {
-    wxSizer* pSizer = GetSizer();
-    pSizer->DeleteWindows();
-    InitCtrls();
-    InsertTextureToListCtrl();
-    if (m_nCurrentIndex != INVALID_DATA)
+    STexturePreviewInfo* pRet = NULL;
+    auto iter = m_textureInfoMap.find(pszFileName);
+    if (iter == m_textureInfoMap.end())
     {
-        m_pListCtrl->SetItemState(m_nCurrentIndex, 1, wxLIST_STATE_SELECTED);
-        ShowTextureInfo(m_nCurrentIndex);
+        wxString strFullPath;
+        {
+            std::lock_guard<std::mutex> locker(m_textureInfoFilesLock);
+            for (auto infoIter = m_textureInfoFiles.begin(); infoIter != m_textureInfoFiles.end(); ++infoIter)
+            {
+                if (CFilePathTool::GetInstance()->FileName(*infoIter) == pszFileName)
+                {
+                    strFullPath = *infoIter;
+                    m_textureInfoFiles.erase(infoIter);
+                    break;
+                }
+            }
+        }
+        BEATS_ASSERT(!strFullPath.empty());
+        LoadInfoFromFile(strFullPath);
+        iter = m_textureInfoMap.find(pszFileName);
     }
-    event.Skip();
+    BEATS_ASSERT(iter != m_textureInfoMap.end());
+    auto subIter = iter->second.find(pszTextureName);
+    if (subIter != iter->second.end())
+    {
+        pRet = subIter->second;
+    }
+    return pRet;
 }
 
+int CTexturePreviewDialog::GetCurrentIndex() const
+{
+    return m_nCurrentSelectImageIndex;
+}
+
+void CTexturePreviewDialog::SetCurrentImage(wxString fileName, wxString imageName)
+{
+    if (!fileName.empty() && m_textureInfoMap.find(fileName) != m_textureInfoMap.end())
+    {
+        std::map<wxString, STexturePreviewInfo*>& imageMap = m_textureInfoMap[fileName];
+        BEATS_ASSERT(imageMap.find(imageName) != imageMap.end());
+        for (size_t i = 0; i < m_pFileListBox->GetCount(); ++i)
+        {
+            if (m_pFileListBox->GetString(i) == fileName)
+            {
+                m_pFileListBox->Select(i);
+                break;
+            }
+        }
+        m_nCurrentSelectImageIndex = imageMap[imageName]->m_uImageIndex;
+    }
+    else
+    {
+        m_nCurrentSelectImageIndex = INVALID_DATA;
+    }
+}
+
+void CTexturePreviewDialog::RefreshListCtrl()
+{
+    wxString strCurrentSelectFileName = m_pFileListBox->GetStringSelection();
+    m_pImageListCtrl->ClearAll();
+    if (!strCurrentSelectFileName.empty())
+    {
+        wxString szSrchText = m_pSrchCtrl->GetValue().Lower();
+        if (strCurrentSelectFileName == _T("All files"))
+        {
+            if (m_textureInfoFiles.size() > 0)
+            {
+                LaunchLoadThread();
+            }
+            for (auto iter = m_textureInfoMap.begin(); iter != m_textureInfoMap.end(); ++iter)
+            {
+                for (auto subIter = iter->second.begin(); subIter != iter->second.end(); ++subIter)
+                {
+                    wxListItem listItem;
+                    listItem.SetData(subIter->second);
+                    listItem.SetImage(subIter->second->m_uImageIndex);
+                    listItem.SetText(subIter->second->textureName);
+                    listItem.SetId(subIter->second->m_uImageIndex);
+                    bool bMatch = subIter->second->textureName.Lower().find(szSrchText.utf8_str()) != -1;
+                    if (bMatch)
+                    {
+                        m_pImageListCtrl->InsertItem(listItem);
+                    }
+                }
+            }
+        }
+        else
+        {
+            auto iter = m_textureInfoMap.find(strCurrentSelectFileName);
+            if (iter == m_textureInfoMap.end())
+            {
+                wxString strFullPath = CResourceManager::GetInstance()->GetResourcePath(eRT_Texture) + "\\" + strCurrentSelectFileName;
+                strFullPath = CStringHelper::GetInstance()->ToLower((TString)strFullPath);
+                {
+                    std::lock_guard<std::mutex> locker(m_textureInfoFilesLock);
+                    auto fileIter = std::find(m_textureInfoFiles.begin(), m_textureInfoFiles.end(), strFullPath);
+                    BEATS_ASSERT(fileIter != m_textureInfoFiles.end());
+                    m_textureInfoFiles.erase(fileIter);
+                }
+                LoadInfoFromFile(strFullPath);
+                iter = m_textureInfoMap.find(strCurrentSelectFileName);
+            }
+            BEATS_ASSERT(iter != m_textureInfoMap.end());
+            for (auto subIter = iter->second.begin(); subIter != iter->second.end(); ++subIter)
+            {
+                wxListItem listItem;
+                listItem.SetData(subIter->second);
+                listItem.SetImage(subIter->second->m_uImageIndex);
+                listItem.SetText(subIter->second->textureName);
+                listItem.SetId(subIter->second->m_uImageIndex);
+                bool bMatch = subIter->second->textureName.Lower().find(szSrchText.utf8_str()) != -1;
+                long currIndex = 0;
+                if (bMatch)
+                {
+                    currIndex = m_pImageListCtrl->InsertItem(listItem);
+                }
+                if (m_nCurrentSelectImageIndex == (int32_t)subIter->second->m_uImageIndex)
+                {
+                    m_pImageListCtrl->SetFocus();
+                    m_pImageListCtrl->SetItemState(currIndex, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED, 0xFFFFFFFF);
+                    m_pImageListCtrl->EnsureVisible(currIndex);
+                }
+            }
+        }
+    }
+}
+
+void CTexturePreviewDialog::LoadingThread()
+{
+    while (true)
+    {
+        wxString strFileName;
+        {
+            std::lock_guard<std::mutex> locker(m_textureInfoFilesLock);
+            if (m_textureInfoFiles.size() > 0)
+            {
+                strFileName = m_textureInfoFiles.back();
+                m_textureInfoFiles.pop_back();
+            }
+            else
+            {
+                break;
+            }
+        }
+        if (strFileName != wxEmptyString)
+        {
+            LoadInfoFromFile(strFileName);
+        }
+    }
+}
+
+void CTexturePreviewDialog::OnSrchIdle(wxIdleEvent& /*event*/)
+{
+    if (m_bEnumSearchTextUpdate && GetTickCount() - m_uLastEnumSearchTextUpdateTime > 700)
+    {
+        m_bEnumSearchTextUpdate = false;
+        RefreshListCtrl();
+    }
+}
+
+void CTexturePreviewDialog::OnSrchUpdate(wxCommandEvent& /*event*/)
+{
+    m_uLastEnumSearchTextUpdateTime = GetTickCount();
+    m_bEnumSearchTextUpdate = true;
+}

@@ -1,16 +1,19 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "NodeAnimation.h"
 #include "NodeAnimationManager.h"
 #include "NodeAnimationData.h"
-#include "Scene\Node.h"
-#include "Event\EventDispatcher.h"
-#include "Event\BaseEvent.h"
-#include "Render\Sprite.h"
+#include "Scene/Node.h"
+#include "Event/EventDispatcher.h"
+#include "Scene/NodeEvent.h"
+#include "Render/Sprite.h"
+#include "Scene/SceneManager.h"
 
 CNodeAnimation::CNodeAnimation()
     : m_bPause(false)
     , m_bIsPlaying(false)
     , m_bReversePlay(false)
+    , m_bAutoDestroy(false)
+    , m_bResetNodeWhenStop(false)
     , m_uCurrFramePos(0)
     , m_uFPS(0)
     , m_fElapsedTime(0)
@@ -19,37 +22,46 @@ CNodeAnimation::CNodeAnimation()
     , m_pData(NULL)
     , m_pOwner(NULL)
     , m_pEventDispatcher(NULL)
+    , m_pEventScene(NULL)
+    , m_bDispatcherBeginEvent(false)
+    , m_bDeleteFlag(false)
 {
 
 }
 
 CNodeAnimation::~CNodeAnimation()
 {
-    if (m_bIsPlaying)
-    {
-        Stop();
-        CNodeAnimationManager::GetInstance()->RemoveNodeAnimation(this->GetOwner(), this);
-    }
     BEATS_SAFE_DELETE(m_pEventDispatcher)
 }
 
-void CNodeAnimation::Play()
+void CNodeAnimation::Play(uint32_t uStartPos /*= 0*/)
 {
+#ifndef DISABLE_NODE_ANIMATION
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
     if (!m_bIsPlaying)
     {
-        InitStartPos();
-        CNodeAnimationManager::GetInstance()->RegisterNodeAnimation(this);
         m_bIsPlaying = true;
-        TriggerEvent(eET_EVENT_NODE_ANIMATION_START);
+        InitStartPos(uStartPos);
+        BEATS_ASSERT(m_pOwner);
+        m_fElapsedTime = uStartPos * m_fTimeForAFrame;
+        m_bDispatcherBeginEvent = true;
+        CNodeAnimationManager::GetInstance()->RegisterNodeAnimation(this);
     }
+#endif
 }
 
 void CNodeAnimation::Stop()
 {
-    BEATS_ASSERT(m_bIsPlaying, _T("Don't stop an animation which is already stopped!"));
+#ifndef DISABLE_NODE_ANIMATION
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
     BEATS_ASSERT(m_pOwner != NULL);
     m_bIsPlaying = false;
-    TriggerEvent(eET_EVENT_NODE_ANIMATION_STOP);
+    m_fElapsedTime = 0;
+    if (m_bResetNodeWhenStop)
+    {
+        ResetNode();
+    }
+#endif
 }
 
 void CNodeAnimation::Pause()
@@ -72,111 +84,124 @@ bool CNodeAnimation::IsPlaying() const
     return m_bIsPlaying;
 }
 
+void CNodeAnimation::SetPlayingFlag(bool bPlaying)
+{
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
+    m_bIsPlaying = bPlaying;
+}
+
 void CNodeAnimation::Update(float ddt)
 {
-    if (!IsPaused())
+#ifndef DISABLE_NODE_ANIMATION
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
+    if (!IsPaused() && m_bIsPlaying && m_playType != eNAPT_NONE)
     {
-        m_fElapsedTime += ddt;
-        if (m_fElapsedTime > m_fTimeForAFrame && m_pData)
+        if (m_pData && m_pData->GetFrameCount() > 0)
         {
-            size_t uFrame = (size_t)(m_fElapsedTime / m_fTimeForAFrame);
-            size_t uTotalCount = m_pData->GetFrameCount();
+            uint32_t uTotalFrame = m_pData->GetFrameCount() - 1;
+            uint32_t uFrame = (uint32_t)(m_fElapsedTime / m_fTimeForAFrame);
+            uint32_t uLastFramePos = m_uCurrFramePos;
+            bool bAnimationFinished = false;
+
+            bool bTriggerLoopEndEvent = false;
             if (m_playType == eNAPT_ONCE)
             {
-                m_uCurrFramePos += uFrame;
-                if (m_uCurrFramePos >= uTotalCount)
+                m_uCurrFramePos = uFrame;
+                if (m_uCurrFramePos > uTotalFrame)
                 {
-                    m_uCurrFramePos = uTotalCount - 1;
-                    TriggerEvent(eET_EVENT_NODE_ANIMATION_FINISHED);
-                    Stop();
+                    m_uCurrFramePos = uTotalFrame;
+                    bAnimationFinished = true;
                 }
             }
             else if (m_playType == eNAPT_LOOP)
             {
-                m_uCurrFramePos += uFrame;
-                if (m_uCurrFramePos >= uTotalCount)
+                if (uFrame > uTotalFrame)
                 {
-                    m_uCurrFramePos = m_uCurrFramePos % uTotalCount;
+                    m_fElapsedTime -= m_fTimeForAFrame * (uTotalFrame + 1);
+                    bTriggerLoopEndEvent = true;
                 }
+                m_uCurrFramePos = uFrame % (uTotalFrame + 1);
             }
             else if (m_playType == eNAPT_REVERSE)
             {
-                int nCurPos = (int)m_uCurrFramePos - (int)uFrame;
-                if ( nCurPos < 0 )
+                int nPos = (int)uTotalFrame - (int)uFrame;
+                if (nPos < 0)
                 {
                     m_uCurrFramePos = 0;
-                    TriggerEvent(eET_EVENT_NODE_ANIMATION_FINISHED);
-                    Stop();
+                    bAnimationFinished = true;
                 }
                 else
                 {
-                    m_uCurrFramePos = nCurPos;
+                    m_uCurrFramePos = nPos;
                 }
             }
             else if (m_playType == eNAPT_BOUNCE)
             {
-                int nFrameCount = m_bReversePlay ? (int)m_uCurrFramePos - (int)uFrame : m_uCurrFramePos + uFrame;
-                if (nFrameCount < 0)
+                if (uFrame > uTotalFrame)
                 {
-                    nFrameCount = -nFrameCount;
-                    m_bReversePlay = false;
+                    BEATS_ASSERT(m_fElapsedTime >= m_fTimeForAFrame * uTotalFrame);
+                    m_fElapsedTime = BEATS_FMOD(m_fElapsedTime, m_fTimeForAFrame * uTotalFrame);
+                    m_bReversePlay = !m_bReversePlay;
                 }
-                if (nFrameCount >= (int)uTotalCount)
+                if (m_bReversePlay)
                 {
-                    while (nFrameCount >= (int)uTotalCount)
-                    {
-                        nFrameCount -= uTotalCount;
-                        m_bReversePlay = !m_bReversePlay;
-                    }
-                    if (m_bReversePlay)
-                    {
-                        m_uCurrFramePos = uTotalCount - nFrameCount - 1;
-                    }
-                    else
-                    {
-                        BEATS_ASSERT(nFrameCount >= 0);
-                        m_uCurrFramePos = nFrameCount;
-                    }
+                    m_uCurrFramePos = (int)uTotalFrame - (int)(uFrame % (uTotalFrame + 1));
                 }
                 else
                 {
-                    m_uCurrFramePos = nFrameCount;
-                    if (m_uCurrFramePos == uTotalCount - 1)
-                    {
-                        m_bReversePlay = true;
-                    }
+                    m_uCurrFramePos = uFrame % (uTotalFrame + 1);
                 }
-                
-                BEATS_ASSERT(m_uCurrFramePos < uTotalCount);
             }
             else if (m_playType == eNAPT_REVERSE_LOOP)
             {
-                int curPos = (int)m_uCurrFramePos - (int)uFrame;
-                while (curPos < 0)
+                if (uFrame > uTotalFrame)
                 {
-                    curPos += uTotalCount;
+                    m_fElapsedTime -= m_fTimeForAFrame * (uTotalFrame + 1);
                 }
-                m_uCurrFramePos = curPos;
+                m_uCurrFramePos = (int)uTotalFrame - (int)(uFrame % (uTotalFrame + 1));
+            }
+            else if (m_playType == eNAPT_NONE)
+            {
+                // Do nothing.
             }
             else
             {
                 BEATS_ASSERT(false, _T("Unknown play type!"));
             }
-            BEATS_ASSERT(m_pOwner != NULL);
-            m_pData->Apply(m_pOwner, m_uCurrFramePos);
-            m_fElapsedTime -= m_fTimeForAFrame * uFrame;
-            BEATS_ASSERT(m_pData != NULL);
+            if (uLastFramePos != m_uCurrFramePos || m_bDispatcherBeginEvent)
+            {
+                BEATS_ASSERT(m_pOwner != NULL);
+                BEATS_ASSERT(m_pData != NULL);
+                m_pData->Apply(m_pOwner, m_uCurrFramePos);
+                if (m_bDispatcherBeginEvent)//dispatch this event must after first frame apply
+                {
+                    TriggerEvent(eET_EVENT_NODE_ANIMATION_START);
+                    m_bDispatcherBeginEvent = false;
+                }
+            }
+            m_fElapsedTime += ddt;
+            if (bTriggerLoopEndEvent)
+            {
+                TriggerEvent(eET_EVENT_NODE_ANIMATION_LOOP_END);
+            }
+            if (bAnimationFinished)
+            {
+                Stop();
+                TriggerEvent(eET_EVENT_NODE_ANIMATION_FINISHED);
+            }
         }
     }
+#endif
 }
 
-size_t CNodeAnimation::GetFPS() const
+uint32_t CNodeAnimation::GetFPS() const
 {
     return m_uFPS;
 }
 
-void CNodeAnimation::SetFPS(size_t uFPS)
+void CNodeAnimation::SetFPS(uint32_t uFPS)
 {
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
     BEATS_ASSERT(uFPS > 0);
     m_uFPS = uFPS;
     m_fTimeForAFrame = 1.0f / m_uFPS;
@@ -189,26 +214,33 @@ ENodeAnimationPlayType CNodeAnimation::GetPlayType() const
 
 void CNodeAnimation::SetPlayType(ENodeAnimationPlayType type)
 {
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
     m_playType = type;
 }
 
 void CNodeAnimation::SetData(CNodeAnimationData* pData)
 {
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
     ResetNode();
     m_pData = pData;
 }
 
-CNodeAnimationData* CNodeAnimation::GetAnimationData() const
+CNodeAnimationData* CNodeAnimation::GetData() const
 {
     return m_pData;
 }
 
-void CNodeAnimation::SetOwner(CNode* pOwner)
+void CNodeAnimation::SetOwner(CNode* pOwner, bool bNeedStop)
 {
-    m_pOwner = pOwner;
-    if (m_pData != NULL)
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
+    if (m_pOwner != pOwner)
     {
-        m_pData->Apply(m_pOwner, m_uCurrFramePos);
+        if (m_bIsPlaying && m_pOwner && bNeedStop)
+        {
+            ResetNode();
+            Stop();
+        }
+        m_pOwner = pOwner;
     }
 }
 
@@ -217,38 +249,36 @@ CNode* CNodeAnimation::GetOwner() const
     return m_pOwner;
 }
 
-size_t CNodeAnimation::GetCurrentFrame() const
+uint32_t CNodeAnimation::GetCurrentFrame() const
 {
     return m_uCurrFramePos;
 }
 
-void CNodeAnimation::SetCurrentFrame(size_t uFrame)
+void CNodeAnimation::SetCurrentFrame(uint32_t uFrame)
 {
+#ifndef DISABLE_NODE_ANIMATION
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
     m_uCurrFramePos = 0;
     if (m_pData)
     {
-        if (uFrame < m_pData->GetFrameCount())
-        {
-            m_uCurrFramePos = uFrame;
-        }
-        else
-        {
-            m_uCurrFramePos = m_pData->GetFrameCount() - 1;
-        }
+        m_uCurrFramePos = MIN(uFrame, m_pData->GetFrameCount() - 1);
+        m_pData->Apply(GetOwner(), m_uCurrFramePos);
     }
+#endif
 }
 
 CEventDispatcher* CNodeAnimation::GetEventDispatcher()
 {
     if (m_pEventDispatcher == NULL)
     {
-        m_pEventDispatcher = new CEventDispatcher;
+        m_pEventDispatcher = new CCompWrapper<CEventDispatcher, CNode>(m_pOwner);
     }
     return m_pEventDispatcher;
 }
 
 void CNodeAnimation::ResetNode()
 {
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
     if (m_pOwner != NULL)
     {
         SAnimationProperty* pProperty = m_pOwner->GetAnimationProperty();
@@ -261,24 +291,76 @@ void CNodeAnimation::ResetNode()
         defaultColor.r = 100;
         defaultColor.g = 100;
         defaultColor.b = 100;
+        defaultColor.a = 100;
         m_pOwner->SetColorScale(defaultColor);
+        if (m_pData)
+        {
+            const std::vector<CNodeAnimationElement*>& elements = m_pData->GetElements();
+            for (size_t i = 0; i < elements.size(); ++i)
+            {
+                m_pOwner->NodeAnimationReset(elements[i]->GetType());
+            }
+        }
     }
 }
 
-void CNodeAnimation::InitStartPos()
+void CNodeAnimation::Reset()
 {
+    m_bPause = false;
+    m_bIsPlaying = false;
+    m_bReversePlay = false;
+    m_bAutoDestroy = false;
+    m_bResetNodeWhenStop = false;
+    m_uCurrFramePos = 0;
+    m_uFPS = 0;
+    m_fElapsedTime = 0;
+    m_fTimeForAFrame = 0;
+    m_playType = eNAPT_Count;
+    if (m_pData != nullptr && m_pData->GetTempFlag())
+    {
+        BEATS_SAFE_DELETE(m_pData);
+    }
+    m_pData = NULL;
+    m_pOwner = NULL;
+    BEATS_SAFE_DELETE(m_pEventDispatcher);
+    m_pEventScene = NULL;
+    m_bDispatcherBeginEvent = false;
+    m_bDeleteFlag = false;
+}
+
+void CNodeAnimation::BindScene(CScene* pScene)
+{
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
+    m_pEventScene = pScene;
+}
+
+void CNodeAnimation::SetAutoDestroy(bool bAutoDestroy)
+{
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
+    m_bAutoDestroy = bAutoDestroy;
+}
+
+bool CNodeAnimation::IsAutoDestroy() const
+{
+    return m_bAutoDestroy;
+}
+
+void CNodeAnimation::InitStartPos(uint32_t uStartPos /*= 0*/)
+{
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
     switch (m_playType)
     {
     case eNAPT_ONCE:
     case eNAPT_LOOP:
     case eNAPT_BOUNCE:
-        SetCurrentFrame(0);
+        SetCurrentFrame(uStartPos);
         break;
     case eNAPT_REVERSE:
     case eNAPT_REVERSE_LOOP:
         if (m_pData != NULL)
         {
-            SetCurrentFrame(m_pData->GetFrameCount() - 1);
+            BEATS_ASSERT(m_pData->GetFrameCount() >= 1 + uStartPos);
+            SetCurrentFrame(m_pData->GetFrameCount() - 1 - uStartPos);
         }
         break;
     default:
@@ -289,9 +371,29 @@ void CNodeAnimation::InitStartPos()
 
 void CNodeAnimation::TriggerEvent(EEventType eventType)
 {
-    if (m_pEventDispatcher != NULL)
+#ifndef DISABLE_NODE_ANIMATION
+    if (m_pEventDispatcher != NULL && (m_pEventScene == NULL || m_pEventScene == CSceneManager::GetInstance()->GetCurrentScene()))
     {
-        CBaseEvent event(eventType);
+        CNodeEvent event(eventType);
         m_pEventDispatcher->DispatchEvent(&event);
     }
+#endif
+}
+
+void CNodeAnimation::SetOnEndHandler(CEventSubscription::EventHandler pHandler)
+{
+#ifndef DISABLE_NODE_ANIMATION
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
+    GetEventDispatcher()->Clear();
+    if (pHandler != nullptr)
+    {
+        GetEventDispatcher()->SubscribeEvent(eET_EVENT_NODE_ANIMATION_STOP, pHandler);
+    }
+#endif
+}
+
+void CNodeAnimation::SetResetNodeWhenStop(bool bValue)
+{
+    BEATS_ASSERT(!m_bDeleteFlag, "Can't operate on a animation which has delete flag, this may cause bug.");
+    m_bResetNodeWhenStop = bValue;
 }

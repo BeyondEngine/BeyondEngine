@@ -1,69 +1,64 @@
 ﻿#ifndef BEYOND_ENGINE_RENDER_ANIMATIONCONTROLLER_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_ANIMATIONCONTROLLER_H__INCLUDE
-#include "BaseAnimationController.h"
-class CAnimation3D;
-class CSkeleton;
-class CSkeletonBone;
+#include "MathExt/Quaternion.h"
+#include "MathExt/Mat4.h"
 
-class CAnimationController : public CBaseAnimationController
+class CSkeletonAnimation;
+class CSkeleton;
+
+class CAnimationController
 {
 public:
-
-    typedef std::map<ESkeletonBoneType, kmMat4> BoneMatrixMap;
-    typedef std::vector<kmMat4>                 BoneMatrix;
-
     CAnimationController();
-    virtual ~CAnimationController();
+    ~CAnimationController();
 
-    void SetSkeleton(SharePtr<CSkeleton> skeleton);
-    SharePtr<CAnimation3D> GetCurrentAnimation();
-    void PlayAnimation(const SharePtr<CAnimation3D>& pAnimation, float fBlendTime, bool bLoop);
-    void GoToFrame(size_t frame);
+    void SetSkeleton(CSkeleton* pSkeleton);
+    CSkeletonAnimation* GetCurrentAnimation() const;
+    void PlayAnimation(CSkeletonAnimation* pAnimation, float fBlendTime, bool bLoop);
+    void GoToFrame(uint32_t frame);
+    void SetAllowSkip(bool bAllow);
     void Pause();
     void Resume();
     void Stop();
     bool IsPlaying();
-    size_t GetCurrFrame() const;
+    uint32_t GetCurrFrame() const;
     float GetPlayingTime() const;
-    void Update(float fDeltaTime) override;
-    const BoneMatrixMap& GetDeltaMatrices() const;
+    void Update(float fDeltaTime);
+    const std::map<uint8_t, CMat4*>& GetBlendDeltaMatrices() const;
+    CMat4 GetBoneCurrWorldTM(uint8_t uBoneIndex) const;
+    void BlendAnimation(const CSkeletonAnimation* pBeforeAnimation, const CSkeletonAnimation* pAfterAnimation);
+    bool IsBlending() const;
+    void SetLoop(bool bLoop);
+    uint32_t GetLoopCount() const;
+    bool IsLoop() const;
 
-    const BoneMatrixMap& GetInitWorldTransform() const;
-    const BoneMatrixMap& GetCurWorldTransform() const;
-
-    void CalcDeltaMatrices();
-
-    void  GetBoneInitWorldTM(kmMat4& transform, const SharePtr<CSkeletonBone> pTposSkeletonBone);
-    void  GetBoneCurWorldTM(kmMat4&  transform, const ESkeletonBoneType boneType);
-    void  BlendAnimation(const SharePtr<CAnimation3D> pBeforeAnimation, const SharePtr<CAnimation3D> pAfterAnimation);
-    const kmMat4*  GetBoneTM(ESkeletonBoneType boneType);
-    size_t GetPlayingFrame();
 private:
-    void  BlendData(const std::vector<kmMat4*>& startBones, const std::vector<kmMat4*>& endBones);
-    void  Interpolation(const kmMat4& startMat, const kmMat4& endMat,kmMat4& insertMat);
-    void  Slerp( kmQuaternion* pOut,const kmQuaternion* q1,const kmQuaternion* q2,kmScalar t);
-    void  ClearBlendData();
-    bool  CheckBlend();
-    void  CalcInitBoneWorldTM();
+    void Interpolation(const CMat4& startMat, const CMat4& endMat,CMat4& insertMat);
+    void UpdateBlendWorldTM(uint32_t type, const std::map<uint32_t, CMat4>& localMap);
+    void CalcDeltaMatrices();
+    CMat4* GetMat();
 
 private:
     bool m_bLoop;
-    size_t m_uLoopCount;
     bool m_bPlaying;
+    bool m_bBlending;
+    bool m_bAllowSkip; // indicate if the delta time is too much, should it skip the frame.
+    uint32_t m_uLoopCount;
     float m_fPlayingTime;
     float m_fBlendTime;
-    SharePtr<CAnimation3D> m_pCurrentAnimation;
-    SharePtr<CAnimation3D> m_pPreAnimation;
-    SharePtr<CSkeleton> m_pSkeleton;
+    CSkeletonAnimation* m_pCurrentAnimation;
+    CSkeletonAnimation* m_pPreAnimation;
+    CSkeleton* m_pSkeleton;
 
-    // this matrix convert Tpose skeleton to current frame pos.
-    BoneMatrixMap m_deltaMatrices;
+    // it's the delta matrices from world TM of T-pos to current world TM.
+    std::map<uint8_t, CMat4*> m_blendDeltaMatrices;
 
-    //this matrix convert  bone space to world space
-    BoneMatrixMap m_initBoneWorldTM;
-    BoneMatrixMap m_curBoneWorldTM;
-    BoneMatrix m_blendBonesMat;
-    std::map<size_t,BoneMatrix> m_bonesMatOfFrameMap;
+    // When we are blending animation, get bone's world TM from this map, otherwise, fetch the data in CSkeletonAnimation
+    std::map<uint32_t, CMat4*> m_blendBonesWorldTMMap;
+
+    std::vector<CMat4*> m_matPool;
+    uint32_t m_matPoolIndex;
+
 };
 
 #endif

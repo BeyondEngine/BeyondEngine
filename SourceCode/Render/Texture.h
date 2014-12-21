@@ -4,6 +4,7 @@
 #include "Resource/Resource.h"
 #include "RenderPublic.h"
 #include "external/Image.h"
+#define BEYONDENGINE_ZIP_FILE_HEADER "BeyondEngine_Zip"
 
 class CTexture : public CResource
 {
@@ -18,7 +19,7 @@ public:
     virtual void Uninitialize() override;
 
     GLuint ID() const;
-
+    CTexture* GetAlphaTexture() const;
     bool InitWithMipmaps( const SMipmapInfo* mipmaps, int mipmapsNum, PixelFormat pixelFormat, int pixelsWide, int pixelsHigh);
     bool InitWithData(const void *data, ssize_t dataLen, PixelFormat pixelFormat, int pixelsWide, int pixelsHigh);
     bool UpdateSubImage(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, const GLvoid *data);
@@ -31,20 +32,28 @@ public:
 
     int Width() const;
     int Height() const;
+    CImage::EFormat GetFileFormat() const;
 
-    bool operator==( const CTexture& other );
+#ifdef DEVELOP_VERSION
+    virtual TString GetDescription() const override;
+#endif
+#ifdef EDITOR_MODE
+    virtual void Reload() override;
+#endif
 
-    bool operator!=( const CTexture& other );
-
+private:
+    void LoadWithImage(CImage* pImage);
 
 private:
     bool m_bPremultipliedAlpha;
     int m_iWidth;
     int m_iHeight;
-    size_t m_uMipmapCount;
+    uint32_t m_uMipmapCount;
     GLuint m_uId;
     PixelFormat m_pixelFormat;
+    CImage::EFormat m_fileFormat = CImage::eF_UNKOWN;
     CImage* m_pImage;
+    CTexture* m_pEtcAlphaTexture = nullptr;
 };
 
 #endif

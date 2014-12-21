@@ -11,8 +11,20 @@ public:
     CEditCameraWnd(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos, const wxSize &size, long style, const wxString &name = wxDialogNameStr);
     virtual ~CEditCameraWnd();
 
+    void InitByConfig();
     void UpdateInfo(bool bForceUpdate = false);
     virtual bool Show(bool bShow = true) override;
+    float GetSpeedValue() const;
+    float GetShiftMoveSpeedRateValue() const;
+    float GetPosXValue() const;
+    float GetPosYValue() const;
+    float GetPosZValue() const;
+    float GetRotationXValue() const;
+    float GetRotationYValue() const;
+    float GetRotationZValue() const;
+    float GetFovValue() const;
+    float GetClipNearValue() const;
+    float GetClipFarValue() const;
 
 private:
     void OnClose(wxCloseEvent& event);
@@ -32,6 +44,7 @@ private:
     wxPGProperty* m_pClipNear;
     wxPGProperty* m_pClipFar;
     wxPGProperty* m_pSpeed;
+    wxPGProperty* m_pShiftMoveSpeedRate;
     wxPGProperty* m_pFov;
     wxButton* m_pSaveAsSceneInitBtn;
     wxButton* m_pLoadSceneInitBtn;

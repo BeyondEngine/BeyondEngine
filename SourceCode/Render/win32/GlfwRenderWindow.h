@@ -1,14 +1,14 @@
 #ifndef BEYOND_ENGINE_RENDER_WIN32_GLFWRENDERWINDOW_H__INCLUDE
 #define BEYOND_ENGINE_RENDER_WIN32_GLFWRENDERWINDOW_H__INCLUDE
 
-#include "Render/RenderWindow.h"
+#include "Render/RenderTarget.h"
 
 struct GLFWwindow;
-class CGlfwRenderWindow : public CRenderWindow
+class CGlfwRenderWindow : public CRenderTarget
 {
-    typedef CRenderWindow super;
+    typedef CRenderTarget super;
 public:
-    CGlfwRenderWindow(int nWidth, int nHeight, bool bAutoCreateViewport = false);
+    CGlfwRenderWindow(int nWidth, int nHeight);
     virtual ~CGlfwRenderWindow();
 
     virtual void SetToCurrent() override;
@@ -19,9 +19,8 @@ public:
 private:
     bool InitGlew();
     bool BindingFBO();
-    void UpdateCamera();
     bool IsLeftMouseDown() { return m_bLeftMouseDown; }
-    void GetMousePos(size_t& x, size_t& y) { x = m_uCurMousePosX, y = m_uCurMousePosY; }
+    void GetMousePos(uint32_t& x, uint32_t& y) { x = m_uCurMousePosX, y = m_uCurMousePosY; }
 
     static void onGLFWError(int errorID, const char* errorDesc);
     static void onGLFWMouseCallBack(GLFWwindow* window, int button, int action, int modify);
@@ -29,26 +28,15 @@ private:
     static void onGLFWMouseScrollCallback(GLFWwindow* window, double x, double y);
     static void onGLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void onGLFWCharCallback(GLFWwindow* window, unsigned int character);
-    static void onGLFWWindowPosCallback(GLFWwindow* windows, int x, int y);
-    static void onGLFWframebuffersize(GLFWwindow* window, int w, int h);
-
+    static void onGLFWSizeChangeCallback(GLFWwindow* window, int nWidth, int nHeight);
 private:
     GLFWwindow* m_pMainWindow;
     bool m_bGlewInited;
     bool m_bLeftMouseDown;
-    size_t m_uLastMousePosX;
-    size_t m_uLastMousePosY;
-    size_t m_uCurMousePosX;
-    size_t m_uCurMousePosY;
-    size_t m_uPressedMousePosX;
-    size_t m_uPressedMousePosY;
-    float m_fPressStartYaw;
-    float m_fPressStartPitch;
-    size_t m_uLastTapTime;
-    unsigned int m_uTapCount;
-
-    static const size_t TAP_INTERVAL = 250;
-    static const size_t TAP_DEVIATION = 5;
+    uint32_t m_uLastMousePosX;
+    uint32_t m_uLastMousePosY;
+    uint32_t m_uCurMousePosX;
+    uint32_t m_uCurMousePosY;
     static std::map<GLFWwindow *, CGlfwRenderWindow *> m_sInstanceMap;
 };
 

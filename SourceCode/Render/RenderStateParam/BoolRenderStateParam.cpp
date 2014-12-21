@@ -39,21 +39,21 @@ void CBoolRenderStateParam::Apply()
     m_bValue ? pRender->EnableGL(m_type) : pRender->DisableGL(m_type);
 }
 
-ERenderState CBoolRenderStateParam::GetRenderStateType() const
+ERenderStateParamType CBoolRenderStateParam::GetRenderStateType() const
 {
-    return eRS_BoolMode;
+    return eRSPT_BoolMode;
 }
 
 bool CBoolRenderStateParam::operator==( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_BoolMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_BoolMode );
     CBoolRenderStateParam* pOther = (CBoolRenderStateParam*)&other;
     return ( m_type == pOther->m_type && m_bValue == pOther->m_bValue );
 }
 
 bool CBoolRenderStateParam::operator!=( const CRenderStateParamBase& other ) const
 {
-    BEATS_ASSERT( other.GetRenderStateType() == eRS_BoolMode );
+    BEATS_ASSERT( other.GetRenderStateType() == eRSPT_BoolMode );
     CBoolRenderStateParam* pOther = (CBoolRenderStateParam*)&other;
     return ( m_type != pOther->m_type || m_bValue != pOther->m_bValue );
 }

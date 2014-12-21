@@ -2,9 +2,11 @@
 #define BEYOND_ENGINE_NODEANIMATION_NODEANIMATION_H__INCLUDE
 
 #include "Event/EventType.h"
+#include "Event/EventSubscription.h"
 
 enum ENodeAnimationPlayType
 {
+    eNAPT_NONE,
     eNAPT_ONCE,
     eNAPT_LOOP,
     eNAPT_REVERSE,
@@ -19,51 +21,73 @@ enum ENodeAnimationPlayType
 class CNodeAnimationData;
 class CNode;
 class CEventDispatcher;
+class CScene;
 class CNodeAnimation
 {
-public:
+private:
     CNodeAnimation();
     ~CNodeAnimation();
 
-    void Play();
+public:
+    friend struct Details::Deallocator<CNodeAnimation, false>;
+    friend class CNodeAnimationManager; // Only CNodeAnimationManager can create and delete CNodeAnimation.
+
+    void Play(uint32_t uStartPos = 0);
     void Stop();
     void Pause();
     void Resume();
     bool IsPaused() const;
     bool IsPlaying() const;
+    void SetPlayingFlag(bool bPlaying);
 
     void Update(float ddt);
-    size_t GetFPS() const;
-    void SetFPS(size_t uFPS);
+    uint32_t GetFPS() const;
+    void SetFPS(uint32_t uFPS);
     ENodeAnimationPlayType GetPlayType() const;
     void SetPlayType(ENodeAnimationPlayType type);
 
     void SetData(CNodeAnimationData* pData);
-    CNodeAnimationData* GetAnimationData() const;
-    void SetOwner(CNode* pOwner);
+    CNodeAnimationData* GetData() const;
+    void SetOwner(CNode* pOwner, bool bNeedStop = true);
     CNode* GetOwner() const;
 
-    size_t GetCurrentFrame() const;
-    void SetCurrentFrame(size_t uFrame);
+    uint32_t GetCurrentFrame() const;
+    void SetCurrentFrame(uint32_t uFrame);
 
     CEventDispatcher* GetEventDispatcher();
     void ResetNode();
+    void Reset();
+
+    // Event will only be trigger in this scene.
+    void BindScene(CScene* pScene);
+
+    void SetAutoDestroy(bool bAutoDestroy);
+    bool IsAutoDestroy() const;
+    void SetOnEndHandler(CEventSubscription::EventHandler pHandler);
+    void TriggerEvent(EEventType eventType);
+
+    void SetResetNodeWhenStop(bool bValue);
 
 private:
-    void InitStartPos();
-    void TriggerEvent(EEventType eventType);
+    void InitStartPos(uint32_t uStartPos = 0);
+
 private:
     bool m_bPause;
     bool m_bIsPlaying;
     bool m_bReversePlay;
-    size_t m_uCurrFramePos;
-    size_t m_uFPS;
+    bool m_bAutoDestroy;
+    bool m_bResetNodeWhenStop;
+    bool m_bDeleteFlag;
+    uint32_t m_uCurrFramePos;
+    uint32_t m_uFPS;
     float m_fElapsedTime;
     float m_fTimeForAFrame;
     ENodeAnimationPlayType m_playType;
     CNodeAnimationData* m_pData;
     CNode* m_pOwner;
     CEventDispatcher* m_pEventDispatcher;
+    CScene* m_pEventScene;
+    bool m_bDispatcherBeginEvent;
 };
 
 #endif

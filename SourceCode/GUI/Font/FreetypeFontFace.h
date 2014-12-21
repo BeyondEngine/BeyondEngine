@@ -2,7 +2,6 @@
 #define BEYOND_ENGINE_GUI_FONT_FREETYPEFONTFACE_H__INCLUDE
 
 #include "FontFace.h"
-
 class CRenderTarget;
 typedef struct FT_Outline_ FT_Outline;
 typedef struct FT_FaceRec_*  FT_Face;
@@ -55,51 +54,70 @@ private:
     float u, v, u_border, v_border;
 };
 
+struct SFontUpdateImageInfo
+{
+    SFontUpdateImageInfo()
+    {
+    }
+    ~SFontUpdateImageInfo()
+    {
+        BEATS_SAFE_DELETE_ARRAY(m_pData);
+    }
+    SharePtr<CTexture> m_pTexture;
+    GLint m_x = 0;
+    GLint m_y = 0;
+    int32_t m_nWidth = 0;
+    int32_t m_nHeight = 0;
+    void* m_pData = 0;
+};
+
 class CFreetypeFontFace : public CFontFace
 {
 public:
-    CFreetypeFontFace(const TString &name, const TString &file, int size, int dpi = -1);
+    CFreetypeFontFace(const TString &name, const TString &file, int32_t size, int32_t dpi = -1);
     virtual ~CFreetypeFontFace();
 
-    virtual const CFontGlyph *PrepareChar(wchar_t character) override;
+    virtual const CFontGlyph *PrepareChar(wchar_t character, bool& bGlyphRestFlag) override;
 
     virtual void Clear() override;
-#ifdef EDITOR_MODE
+#if (BEYONDENGINE_PLATFORM == PLATFORM_WIN32) && defined(DEVELOP_VERSION)
     virtual void SaveToTextureFile(const TCHAR* pszFilePath) override;
 #endif
     void SetRelatedRenderTarget(CRenderTarget *pRenderTarget);
+    virtual float GetScaleFactor() const override;
 
 private:
-    virtual void DrawGlyph(const CFontGlyph *glyph, float x, float y, float fFontSize,
-        CColor color, CColor borderColor, const kmMat4 *transform, bool bGUI, const CRect *pRect) const override;
-
-    float GetScaleFactor() const;
-
+    virtual void DrawGlyph(CRenderBatch* pBatch, const CFontGlyph *glyph, float x, float y, float fFontSize, const CColor& color, const CColor& borderColor = 0x000000FF,
+        const CMat4 *transform = nullptr, const CRect *pRect = nullptr, float fAlphaScale = 1.0f) const override;
+    virtual CRenderBatch* GetRenderBatch(ERenderGroupID renderGroupId) const override;
     void NewPage();
 
     void ApplyFTSize();
 
     FT_Face GetFontFace() const;
-    virtual void SetFontSize(int nFontSize);
+    virtual void SetFontSize(int32_t nFontSize) override;
 
 private:
-    unsigned char* RenderFontDataToBmp(int nWidth, int nHeight, int startPosX, int startPosY, FT_Outline* pOutLine);
-
+    unsigned char* RenderFontDataToBmp(int32_t nWidth, int32_t nHeight, int32_t startPosX, int32_t startPosY, FT_Outline* pOutLine);
+    bool AdjustQuadCornerByRectClip(CQuadPTCC& quad, const CRect *pRect) const;
+    void ClicPointToRect(CVertexPTCC& vertex, const CRect* pRect, float fQuadWidth, float fQuadHeight, float fTexWidth, float fTextHeight ) const;
+    // If the position is not in the rect, we return the distance between it, otherwise we return 0,0.
+    CVec2 GetDistanceBetweenPointAndRect( const CVec3& position, const CRect* pRect) const;
+    void UpdateVertice( CVec3& positon, CTex& tex, float quadWidth, float quadHeight, float texWidth, float texHeight, const CVec2& offset ) const;
+    float GetDistanceFromRange( float checkValue, float start, float end ) const;
+    void ResetGlyphs();
 private:
     SharePtr<CFont> m_pFont;
-    std::vector<SharePtr<CTexture>> m_textures;
-    int m_nCurrPage;
-    size_t m_uCurrX;
-    size_t m_uCurrY;
-    int m_nSize;
-    int m_nDpi;
-    int m_nLineHeight;    //maxheight of current font face
-    int m_nAscender;  //distance from top to baseline
-
+    uint32_t m_uCurrX;
+    uint32_t m_uCurrY;
+    int32_t m_nDpi;
+    int32_t m_nLineHeight;    //maxheight of current font face
+    int32_t m_nAscender;  //distance from top to baseline
+    static const int32_t m_nBorderSpace = 2;
     CRenderTarget *m_pRelatedRenderTarget;
-
-    static const int PAGE_WIDTH = 1024;
-    static const int PAGE_HEIGHT = 1024;
+    std::mutex m_fontUpdateImageCacheMutex;
+    std::vector<SFontUpdateImageInfo*> m_fontUpdateImageCache;
+    static const int32_t PAGE_WIDTH = 2048;
+    static const int32_t PAGE_HEIGHT = 2048;
 };
-
 #endif

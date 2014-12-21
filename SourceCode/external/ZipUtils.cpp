@@ -475,3 +475,15 @@ unsigned int CZipUtils::ChecksumPvr( const unsigned int *data, ssize_t len )
 
     return cs;
 }
+
+void CZipUtils::Compress(const unsigned char* SourceBuffer, unsigned long sourceLength, unsigned char* pDestBuffer, unsigned long* DestLength)
+{
+    bool bRet = compress(pDestBuffer, DestLength, SourceBuffer, sourceLength) == Z_OK;
+    BEYONDENGINE_UNUSED_PARAM(bRet);
+    BEATS_ASSERT(bRet, _T("压缩失败"));
+}
+
+unsigned long CZipUtils::CompressBound(unsigned long uLength)
+{
+    return compressBound(uLength);
+}

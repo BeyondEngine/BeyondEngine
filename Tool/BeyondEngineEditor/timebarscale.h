@@ -20,10 +20,11 @@ public:
 protected:
     void                OnPaint( wxPaintEvent& event );
     void                OnMouse( wxMouseEvent& event );
+    void                OnMouseCaptureLost(wxMouseCaptureLostEvent& event);
 
 private:
-    int     m_iCursorPositionX;
-    CTimeBarFrame* m_pTimeBarFrame;
+    int     m_iCursorPositionX = 0;
+    CTimeBarFrame* m_pTimeBarFrame = nullptr;
     DECLARE_EVENT_TABLE()
 };
 

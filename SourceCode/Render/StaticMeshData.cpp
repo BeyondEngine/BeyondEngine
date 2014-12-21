@@ -1,125 +1,237 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "StaticMeshData.h"
 #include "RenderBatch.h"
 #include "Material.h"
-#include "RenderState.h"
+#include "Texture.h"
 #include "Utility/BeatsUtility/FilePathTool.h"
 #include "Resource/ResourceManager.h"
+#include "NodeAnimation/NodeAnimationData.h"
+#include "RenderManager.h"
 
-CStaticMeshData::CStaticMeshData()
+SSubMesh::SSubMesh()
 {
 
 }
 
+SSubMesh::~SSubMesh()
+{
+    BEATS_SAFE_DELETE(m_pRenderBatch);
+    BEATS_SAFE_DELETE(m_pNodeAnimationData);
+}
+
+CStaticMeshData::CStaticMeshData()
+{
+    m_aabb.m_maxPos.Fill(FLT_MIN, FLT_MIN, FLT_MIN);
+    m_aabb.m_minPos.Fill(FLT_MAX, FLT_MAX, FLT_MAX);
+}
+
 CStaticMeshData::~CStaticMeshData()
 {
-
+    if (IsInitialized())
+    {
+        Uninitialize();
+    }
 }
 
 bool CStaticMeshData::Load()
 {
     BEATS_ASSERT(!IsLoaded());
 
-    CRenderGroup *p3DRenderGroup = CRenderGroupManager::GetInstance()->GetRenderGroup(CRenderGroupManager::LAYER_3D);
-    CRenderGroup *pAlphaRenderGroup = CRenderGroupManager::GetInstance()->GetRenderGroup(CRenderGroupManager::LAYER_3D_ALPHA);
+#ifdef DEVELOP_VERSION
+    m_uVertexCount = 0;
+#endif
 
     // Load From File
     CSerializer serializer;
-    CFilePathTool::GetInstance()->LoadFile(&serializer, GetFilePath().c_str(), _T("rb"));
-
-    BEATS_ASSERT(serializer.GetWritePos() > 0, _T("Read empty file %s !"), GetFilePath().c_str());
-    size_t meshCount;
-    serializer >> meshCount;
-    std::map<float, std::vector<SSubMesh*>> meshSortMap;
-    for (size_t i = 0; i < meshCount; ++i)
+    if (CFilePathTool::GetInstance()->LoadFile(&serializer, GetFilePath().c_str(), _T("rb")))
     {
-        size_t matCount;
-        serializer >> matCount;
-        for (size_t j = 0; j < matCount; ++j)
+        BEATS_ASSERT(serializer.GetWritePos() > 0, _T("Read empty file %s !"), GetFilePath().c_str());
+        uint32_t meshCount = 0;
+        serializer >> meshCount;
+        uint32_t nAnimationFrameCount = 0;
+        serializer >> nAnimationFrameCount;
+        for (uint32_t i = 0; i < meshCount; ++i)
         {
             SSubMesh *pSubMesh = new SSubMesh;
-            CMaterial* pNewMaterial = new CMaterial();
-            std::string strTextureName;
-            serializer >> strTextureName;
-            BEATS_ASSERT(!strTextureName.empty(), _T("Texutre can't be empty in static mesh data!"));
-            TCHAR buffer[MAX_PATH];
-            CStringHelper::GetInstance()->ConvertToTCHAR(strTextureName.c_str(), buffer, MAX_PATH);
-            pNewMaterial->SetTexture(0, CResourceManager::GetInstance()->GetResource<CTexture>(buffer));
-            pNewMaterial->SetSharders( _T("PointTexShader.vs"), _T("PointTexShader.ps"));
-            CRenderState* pRenderState = pNewMaterial->GetRenderState();
-            pRenderState->SetBoolState(CBoolRenderStateParam::eBSP_DepthTest, true);
+            uint32_t matCount;
+            serializer >> matCount;
+            BEATS_ASSERT(matCount <= 1, _T("mesh has %d mat, but we only support 1 static mesh\n%s"), matCount, GetFilePath().c_str());
             bool bUseBlend = false;
-            serializer >> bUseBlend;
-            pRenderState->SetBoolState(CBoolRenderStateParam::eBSP_Blend, bUseBlend);
-            pRenderState->SetBoolState(CBoolRenderStateParam::eBSP_ScissorTest, false);
-            pRenderState->SetBlendEquation(GL_FUNC_ADD);
-            pRenderState->SetBlendFuncSrcFactor(GL_SRC_ALPHA);
-            pRenderState->SetBlendFuncTargetFactor(GL_ONE_MINUS_SRC_ALPHA);
-            pNewMaterial->Initialize();
-            pSubMesh->m_material = pNewMaterial;
-            size_t uVertexCount = 0;
-            serializer >> uVertexCount;
-            if (uVertexCount > 0)
+            bool bUseLightMap = false;
+            std::string strTextureName;
+            std::string strLightMapTextureName;
+            if (matCount > 0)
             {
-                pSubMesh->m_vertices.resize(uVertexCount);
-                for (size_t k = 0; k < uVertexCount; ++k)
+                for (uint32_t j = 0; j < matCount; ++j)
                 {
-                    kmVec3 &position = pSubMesh->m_vertices[k].position;
-                    serializer >> position.x >> position.y >> position.z;
-                    CTex &tex = pSubMesh->m_vertices[k].tex;
-                    serializer >> tex.u >> tex.v;
-                }
-
-                pSubMesh->m_pRenderBatch = new CRenderBatch(VERTEX_FORMAT(CVertexPT), pSubMesh->m_material, GL_TRIANGLES, false);
-                pSubMesh->m_pRenderBatch->SetStatic(true);
-                pSubMesh->m_pRenderBatch->AddVertices(pSubMesh->m_vertices.data(), pSubMesh->m_vertices.size());
-                pSubMesh->m_pRenderBatch->SetGroup(bUseBlend ? pAlphaRenderGroup : p3DRenderGroup);
-                // HACK: For transparent object, we decide which object should be render first(further in view matrix)
-                // We just simply detect the distance between center pos and the camera direction pos 5000, 5000.
-                kmVec3 meshCenterPos;
-                serializer >> meshCenterPos.x >> meshCenterPos.y >> meshCenterPos.z;
-                if (bUseBlend)
-                {
-                    meshCenterPos.y = 0;
-                    kmVec3 positivePos;
-                    kmVec3Fill(&positivePos, 5000, 0, 5000);
-                    kmVec3 distance;
-                    kmVec3Subtract(&distance, &meshCenterPos, &positivePos);
-                    meshSortMap[kmVec3Length(&distance)].push_back(pSubMesh);
-                }
-                else
-                {
-                    // Solid object always render first.
-                    m_subMeshes.push_back(pSubMesh);
+                    serializer >> strTextureName;
+                    BEATS_ASSERT(!strTextureName.empty(), _T("Texutre can't be empty in static mesh data!"));
+                    serializer >> bUseLightMap;
+                    if (bUseLightMap)
+                    {
+                        serializer >> strLightMapTextureName;
+                        BEATS_ASSERT(!strLightMapTextureName.empty());
+                    }
+                    serializer >> bUseBlend;
                 }
             }
+            uint32_t uVertexCount = 0;
+            serializer >> uVertexCount;
+            BEATS_ASSERT(uVertexCount > 0, "static mesh data %s contains no vertices!", GetFilePath().c_str());
+#ifdef DEVELOP_VERSION
+            m_uVertexCount += uVertexCount;
+#endif
+            CVec3 localPos;
+            serializer >> localPos.X() >> localPos.Y() >> localPos.Z();
+            pSubMesh->SetPosition(localPos);
+            if (uVertexCount > 0)
+            {
+                uint32_t uDataSize = uVertexCount * (bUseLightMap ? sizeof(CVertexPTT) : sizeof(CVertexPT));
+                SharePtr<CMaterial> pNewMaterial = bUseLightMap ? CRenderManager::GetInstance()->GetMeshLightMapMaterial(bUseBlend) : CRenderManager::GetInstance()->GetMeshMaterial(bUseBlend, false);
+                pSubMesh->m_pRenderBatch = new CRenderBatch(bUseLightMap ? VERTEX_FORMAT(CVertexPTT) : VERTEX_FORMAT(CVertexPT), pNewMaterial, GL_TRIANGLES, false);
+                pSubMesh->m_pRenderBatch->SetStatic(true);
+                pSubMesh->m_pRenderBatch->AddVertices(serializer.GetReadPtr(), uVertexCount);
+                serializer.SetReadPos(serializer.GetReadPos() + uDataSize);
+                if (!strTextureName.empty())
+                {
+                    pSubMesh->m_pRenderBatch->SetTexture(0, CResourceManager::GetInstance()->GetResource<CTexture>(strTextureName.c_str()));
+                }
+                if (!strLightMapTextureName.empty())
+                {
+                    pSubMesh->m_pRenderBatch->SetTexture(1, CResourceManager::GetInstance()->GetResource<CTexture>(strLightMapTextureName.c_str()));
+                }
+                bool bUseRepeatMode = false;
+                serializer >> bUseRepeatMode;
+                serializer >> pSubMesh->m_aabb.m_minPos;
+                serializer >> pSubMesh->m_aabb.m_maxPos;
+                // If on point UV value is more than 1, we think we will use repeat mode to sample the texture.
+                pSubMesh->m_pRenderBatch->SetTextureClampOrRepeat(!bUseRepeatMode);
+                m_subMeshes.push_back(pSubMesh);
+            }
+            // Export animation.
+            bool bHasPosAnimation = false;
+            serializer >> bHasPosAnimation;
+            if (bHasPosAnimation)
+            {
+                BEATS_ASSERT(pSubMesh->m_pNodeAnimationData == NULL);
+                pSubMesh->m_pNodeAnimationData = new CNodeAnimationData;
+                pSubMesh->m_pNodeAnimationData->SetFrameCount(nAnimationFrameCount);
+                CNodeAnimationElement* pPosElement = new CNodeAnimationElement;
+                pPosElement->SetType(eNAET_Pos);
+                pSubMesh->m_pNodeAnimationData->AddElements(pPosElement);
+                int nStartFrame = 0;
+                int nEndFrame = 0;
+                serializer >> nStartFrame >> nEndFrame;
+                for (int n = nStartFrame; n <= nEndFrame; ++n)
+                {
+                    CVec3 data;
+                    serializer >> data.X() >> data.Y() >> data.Z();
+                    pPosElement->AddKeyFrame(n, data);
+                }
+            }
+            bool bHasRotateAnimation = false;
+            serializer >> bHasRotateAnimation;
+            if (bHasRotateAnimation)
+            {
+                if (pSubMesh->m_pNodeAnimationData == NULL)
+                {
+                    pSubMesh->m_pNodeAnimationData = new CNodeAnimationData;
+                    pSubMesh->m_pNodeAnimationData->SetFrameCount(nAnimationFrameCount);
+                }
+                CNodeAnimationElement* pRotateElement = new CNodeAnimationElement;
+                pRotateElement->SetType(eNAET_Rotation);
+                pSubMesh->m_pNodeAnimationData->AddElements(pRotateElement);
+                int nStartFrame = 0;
+                int nEndFrame = 0;
+                serializer >> nStartFrame >> nEndFrame;
+                for (int n = nStartFrame; n <= nEndFrame; ++n)
+                {
+                    CVec3 data;
+                    serializer >> data.X() >> data.Y() >> data.Z();
+                    pRotateElement->AddKeyFrame(n, data);
+                }
+            }
+            bool bHasScaleAnimation = false;
+            serializer >> bHasScaleAnimation;
+            if (bHasScaleAnimation)
+            {
+                if (pSubMesh->m_pNodeAnimationData == NULL)
+                {
+                    pSubMesh->m_pNodeAnimationData = new CNodeAnimationData;
+                    pSubMesh->m_pNodeAnimationData->SetFrameCount(nAnimationFrameCount);
+                }
+                CNodeAnimationElement* pScaleElement = new CNodeAnimationElement;
+                pScaleElement->SetType(eNAET_Scale);
+                pSubMesh->m_pNodeAnimationData->AddElements(pScaleElement);
+                int nStartFrame = 0;
+                int nEndFrame = 0;
+                serializer >> nStartFrame >> nEndFrame;
+                for (int n = nStartFrame; n <= nEndFrame; ++n)
+                {
+                    CVec3 data;
+                    serializer >> data.X() >> data.Y() >> data.Z();
+                    data.Z() *= -1;// HACK: I don't know why we need to do this to fit 3dmax.
+                    pScaleElement->AddKeyFrame(n, data);
+                }
+            }
+            if (uVertexCount == 0)
+            {
+                BEATS_SAFE_DELETE(pSubMesh);
+            }
         }
+        serializer >> m_aabb.m_minPos;
+        serializer >> m_aabb.m_maxPos;
     }
-    for (auto iter = meshSortMap.rbegin(); iter != meshSortMap.rend(); ++iter)
-    {
-        for (size_t i = 0; i < iter->second.size(); ++i)
-        {
-            m_subMeshes.push_back(iter->second.at(i));
-        }
-    }
-
     super::Load();
     return true;
 }
 
-bool CStaticMeshData::Unload()
+void CStaticMeshData::Initialize()
 {
-    BEATS_ASSERT(IsLoaded());
-    for(auto pSubMesh : m_subMeshes)
+    super::Initialize();
+    for (size_t i = 0; i < m_subMeshes.size(); ++i)
     {
-        BEATS_SAFE_DELETE(pSubMesh->m_pRenderBatch);
+        m_subMeshes[i]->Initialize();
+    }
+}
+
+void CStaticMeshData::Uninitialize()
+{
+    for (auto pSubMesh : m_subMeshes)
+    {
+        pSubMesh->Uninitialize();
         BEATS_SAFE_DELETE(pSubMesh);
     }
-    super::Unload();
-    return true;
+    m_subMeshes.clear();
+    super::Uninitialize();
 }
 
 const std::vector<SSubMesh *> & CStaticMeshData::GetSubMeshes() const
 {
     return m_subMeshes;
+}
+
+#ifdef EDITOR_MODE
+void CStaticMeshData::Reload()
+{
+    super::Reload();
+    Uninitialize();
+    Initialize();
+}
+#endif
+
+#ifdef DEVELOP_VERSION
+TString CStaticMeshData::GetDescription() const
+{
+    TString strRet = super::GetDescription();
+    TCHAR szBuffer[MAX_PATH];
+    _stprintf(szBuffer, "VertexCount: %d, ", m_uVertexCount);
+    strRet.append(szBuffer);
+    return strRet;
+}
+#endif
+
+const CAABBBox& CStaticMeshData::GetAABB() const
+{
+    return m_aabb;
 }

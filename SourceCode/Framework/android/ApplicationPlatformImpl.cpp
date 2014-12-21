@@ -1,12 +1,14 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Framework/Application.h"
 #include <android_native_app_glue.h>
 #include <NDKHelper.h>
 #include "Utility/BeatsUtility/FilePathTool.h"
 #include "AndroidHandler.h"
 
-int CApplication::Run(void* pData)
+int CApplication::Run(int argc, char* argv[], void* pData)
 {
+    BEYONDENGINE_UNUSED_PARAM(argc);
+    BEYONDENGINE_UNUSED_PARAM(argv);
     BEATS_ASSERT(pData != NULL, _T("android application can't be null!"));
     android_app* pApp = (android_app*)pData;
     CAndroidHandler* pAndroidHandler = CAndroidHandler::GetInstance();
@@ -45,10 +47,21 @@ int CApplication::Run(void* pData)
         if(pAndroidHandler->IsFocus() && pEngineCenter->ShouldUpdateThisFrame())
         {
             CApplication * pApplication = CApplication::GetInstance();
+            pAndroidHandler->RefreshTextBoxStr();
             pApplication->Update();
             pApplication->Render();
             pAndroidHandler->GetGLContext()->Swap();
         }
     }
     return 0;
+}
+
+void CApplication::OnSwitchToBackground()
+{
+    Pause();
+}
+
+void CApplication::OnSwitchToForeground()
+{
+    Resume();
 }

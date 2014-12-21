@@ -10,11 +10,14 @@
   </Project>
   <Build xsi:type="com.visualgdb.build.android">
     <AndroidPlatform>android-14</AndroidPlatform>
+    <AdditionalBuildArguments />
     <IsDebugConfiguration>false</IsDebugConfiguration>
+    <DoNotEditAndroidManifest>false</DoNotEditAndroidManifest>
     <JNIOnlyBuild>false</JNIOnlyBuild>
+    <AdditionalANTArguments />
     <AdditionalDirectoriesToDeleteOnClean>bin;obj</AdditionalDirectoriesToDeleteOnClean>
     <DeleteANTFilesOnClean>false</DeleteANTFilesOnClean>
-    <DoNotEditAndroidManifest>false</DoNotEditAndroidManifest>
+    <KeystorePath>$(ProjectDir)\starraiders.keystore</KeystorePath>
     <CustomActions />
   </Build>
   <Debug xsi:type="com.visualgdb.debug.android">
@@ -46,6 +49,8 @@
       <ExamineRegistersInRawFormat>true</ExamineRegistersInRawFormat>
       <EnableSmartStepping>false</EnableSmartStepping>
       <DisableSignals>false</DisableSignals>
+      <EnableAsyncExecutionMode>false</EnableAsyncExecutionMode>
+      <EnableNonStopMode>false</EnableNonStopMode>
     </AdditionalGDBSettings>
     <LaunchGDBSettings xsi:type="GDBLaunchParametersAndroid" />
     <GenerateCtrlBreakInsteadOfCtrlC>false</GenerateCtrlBreakInsteadOfCtrlC>
@@ -58,9 +63,13 @@
     <AlreadyRunningDecision>Ask</AlreadyRunningDecision>
     <ShowLogCat>true</ShowLogCat>
     <EnableThreadNameWatcher>true</EnableThreadNameWatcher>
+    <AppProcess>AutoDetect</AppProcess>
     <StandaloneExeSettings>
+      <LaunchMode>NewInstance</LaunchMode>
       <DeploymentDirectory>/data/local/tmp</DeploymentDirectory>
+      <StartGDBServerAsRoot>false</StartGDBServerAsRoot>
     </StandaloneExeSettings>
+    <SharedLibraryBreakpointWorkaroundMode>AutoDetect</SharedLibraryBreakpointWorkaroundMode>
   </Debug>
   <CustomBuild>
     <PreBuildActions />
@@ -78,4 +87,7 @@
     <ShowMessageAfterExecuting>true</ShowMessageAfterExecuting>
   </CustomShortcuts>
   <UserDefinedVariables />
+  <CodeSense>
+    <Enabled>Unknown</Enabled>
+  </CodeSense>
 </VisualGDBProjectSettings2>

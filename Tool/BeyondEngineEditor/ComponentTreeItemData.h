@@ -6,14 +6,14 @@
 class CComponentTreeItemData : public wxTreeItemData
 {
 public:
-    CComponentTreeItemData(bool bIsDirectory, size_t guid);
+    CComponentTreeItemData(bool bIsDirectory, uint32_t guid);
     virtual ~CComponentTreeItemData();
 
     bool IsDirectory();
-    size_t GetGUID();
+    uint32_t GetGUID();
 private:
     bool m_bIsDirectory;
-    size_t m_uComponentGUID;
+    uint32_t m_uComponentGUID;
 };
 
 #endif
