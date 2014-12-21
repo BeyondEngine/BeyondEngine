@@ -22,6 +22,39 @@
                 </Dependency>
             </Instance>
         </Component>
+        <Component GUID="0x7b1a17b7" Name="CTestComponent">
+            <Instance Id="3" PosX="-20" PosY="1" UserDefineName="²âÊÔÓÃ×é¼þ">
+                <VariableNode Type="13" Variable="m_enum" SavedValue="0" />
+                <VariableNode Type="6" Variable="m_str" SavedValue="string" />
+                <VariableNode Type="1" Variable="m_bool" SavedValue="False" />
+                <VariableNode Type="5" Variable="m_colour" SavedValue="0x0" />
+                <VariableNode Type="3" Variable="m_double" SavedValue="0.00000000000000000" />
+                <VariableNode Type="2" Variable="m_float" SavedValue="0" />
+                <VariableNode Type="4" Variable="m_int" SavedValue="0" />
+                <VariableNode Type="5" Variable="m_uint" SavedValue="0" />
+                <VariableNode Type="8" Variable="m_vector" SavedValue="Empty" />
+                <VariableNode Type="9" Variable="m_map" SavedValue="Empty" />
+                <VariableNode Type="14" Variable="m_vec2" SavedValue="0, 0">
+                    <VariableNode Type="2" Variable="x" SavedValue="0" />
+                    <VariableNode Type="2" Variable="y" SavedValue="0" />
+                </VariableNode>
+                <VariableNode Type="15" Variable="m_vec3" SavedValue="0, 0, 0">
+                    <VariableNode Type="2" Variable="x" SavedValue="0" />
+                    <VariableNode Type="2" Variable="y" SavedValue="0" />
+                    <VariableNode Type="2" Variable="z" SavedValue="0" />
+                </VariableNode>
+                <VariableNode Type="16" Variable="m_vec4" SavedValue="0, 0, 0, 0">
+                    <VariableNode Type="2" Variable="x" SavedValue="0" />
+                    <VariableNode Type="2" Variable="y" SavedValue="0" />
+                    <VariableNode Type="2" Variable="z" SavedValue="0" />
+                    <VariableNode Type="2" Variable="w" SavedValue="0" />
+                </VariableNode>
+                <VariableNode Type="10" Variable="m_ptr" SavedValue="CTestComponent@0x7b1a17b7" />
+                <VariableNode Type="10" Variable="m_abstractptr" SavedValue="CTestAbstractClass@0x1a7bb177" />
+                <VariableNode Type="12" Variable="m_filePath" SavedValue="" />
+                <VariableNode Type="17" Variable="m_texture" SavedValue="" />
+            </Instance>
+        </Component>
         <Component GUID="0xe3bb1421" Name="CStaticMesh">
             <Instance Id="2" PosX="-31" PosY="-5">
                 <VariableNode Type="6" Variable="m_strName" SavedValue="Protoss" />
