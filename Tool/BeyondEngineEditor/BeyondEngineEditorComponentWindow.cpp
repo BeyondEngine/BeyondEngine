@@ -115,6 +115,7 @@ CBeyondEngineEditorComponentWindow::~CBeyondEngineEditorComponentWindow()
     BEATS_SAFE_DELETE(m_pAddDependencyMenu);
     BEATS_SAFE_DELETE(m_pCopyComponent);
     BEATS_SAFE_DELETE(m_pCamera);
+    m_pNode->Uninitialize();
     BEATS_SAFE_DELETE(m_pNode);
 }
 CCamera* CBeyondEngineEditorComponentWindow::GetCamera()
