@@ -41,6 +41,7 @@ extern HWND BEYONDENGINE_HWND;
 //////////////////////////////////////////////////////////////////////////
 //Configuration
 #define DEVELOP_VERSION
+#define BEYOND_ENGINE_PUBLISH_VERSION
 #ifdef EDITOR_MODE
 #define DISABLE_NETWORK
 #define DEVELOP_VERSION
