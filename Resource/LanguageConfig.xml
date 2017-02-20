@@ -1,0 +1,261 @@
+<Language Count="65">
+    <LanguageNode Enum="eLTT_Editor_Animation_Skeleton" Tag="编辑器">
+        <chinese Value="s"/>
+        <english Value="Skeleton"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Animation_SkeletonBone" Tag="编辑器">
+        <chinese Value="骨骼点"/>
+        <english Value="SkeletonBone"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Animation_Skin" Tag="编辑器">
+        <chinese Value="蒙皮"/>
+        <english Value="Skin"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Add" Tag="编辑器">
+        <chinese Value="添加"/>
+        <english Value="Add"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Animation" Tag="编辑器">
+        <chinese Value="动画"/>
+        <english Value="Animation"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Chinese" Tag="编辑器">
+        <chinese Value="中文"/>
+        <english Value="Chinese"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Close" Tag="编辑器">
+        <chinese Value="关闭"/>
+        <english Value="Close"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Component" Tag="编辑器">
+        <chinese Value="组件"/>
+        <english Value="Component"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Continue" Tag="编辑器">
+        <chinese Value="继续"/>
+        <english Value="Continue"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Copy" Tag="编辑器">
+        <chinese Value="拷贝"/>
+        <english Value="Copy"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_DeselectAll" Tag="编辑器">
+        <chinese Value="取消全选"/>
+        <english Value="DeslectAll"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Edit" Tag="编辑器">
+        <chinese Value="编辑"/>
+        <english Value="Edit"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_English" Tag="编辑器">
+        <chinese Value="英文"/>
+        <english Value="English"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Export" Tag="编辑器">
+        <chinese Value="导出"/>
+        <english Value="Export"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_File" Tag="编辑器">
+        <chinese Value="文件"/>
+        <english Value="File"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_GM" Tag="编辑器">
+        <chinese Value="命令"/>
+        <english Value="GM"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Help" Tag="编辑器">
+        <chinese Value="帮助"/>
+        <english Value="Help"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Language" Tag="编辑器">
+        <chinese Value="语言"/>
+        <english Value="Language"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Last_Open_Files" Tag="编辑器">
+        <chinese Value="最近打开文件"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Loop" Tag="编辑器">
+        <chinese Value="循环"/>
+        <english Value="Loop"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Open" Tag="编辑器">
+        <chinese Value="打开"/>
+        <english Value="Open"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Paste" Tag="编辑器">
+        <chinese Value="粘贴"/>
+        <english Value="Paste"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Pause" Tag="编辑器">
+        <chinese Value="暂停"/>
+        <english Value="Pause"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Play" Tag="编辑器">
+        <chinese Value="播放"/>
+        <english Value="Play"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Property" Tag="编辑器">
+        <chinese Value="属性"/>
+        <english Value="Property"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Resource" Tag="编辑器">
+        <chinese Value="资源"/>
+        <english Value="Resource"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Save" Tag="编辑器">
+        <chinese Value="保存"/>
+        <english Value="Save"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Search" Tag="编辑器">
+        <chinese Value="搜索"/>
+        <english Value="Search"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_SelectAll" Tag="编辑器">
+        <chinese Value="全选"/>
+        <english Value="SelectAll"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Setting" Tag="编辑器">
+        <chinese Value="设置"/>
+        <english Value="Setting"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Stop" Tag="编辑器">
+        <chinese Value="停止"/>
+        <english Value="Stop"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Terrain" Tag="编辑器">
+        <chinese Value="地形"/>
+        <english Value="Terrain"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_View" Tag="编辑器">
+        <chinese Value="视图"/>
+        <english Value="View"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Common_Window" Tag="编辑器">
+        <chinese Value="窗口"/>
+        <english Value="Window"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Component_ShowGuidId" Tag="编辑器">
+        <chinese Value="显示GUID"/>
+        <english Value="ShowGuid"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_About" Tag="编辑器">
+        <chinese Value="关于"/>
+        <english Value="About"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_AnimationView" Tag="编辑器">
+        <chinese Value="动画视窗"/>
+        <english Value="AnimationView"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_BatchEdit" Tag="编辑器">
+        <chinese Value="批量修改"/>
+        <english Value="BatchEdit"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_Camera" Tag="编辑器">
+        <chinese Value="相机"/>
+        <english Value="Camera"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_Capture" Tag="编辑器">
+        <chinese Value="截图"/>
+        <english Value="Capture"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_Component" Tag="编辑器">
+        <chinese Value="组件"/>
+        <english Value="Component"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_Effect" Tag="编辑器">
+        <chinese Value="特效"/>
+        <english Value="Effect"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_GameView" Tag="编辑器">
+        <chinese Value="游戏视窗"/>
+        <english Value="GameView"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_Performance" Tag="编辑器">
+        <chinese Value="性能"/>
+        <english Value="Performace"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_Reopen" Tag="编辑器">
+        <chinese Value="重新打开"/>
+        <english Value="Reopen"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_Scene" Tag="编辑器">
+        <chinese Value="场景"/>
+        <english Value="Scene"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_SimulateView" Tag="编辑器">
+        <chinese Value="模拟分辨率"/>
+        <english Value="SimulateView"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_UI" Tag="编辑器">
+        <chinese Value="UI"/>
+        <english Value="UI"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Menu_ViewTexture" Tag="编辑器">
+        <chinese Value="查看纹理"/>
+        <english Value="ViewTexture"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_NoSupport_Battle_Replay" Tag="编辑器">
+        <chinese Value="编辑器不支持战斗回放！"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_ElapsedTime" Tag="编辑器">
+        <chinese Value="逝去时间"/>
+        <english Value="ElapsedTime"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_FunctionAreas" Tag="编辑器">
+        <chinese Value="功能区"/>
+        <english Value="FunctionAreas"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_Location" Tag="编辑器">
+        <chinese Value="位置"/>
+        <english Value="Location"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_NoInfo" Tag="编辑器">
+        <chinese Value="没有可用信息"/>
+        <english Value="Noinfoisavailabel"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_PauseMonitor" Tag="编辑器">
+        <chinese Value="暂停监控"/>
+        <english Value="PauseMonitor"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_PeakTime" Tag="编辑器">
+        <chinese Value="峰值"/>
+        <english Value="PeakTime"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_Recollect" Tag="编辑器">
+        <chinese Value="重新收集"/>
+        <english Value="Recollect"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_ResetPeak" Tag="编辑器">
+        <chinese Value="重置峰值"/>
+        <english Value="ResetPeak"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_SourceCodeLine" Tag="编辑器">
+        <chinese Value="源代码行"/>
+        <english Value="Line"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_StatisticalInfo" Tag="编辑器">
+        <chinese Value="统计信息"/>
+        <english Value="Statistical"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_SubItemInfo" Tag="编辑器">
+        <chinese Value="子节点"/>
+        <english Value="SubNode"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_TotalRunFrames" Tag="编辑器">
+        <chinese Value="总共运行帧数"/>
+        <english Value="TotalRunFrames"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Performance_TotalRunTime" Tag="编辑器">
+        <chinese Value="总共运行时间"/>
+        <english Value="TotalRunTime"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_Perfromance_AverageTime" Tag="编辑器">
+        <chinese Value="平均时间"/>
+        <english Value="AverageTime"/>
+    </LanguageNode>
+    <LanguageNode Enum="eLTT_Editor_TextInfo_Welcome" Tag="编辑器">
+        <chinese Value="欢迎使用BeyondEngine"/>
+        <english Value="Welcometoenterbeyondengine"/>
+    </LanguageNode>
+</Language>
+
