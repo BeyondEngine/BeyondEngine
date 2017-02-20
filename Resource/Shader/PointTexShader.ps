@@ -3,9 +3,16 @@
 varying TEXP vec2 texCoord0;
 
 uniform SAMP sampler2D u_tex0;
-
+uniform SAMP sampler2D u_tex1;
 void main()
 {
-	COLP vec4 fragColor = texture2D(u_tex0, texCoord0);
-	gl_FragColor = fragColor;
+    COLP vec4 fragColor = texture2D(u_tex0, texCoord0);
+#ifdef PLATFORM_ANDROID
+    if( u_isEtc > 0)
+    {
+        fragColor.a = u_etcHasAlpha == 1 ? texture2D(u_tex1, texCoord0).r : 1.0;
+    }
+#endif
+    fragColor *= u_ColorScale;
+    gl_FragColor = fragColor;
 }

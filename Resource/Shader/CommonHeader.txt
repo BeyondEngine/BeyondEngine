@@ -1,20 +1,30 @@
 /* file: CommonHeader.txt
  */
 #ifdef GL_ES
-	#define HIGHP highp
-	#define MEDIUMP mediump
-	#define LOWP lowp
+    #define HIGHP highp
+    #define MEDIUMP mediump
+    #define LOWP lowp
 #else
-	#define HIGHP
-	#define MEDIUMP
-	#define LOWP
+    #define HIGHP
+    #define MEDIUMP
+    #define LOWP
 #endif
 
-#define POSP HIGHP		//precision for position
-#define TEXP MEDIUMP	//precision for tex coord
-#define COLP LOWP		//precision for color
-#define BIDXP LOWP		//precision for bone index
-#define WEIP MEDIUMP	//precision for weights
-#define MATP HIGHP		//precision for mat4
-#define SAMP LOWP		//precision for sampler2D
+#define POSP HIGHP        //precision for position
+#define TEXP HIGHP    //precision for tex coord
+#define COLP LOWP        //precision for color
+#define BIDXP LOWP        //precision for bone index
+#define WEIP MEDIUMP    //precision for weights
+#define MATP HIGHP        //precision for mat4
+#define SAMP LOWP        //precision for sampler2D
 
+#define MATH_PI 3.1415926536
+
+uniform HIGHP vec4 u_ColorScale;
+uniform HIGHP mat4 u_PMatrix;
+uniform HIGHP mat4 u_MMatrix;
+uniform HIGHP mat4 u_VMatrix;
+uniform HIGHP mat4 u_MVPMatrix;
+
+uniform LOWP int u_isEtc;
+uniform LOWP int u_etcHasAlpha;

@@ -43,4 +43,5 @@ int CAboutDlg::ShowModal()
 void CAboutDlg::OnShowAfterLaunchCheckBoxClick(wxCommandEvent& event)
 {
     CEditorConfig::GetInstance()->SetShowAboutDlgAfterlaunch(event.GetInt() != 0);
+    CEditorConfig::GetInstance()->SaveToFile();
 }

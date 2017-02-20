@@ -9,15 +9,26 @@ uniform SAMP sampler2D u_tex0;
 
 void main()
 {
-	COLP vec4 texColor = texture2D(u_tex0, texCoord0);
-	COLP float fBorderAlpha = 0;
-	COLP float fFontAlpha = 1.0;
-	if(borderColor.a > 0)
+    COLP vec4 texColor = texture2D(u_tex0, texCoord0);
+    COLP float fBorderAlpha = texColor.r;
+	COLP float fFrontAlpha = texColor.a;
+	
+	COLP vec4 realColor = vec4(0,0,0,0);
+	if(borderColor.a > 0.0)
 	{
-		fBorderAlpha = texColor.r;
-		fFontAlpha = texColor.a;
+	    realColor = borderColor;
+		realColor.a = borderColor.a * fBorderAlpha;
+		if(fFrontAlpha != 0.0)
+	    {
+	    	COLP float frontA = color.a * fFrontAlpha;
+	    	realColor = color * frontA + realColor;
+	    }
 	}
-	texColor.rgb = color.rgb * fFontAlpha + borderColor.rgb * (1.0 -fFontAlpha);
-	texColor.a = (fBorderAlpha * texColor.a > 0.0 ? 255.0 : (fBorderAlpha + texColor.a)) * color.a;
-	gl_FragColor = texColor;
+	else
+	{
+	    realColor = color;
+	    realColor.a = color.a * fFrontAlpha;
+	}
+
+	gl_FragColor = realColor;
 }

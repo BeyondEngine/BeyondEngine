@@ -1,0 +1,20 @@
+varying TEXP vec2 texCoord0;
+varying TEXP vec2 texCoord1;
+
+uniform SAMP sampler2D u_tex0;
+uniform SAMP sampler2D u_tex1;
+uniform SAMP sampler2D u_tex2;
+void main()
+{
+    COLP vec4 fragColor = texture2D(u_tex0, texCoord0);
+    COLP vec4 lightMapColor = texture2D(u_tex1, texCoord1);
+#ifdef PLATFORM_ANDROID
+    if (u_isEtc > 0)
+    {
+        fragColor.a = u_etcHasAlpha == 1 ? texture2D(u_tex1, texCoord0).r : 1.0;
+        lightMapColor = texture2D(u_tex2, texCoord1);
+    }
+#endif
+    HIGHP vec4 finalColor = fragColor * lightMapColor * 1.5;
+    gl_FragColor = finalColor * u_ColorScale;
+}

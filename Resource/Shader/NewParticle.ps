@@ -1,0 +1,16 @@
+uniform SAMP sampler2D u_tex0;
+uniform SAMP sampler2D u_tex1;
+uniform COLP vec4 TintColor;
+varying COLP vec4 color;
+varying TEXP vec2 texCoord0;
+void main ()
+{
+    COLP vec4 tmpvar_1 = texture2D (u_tex0, texCoord0);    
+#ifdef PLATFORM_ANDROID
+    if (u_isEtc > 0)
+    {
+       tmpvar_1.a = u_etcHasAlpha == 1 ? texture2D( u_tex1, texCoord0 ).r : 1.0;
+    }
+#endif
+	gl_FragColor = (((2.0 * color) * TintColor) * tmpvar_1);
+}

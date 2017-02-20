@@ -1,14 +1,22 @@
 /* file: PointTexShader.ps
  */
 varying TEXP vec2 texCoord0;
-varying COLP vec4 colorScale;
+varying HIGHP vec4 colorScale;
 uniform SAMP sampler2D u_tex0;
+uniform SAMP sampler2D u_tex1;
 
 void main()
 {
-	COLP vec4 fragColor = texture2D(u_tex0, texCoord0);
-	fragColor.r *= (colorScale.r * 255.0) * 0.01;
-	fragColor.g *= (colorScale.g * 255.0) * 0.01;
-	fragColor.b *= (colorScale.b * 255.0) * 0.01;
-	gl_FragColor = fragColor;
+    COLP vec4 fragColor = texture2D(u_tex0, texCoord0);
+#ifdef PLATFORM_ANDROID
+    if (u_isEtc > 0)
+    {
+        fragColor.a = u_etcHasAlpha == 1 ? texture2D(u_tex1, texCoord0).r : 1.0;
+    }
+#endif
+    fragColor.r *= (colorScale.r * 2.55);
+    fragColor.g *= (colorScale.g * 2.55);
+    fragColor.b *= (colorScale.b * 2.55);
+    fragColor.a *= (colorScale.a * 2.55);
+    gl_FragColor = fragColor;
 }

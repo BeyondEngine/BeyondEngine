@@ -1,0 +1,20 @@
+/* file: CircelProgressShader.ps
+ */
+varying TEXP vec2 texCoord0;
+
+uniform SAMP sampler2D u_tex0;
+uniform SAMP sampler2D u_tex1;
+uniform HIGHP vec4 info; //x: progress from 0 to 1; y: mask color scale; z: center u; w: center v
+void main()
+{
+    COLP vec4 texColor = texture2D(u_tex0, texCoord0);    
+    if (u_isEtc > 0)
+    {
+        texColor.a = u_etcHasAlpha == 1 ? texture2D(u_tex1, texCoord0).r : 1.0;
+    }
+    HIGHP vec2 uvDirection = normalize(vec2(texCoord0.x - info.z, texCoord0.y - info.w));
+    HIGHP float fAngle = acos(dot(uvDirection, vec2(0.0, 1.0)));
+    HIGHP float fProgress = step(uvDirection.x, 0.0) + (fAngle / (MATH_PI * 2.0)) * sign(uvDirection.x);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, step(info.x, fProgress) * texColor.a * info.y);
+}
+

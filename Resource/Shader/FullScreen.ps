@@ -4,5 +4,6 @@ uniform SAMP sampler2D u_tex0;
 
 void main()
 {
-    gl_FragColor = texture2D(u_tex0, texCoord0);
+    COLP vec4 color = texture2D(u_tex0, texCoord0);
+    gl_FragColor = color * u_ColorScale;
 }

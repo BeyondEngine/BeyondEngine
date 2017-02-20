@@ -1,0 +1,77 @@
+/* file: GUIShader.ps 
+*/
+
+varying TEXP vec2 texCoord0;
+varying COLP vec4 color;
+
+uniform SAMP sampler2D u_tex0;
+uniform SAMP sampler2D u_tex1;
+uniform SAMP sampler2D u_tex2;
+uniform SAMP sampler2D u_tex3;
+
+uniform TEXP vec2 selfStartUV;
+uniform TEXP vec2 maskStartUV;
+uniform COLP float maskUSize;
+uniform COLP float maskVSize;
+uniform COLP float selfUSize;
+uniform COLP float selfVSize;
+uniform COLP float isButtomToTopAnimation;
+uniform TEXP vec2 rectPos;
+uniform TEXP vec2 rectSize;
+
+void main()
+{
+    TEXP vec2 maskTextCoord = maskStartUV;
+    COLP vec4 texColor = texture2D(u_tex0, texCoord0);
+    
+    
+    if(isButtomToTopAnimation > 0.0)
+    {
+        COLP float selfUOffset = texCoord0.x - selfStartUV.x;
+        COLP float selfVOffset = texCoord0.y - selfStartUV.y;
+        COLP float uScale = selfUOffset / selfUSize;
+        COLP float vScale = selfVOffset / selfVSize;
+        COLP float maskUOffset = uScale * maskUSize;
+        COLP float maskVOffset = vScale * maskVSize;
+        maskTextCoord.x = maskTextCoord.x + maskUOffset;
+        maskTextCoord.y = maskTextCoord.y + maskVOffset;
+    }
+    else
+    {
+        COLP float selfUOffset = texCoord0.x - selfStartUV.x;
+        COLP float selfVOffset = selfStartUV.y - texCoord0.y;
+        COLP float uScale = selfUOffset / selfUSize;
+        COLP float vScale = selfVOffset / selfVSize;
+        COLP float maskUOffset = uScale * maskUSize;
+        COLP float maskVOffset = vScale * maskVSize;
+        maskTextCoord.x = maskTextCoord.x + maskUOffset;
+        maskTextCoord.y = maskTextCoord.y - maskVOffset;
+    }
+    
+    if(maskTextCoord.x >= rectPos.x && maskTextCoord.y <= rectPos.y && maskTextCoord.x <= rectPos.x + rectSize.x && maskTextCoord.y >= rectPos.y - rectSize.y )
+    {
+        COLP vec4 maskMapColor = texture2D(u_tex1, maskTextCoord);
+    #ifdef PLATFORM_ANDROID
+        if (u_isEtc > 0)
+        {
+            texColor.a = u_etcHasAlpha == 1 ? texture2D(u_tex1, texCoord0).r : 1.0;
+            maskMapColor = texture2D(u_tex2, maskTextCoord);
+            maskMapColor.a = u_etcHasAlpha == 1 ? texture2D(u_tex3, maskTextCoord).r : 1.0;
+        }
+    #endif
+        COLP float maskMapColorAlpha = maskMapColor.a;
+        texColor.a = texColor.a * maskMapColorAlpha;
+		texColor += vec4(color.r, color.g, color.b, 0);
+	    texColor.a = texColor.a * color.a;
+        if(maskMapColor.a == 0.0)
+        {
+           texColor.a = 0.0;
+        }
+    }
+    else
+    {
+        texColor.a = 0.0;
+    }
+
+    gl_FragColor = texColor;
+}
